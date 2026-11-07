@@ -3,6 +3,7 @@ import {
   CrackDetector,
   FlickDetector,
   PourTimer,
+  TipCounter,
   WhiskTracker,
 } from './gestures.js';
 
@@ -75,6 +76,29 @@ describe('WhiskTracker', () => {
     tracker.update(0.05, 0, false, 0.015, 1);
     tracker.update(0, 0.05, false, 0.015, 1);
     expect(tracker.turns).toBe(0);
+  });
+});
+
+describe('TipCounter', () => {
+  const TIP = 2;
+  const REARM = 1.6;
+
+  it('counts one tip per swing past the angle', () => {
+    const tips = new TipCounter();
+    tips.update(2.2, true, TIP, REARM);
+    tips.update(2.5, true, TIP, REARM);
+    tips.update(1.8, true, TIP, REARM);
+    tips.update(2.2, true, TIP, REARM);
+    expect(tips.count).toBe(1);
+    tips.update(1.5, true, TIP, REARM);
+    tips.update(2.2, true, TIP, REARM);
+    expect(tips.count).toBe(2);
+  });
+
+  it('ignores tips away from the bowl', () => {
+    const tips = new TipCounter();
+    tips.update(2.2, false, TIP, REARM);
+    expect(tips.count).toBe(0);
   });
 });
 

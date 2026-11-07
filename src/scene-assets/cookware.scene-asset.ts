@@ -9,7 +9,6 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
-  RingGeometry,
   Vector2,
 } from '@iwsdk/core';
 import { COOKWARE } from '../config/cookware.js';
@@ -51,7 +50,10 @@ const burnerMaterial = createSceneMaterial({
   baseColor: '#1E1F22',
   roughness: 0.8,
 });
-const flameMaterial = new MeshBasicMaterial({ color: '#FF7A1A' });
+const flameMaterial = new MeshBasicMaterial({
+  color: '#FF7A1A',
+  side: DoubleSide,
+});
 const plateMaterial = new MeshStandardMaterial({
   color: '#F4F1EA',
   roughness: 0.4,
@@ -60,6 +62,10 @@ const plateMaterial = new MeshStandardMaterial({
 const bowlEggMaterial = new MeshStandardMaterial({
   color: '#F5B335',
   roughness: 0.5,
+});
+const panButterMaterial = new MeshStandardMaterial({
+  color: '#F5D76E',
+  roughness: 0.4,
 });
 const omeletteMaterial = new MeshStandardMaterial({
   color: '#F6E27A',
@@ -166,16 +172,18 @@ export function createPan(): Group {
   handle.position.set(0, half * 0.6, rimRadius + handleLength / 2 - 0.004);
   const egg = foodDisc('PanEgg', baseRadius * 0.95, omeletteMaterial);
   egg.position.y = -half + 0.003;
+  const butter = foodDisc('PanButter', baseRadius * 0.8, panButterMaterial);
+  butter.position.y = -half + 0.002;
 
   const pan = new Group();
   pan.name = 'Pan';
-  pan.add(body, handle, egg);
+  pan.add(body, handle, egg, butter);
   return pan;
 }
 
 /** Origin at table contact. The flame ring stays hidden until the pan heats. */
 export function createStove(): Group {
-  const { width, height } = COOKWARE.stove;
+  const { width, height, grateHeight } = COOKWARE.stove;
   const base = new Mesh(new BoxGeometry(width, height, width), stoveMaterial);
   base.name = 'StoveBase';
   base.position.y = height / 2;
@@ -186,16 +194,35 @@ export function createStove(): Group {
   burner.name = 'StoveBurner';
   burner.position.y = height + 0.001;
 
-  const flameGeometry = new RingGeometry(width * 0.3, width * 0.38, 24);
-  flameGeometry.rotateX(-Math.PI / 2);
-  const flame = new Mesh(flameGeometry, flameMaterial);
+  // Two crossed bars hold the pan above the burner.
+  const grate = new Group();
+  grate.name = 'StoveGrate';
+  for (const [index, turn] of [0, Math.PI / 2].entries()) {
+    const bar = new Mesh(
+      new BoxGeometry(width * 0.74, grateHeight, 0.012),
+      burnerMaterial,
+    );
+    bar.name = `GrateBar${index}`;
+    bar.rotation.y = turn;
+    bar.position.y = height + grateHeight / 2;
+    grate.add(bar);
+  }
+
+  // Flames flare out from under the pan, so they show around its rim.
+  const flame = new Mesh(
+    lathe([
+      [COOKWARE.pan.baseRadius, 0],
+      [COOKWARE.pan.rimRadius + 0.012, 0.012],
+    ]),
+    flameMaterial,
+  );
   flame.name = 'StoveFlame';
   flame.position.y = height + 0.002;
   flame.visible = false;
 
   const stove = new Group();
   stove.name = 'Stove';
-  stove.add(base, burner, flame);
+  stove.add(base, burner, grate, flame);
   return stove;
 }
 

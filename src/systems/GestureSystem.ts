@@ -9,13 +9,15 @@ import {
   Vector3,
   VisibilityState,
 } from '@iwsdk/core';
-import { WHISK_IN_BOWL_OFFSET_Y } from '../config/cookware.js';
+import { COOKWARE, WHISK_TIP_IN_BOWL_Y } from '../config/cookware.js';
+import { OMELETTE_INGREDIENTS } from '../config/recipes/omelette.js';
 import type { StepCompletion } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import {
   CrackDetector,
   FlickDetector,
   PourTimer,
+  TipCounter,
   WhiskTracker,
 } from '../game/gestures.js';
 import { isWithinSnapZone } from '../util/snap.js';
@@ -25,7 +27,11 @@ import { StepSystem } from './StepSystem.js';
 
 const DEG_TO_RAD = Math.PI / 180;
 
-/** The whisk model lies along X with its head at -X; this stands it head down. */
+/** From the shaker center to its cap, along the model's up axis. */
+const SHAKER_CAP_OFFSET_M = OMELETTE_INGREDIENTS.salt.lengthM / 2;
+
+/** The whisk model lies along X with its head at -X. */
+const WHISK_AXIS = new Vector3(1, 0, 0);
 const WHISK_UPRIGHT = new Quaternion().setFromEuler(
   new Euler(0, 0, Math.PI / 2),
 );
@@ -39,6 +45,7 @@ const WHISK_UPRIGHT = new Quaternion().setFromEuler(
 export class GestureSystem extends createSystem({}) {
   private readonly crack = new CrackDetector();
   private readonly whisk = new WhiskTracker();
+  private readonly salt = new TipCounter();
   private readonly pour = new PourTimer();
   private readonly flick = new FlickDetector();
   private readonly leftHand = new Vector3();
@@ -48,22 +55,30 @@ export class GestureSystem extends createSystem({}) {
   private readonly orientation = new Quaternion();
   private readonly up = new Vector3();
   private readonly whiskTarget = new Vector3();
+  private readonly whiskLean = new Vector3();
+  private readonly whiskTargetTurn = new Quaternion();
   private readonly whiskShownAt = new Vector3();
   private readonly whiskShownTurn = new Quaternion();
+  private readonly gripAtGrab = new Quaternion();
+  private readonly shakerTurn = new Quaternion();
+  private readonly shakerShownTurn = new Quaternion();
   private steps!: StepSystem;
   private kitchen!: KitchenSystem;
   private cooking!: CookingSystem;
   private grabSystem: GrabSystem | undefined;
   private egg!: Entity;
+  private saltShaker!: Entity;
+  private butter!: Entity;
   private activeStep: StepCompletion | null = null;
   private whiskTurnsShown = 0;
-  private saltPinches = 0;
+  private isButterOverPan = false;
   private hasFlipped = false;
   private isWhiskInHand = false;
+  private isShakerInHand = false;
 
-  /** How many pinches of salt went in. The score will read this. */
-  get saltPinchCount(): number {
-    return this.saltPinches;
+  /** How many dashes of salt went in. The score will read this. */
+  get saltDashCount(): number {
+    return this.salt.count;
   }
 
   init(): void {
@@ -78,6 +93,8 @@ export class GestureSystem extends createSystem({}) {
     this.cooking = cooking;
     this.grabSystem = this.world.getSystem(GrabSystem);
     this.egg = this.world.requireSceneEntity('ingredient-egg');
+    this.saltShaker = this.world.requireSceneEntity('ingredient-salt');
+    this.butter = this.world.requireSceneEntity('ingredient-butter');
   }
 
   update(delta: number): void {
@@ -97,7 +114,10 @@ export class GestureSystem extends createSystem({}) {
         this.updateWhisk(delta);
         break;
       case 'season':
-        this.updateSeason();
+        this.updateSeason(delta);
+        break;
+      case 'heat':
+        this.updateHeat();
         break;
       case 'pour':
         this.updatePour(delta);
@@ -122,8 +142,11 @@ export class GestureSystem extends createSystem({}) {
       this.whiskTurnsShown = 0;
       this.steps.setProgress(`0/${TUNING.whiskTargetTurns}`);
     } else if (step === 'season') {
-      this.saltPinches = 0;
+      this.salt.reset();
+      this.isShakerInHand = false;
       this.steps.setProgress('0');
+    } else if (step === 'heat') {
+      this.isButterOverPan = false;
     } else if (step === 'pour') {
       this.pour.reset();
     } else if (step === 'cook') {
@@ -188,7 +211,7 @@ export class GestureSystem extends createSystem({}) {
       TUNING.bowlZoneRadiusM,
       TUNING.bowlZoneHeightM,
     );
-    this.poseWhisk(object, hand, bowlAt, isInBowl, delta);
+    this.poseWhisk(object, holder, hand, bowlAt, isInBowl, delta);
     const turns = this.whisk.update(
       offsetX,
       offsetZ,
@@ -209,12 +232,14 @@ export class GestureSystem extends createSystem({}) {
   }
 
   /**
-   * Stands the held whisk head down and, near the bowl, keeps the head inside
-   * it. The hand may circle wider than the bowl: the head traces a smaller
-   * circle, so shaky tracking never pulls it through the wall.
+   * Holds the whisk head down. Near the bowl its tip stays inside and the
+   * handle leans out toward the hand, like a real whisk. The hand may circle
+   * wider than the bowl: the tip traces a smaller circle, so shaky tracking
+   * never pulls it through the wall.
    */
   private poseWhisk(
     object: Object3D,
+    holder: 'left' | 'right',
     hand: Vector3,
     bowlAt: Vector3,
     isInBowl: boolean,
@@ -232,55 +257,134 @@ export class GestureSystem extends createSystem({}) {
       const scale = Math.min(TUNING.whiskHeadRadiusM / (radius || 1), 1);
       this.whiskTarget.set(
         bowlAt.x + offsetX * scale,
-        bowlAt.y + WHISK_IN_BOWL_OFFSET_Y,
+        bowlAt.y + WHISK_TIP_IN_BOWL_Y,
         bowlAt.z + offsetZ * scale,
+      );
+      this.setWhiskLean(holder, hand);
+      this.whiskTargetTurn.setFromUnitVectors(WHISK_AXIS, this.whiskLean);
+      this.whiskTarget.addScaledVector(
+        this.whiskLean,
+        COOKWARE.whisk.length / 2,
       );
     } else {
       this.whiskTarget.set(hand.x, hand.y - TUNING.whiskUnderHandM, hand.z);
+      this.whiskTargetTurn.copy(WHISK_UPRIGHT);
     }
     const blend = Math.min(TUNING.whiskFollowRatePerS * delta, 1);
     this.whiskShownAt.lerp(this.whiskTarget, blend);
-    this.whiskShownTurn.slerp(WHISK_UPRIGHT, blend);
+    this.whiskShownTurn.slerp(this.whiskTargetTurn, blend);
     object.position.copy(this.whiskShownAt);
     object.quaternion.copy(this.whiskShownTurn);
   }
 
-  private updateSeason(): void {
+  /** Points `whiskLean` from the whisk tip toward the hand, within the tilt limits. */
+  private setWhiskLean(holder: 'left' | 'right', hand: Vector3): void {
+    const side = holder === 'left' ? -1 : 1;
+    const x = hand.x + side * TUNING.whiskLeanSideM - this.whiskTarget.x;
+    const y = hand.y - this.whiskTarget.y;
+    const z = hand.z + TUNING.whiskLeanTowardPlayerM - this.whiskTarget.z;
+    const reach = Math.hypot(x, z);
+    const tilt = Math.min(
+      Math.max(
+        Math.atan2(reach, y),
+        TUNING.whiskMinTiltDeg * DEG_TO_RAD,
+      ),
+      TUNING.whiskMaxTiltDeg * DEG_TO_RAD,
+    );
+    const lean = Math.sin(tilt) / (reach || 1);
+    this.whiskLean.set(x * lean, Math.cos(tilt), z * lean);
+  }
+
+  /**
+   * The shaker lies flat on the sheet, so it stands up in the hand, cap on top,
+   * and then turns with the wrist. That way the wrist tips the cap where the
+   * player expects, and `up` ends up holding the shaker's up axis.
+   */
+  private poseShaker(
+    object: Object3D,
+    holder: 'left' | 'right',
+    delta: number,
+  ): void {
+    const grip = this.player.gripSpaces[holder].getWorldQuaternion(
+      this.orientation,
+    );
+    if (!this.isShakerInHand) {
+      this.isShakerInHand = true;
+      this.gripAtGrab.copy(grip).invert();
+      this.shakerShownTurn.copy(object.quaternion);
+    }
+    this.shakerTurn.copy(grip).multiply(this.gripAtGrab);
+    this.shakerShownTurn.slerp(
+      this.shakerTurn,
+      Math.min(TUNING.whiskFollowRatePerS * delta, 1),
+    );
+    object.quaternion.copy(this.shakerShownTurn);
+    this.up.set(0, 1, 0).applyQuaternion(this.shakerShownTurn);
+  }
+
+  private updateSeason(delta: number): void {
+    const object = this.saltShaker.object3D;
     const bowlAt = this.kitchen
       .requireTool('bowl')
       .object3D?.getWorldPosition(this.positionB);
-    if (bowlAt == null) {
+    if (object == null || bowlAt == null) {
       return;
     }
-    const left = this.isSaltPinch('left', this.player.gripSpaces.left, bowlAt);
-    const right = this.isSaltPinch(
-      'right',
-      this.player.gripSpaces.right,
-      bowlAt,
+    const holder = this.grabSystem?.getHolderHand(this.saltShaker) ?? null;
+    if (holder == null) {
+      this.isShakerInHand = false;
+      return;
+    }
+    this.poseShaker(object, holder, delta);
+    // The cap has to be over the bowl, so tipping it away spills no salt.
+    const capAt = object.getWorldPosition(this.positionA);
+    capAt.addScaledVector(this.up, SHAKER_CAP_OFFSET_M);
+    const isOverBowl = isWithinSnapZone(
+      capAt.x - bowlAt.x,
+      capAt.y - bowlAt.y,
+      capAt.z - bowlAt.z,
+      TUNING.seasonZoneRadiusM,
+      TUNING.bowlZoneHeightM,
     );
-    if (left || right) {
-      this.saltPinches += (left ? 1 : 0) + (right ? 1 : 0);
-      this.steps.setProgress(String(this.saltPinches));
+    const hasTipped = this.salt.update(
+      Math.acos(Math.min(Math.max(this.up.y, -1), 1)),
+      isOverBowl,
+      TUNING.saltTipDeg * DEG_TO_RAD,
+      TUNING.saltRearmDeg * DEG_TO_RAD,
+    );
+    if (hasTipped) {
+      this.steps.setProgress(String(this.salt.count));
       this.steps.setActionReady(true);
     }
   }
 
-  private isSaltPinch(
-    handedness: 'left' | 'right',
-    grip: { getWorldPosition(target: Vector3): Vector3 },
-    bowlAt: Vector3,
-  ): boolean {
-    if (!this.input.xr.getSelectState(handedness).start) {
-      return false;
+  /** The butter counts once it is let go over the pan on the stove. */
+  private updateHeat(): void {
+    if (this.butter.hasComponent(Grabbed)) {
+      const stove = this.kitchen.copyStoveSeat(this.positionB);
+      const butterAt = this.butter.object3D?.getWorldPosition(this.positionA);
+      this.isButterOverPan =
+        butterAt != null &&
+        this.kitchen.panOnStove &&
+        isWithinSnapZone(
+          butterAt.x - stove.x,
+          butterAt.y - stove.y,
+          butterAt.z - stove.z,
+          TUNING.butterDropRadiusM,
+          TUNING.butterDropHeightM,
+        );
+    } else if (this.isButterOverPan) {
+      this.isButterOverPan = false;
+      this.cooking.meltButter();
+      this.steps.completeStep();
     }
-    const hand = grip.getWorldPosition(this.positionA);
-    return isWithinSnapZone(
-      hand.x - bowlAt.x,
-      hand.y - bowlAt.y,
-      hand.z - bowlAt.z,
-      TUNING.seasonZoneRadiusM,
-      TUNING.bowlZoneHeightM,
-    );
+  }
+
+  /** Angle in radians between an object's up axis and straight up. */
+  private tiltOf(object: Object3D): number {
+    object.getWorldQuaternion(this.orientation);
+    this.up.set(0, 1, 0).applyQuaternion(this.orientation);
+    return Math.acos(Math.min(Math.max(this.up.y, -1), 1));
   }
 
   private updatePour(delta: number): void {
@@ -301,11 +405,8 @@ export class GestureSystem extends createSystem({}) {
         TUNING.pourZoneRadiusM,
         TUNING.pourMaxHeightM,
       );
-    object.getWorldQuaternion(this.orientation);
-    this.up.set(0, 1, 0).applyQuaternion(this.orientation);
-    const tilt = Math.acos(Math.min(Math.max(this.up.y, -1), 1));
     const heldS = this.pour.update(
-      tilt,
+      this.tiltOf(object),
       isOverPan,
       TUNING.pourMinTiltDeg * DEG_TO_RAD,
       delta,

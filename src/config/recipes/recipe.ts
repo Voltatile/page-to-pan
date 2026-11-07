@@ -23,6 +23,7 @@ export type StepCompletion =
   | 'crack'
   | 'whisk'
   | 'season'
+  | 'heat'
   | 'pour'
   | 'cook'
   | 'flip';

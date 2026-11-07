@@ -31,6 +31,14 @@ describe('omelette recipe sheet', () => {
     }
   });
 
+  it('only unlocks ingredients that are on the table', () => {
+    for (const step of OMELETTE.steps) {
+      for (const id of step.grabbableIngredients) {
+        expect(step.ingredients).toContain(id);
+      }
+    }
+  });
+
   it('uses unique ids', () => {
     const ids = ingredients.map((ingredient) => ingredient.id);
     expect(new Set(ids).size).toBe(ids.length);

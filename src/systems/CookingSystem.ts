@@ -26,6 +26,9 @@ const YOLK_COLOR = new Color('#F5B335');
 const FOLDED_SCALE_Z = 0.55;
 const FOLDED_SHIFT_Z = 0.03;
 
+/** Size of the butter disc, against fully melted, when it lands. */
+const BUTTER_START_SCALE = 0.35;
+
 const GOLDEN_MOMENT = 0.7;
 const BURNT_MOMENT = 1.2;
 
@@ -35,7 +38,9 @@ export class CookingSystem extends createSystem({}) {
   private kitchen!: KitchenSystem;
   private bowlEgg!: Mesh;
   private panEgg!: Mesh;
+  private panButter!: Mesh;
   private plateOmelette!: Mesh;
+  private butterMeltS = 0;
   private progress = 0;
   private hasEggInPan = false;
   private zone: CookZone = 'raw';
@@ -54,6 +59,7 @@ export class CookingSystem extends createSystem({}) {
     this.kitchen = kitchen;
     this.bowlEgg = this.ownedMesh('bowl', 'BowlEgg');
     this.panEgg = this.ownedMesh('pan', 'PanEgg');
+    this.panButter = this.ownedMesh('pan', 'PanButter');
     this.plateOmelette = this.ownedMesh('plate', 'PlateOmelette');
     this.cleanupFuncs.push(
       steps.subscribe(() => {
@@ -69,6 +75,7 @@ export class CookingSystem extends createSystem({}) {
     if (this.world.visibilityState.peek() !== VisibilityState.Visible) {
       return;
     }
+    this.updateButter(delta);
     if (!this.hasEggInPan) {
       return;
     }
@@ -81,6 +88,13 @@ export class CookingSystem extends createSystem({}) {
       this.zone = zone;
       this.showDoneness();
     }
+  }
+
+  /** The butter lands in the hot pan and starts to spread. */
+  meltButter(): void {
+    this.butterMeltS = TUNING.butterMeltS;
+    this.panButter.visible = true;
+    this.panButter.scale.setScalar(BUTTER_START_SCALE);
   }
 
   /** The cracked egg lands in the bowl as separate yolks. */
@@ -106,6 +120,7 @@ export class CookingSystem extends createSystem({}) {
   startCooking(): void {
     this.setPourProgress(1);
     this.bowlEgg.visible = false;
+    this.panButter.visible = false;
     this.hasEggInPan = true;
   }
 
@@ -127,6 +142,17 @@ export class CookingSystem extends createSystem({}) {
   /** Writes the doneness after the step title. */
   showDoneness(): void {
     this.steps.setProgress(COOK_ZONE_LABEL[cookZone(this.progress)]);
+  }
+
+  private updateButter(delta: number): void {
+    if (this.butterMeltS <= 0) {
+      return;
+    }
+    this.butterMeltS = Math.max(this.butterMeltS - delta, 0);
+    const melted = 1 - this.butterMeltS / TUNING.butterMeltS;
+    this.panButter.scale.setScalar(
+      BUTTER_START_SCALE + (1 - BUTTER_START_SCALE) * melted,
+    );
   }
 
   private paintDoneness(): void {
@@ -157,8 +183,10 @@ export class CookingSystem extends createSystem({}) {
     this.progress = 0;
     this.hasEggInPan = false;
     this.zone = 'raw';
+    this.butterMeltS = 0;
     this.bowlEgg.visible = false;
     this.panEgg.visible = false;
+    this.panButter.visible = false;
     this.plateOmelette.visible = false;
     this.panEgg.scale.setScalar(1);
     this.panEgg.position.z = 0;

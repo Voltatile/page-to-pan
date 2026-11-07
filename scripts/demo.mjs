@@ -24,7 +24,7 @@ const HEAD = { x: 0, y: 1.6, z: 0 };
 /** Time on the heat after the card first says Golden, aiming for doneness 0.7. */
 const GOLDEN_EXTRA_MS = 1500;
 const BOWL = { x: -0.27, z: -0.32 };
-const STOVE = { x: 0.33, z: -0.35 };
+const STOVE = { x: 0.35, z: -0.35 };
 const PLATE = { x: 0, z: -0.31 };
 const LEVEL = { pitch: 0, yaw: 0, roll: 0 };
 
@@ -40,7 +40,21 @@ function log(message) {
   console.log(`[${seconds}s] ${message}`);
 }
 
-function runCli(args, timeoutMs = 60000) {
+/** Several commands at once can collide on the session lock, so retry those. */
+async function runCli(args, timeoutMs) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await callCli(args, timeoutMs);
+    } catch (error) {
+      if (attempt >= 3 || !error.message.includes('state lock')) {
+        throw error;
+      }
+      await sleep(400);
+    }
+  }
+}
+
+function callCli(args, timeoutMs = 60000) {
   return new Promise((done, fail) => {
     execFile(
       process.execPath,
@@ -232,14 +246,25 @@ async function whiskEggs() {
     { target: 'Whisk', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
     { anchor: 'grasp', position: { x: BOWL.x + 0.07, y: 1.1, z: BOWL.z } },
   ]);
-  // Sequence steps each arc upward, which would bounce the hand out of the
-  // bowl, so the circle is a chain of level moves. Moves queue up in order,
-  // and starting each one early keeps the queue from running dry.
-  const pointsPerTurn = 12;
-  const moveS = 0.25;
+  // A sequence places a held object by its base, which fights the whisk pose
+  // the game sets, so the circle is a chain of plain moves. Moves queue up in
+  // order, and starting each one early keeps the queue from running dry. A
+  // lost move only skips a corner: the loop below circles until the step ends.
+  const pointsPerTurn = 8;
+  const moveS = 0.45;
+  let isWhisked = false;
+  const watchCard = (async () => {
+    while (!isWhisked) {
+      isWhisked = /^Season/.test(await cardTitle());
+      await sleep(400);
+    }
+  })();
   const circle = async (turns) => {
     const moves = [];
     for (let index = 0; index < turns * pointsPerTurn; index += 1) {
+      if (isWhisked) {
+        break;
+      }
       const angle = ((index + 1) * Math.PI * 2) / pointsPerTurn;
       moves.push(
         xr('animate-to', {
@@ -250,47 +275,71 @@ async function whiskEggs() {
             z: BOWL.z + Math.sin(angle) * 0.07,
           },
           duration: moveS,
-        }),
+        }).catch(() => {}),
       );
-      await sleep(moveS * 800);
+      await sleep(moveS * 900);
     }
     await Promise.all(moves);
   };
-  await circle(3.25);
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    if (await waitForTitle(/^Season/, 400)) {
-      break;
-    }
-    await circle(0.5);
+  for (let attempt = 0; attempt < 12 && !isWhisked; attempt += 1) {
+    await circle(1);
   }
+  isWhisked = true;
+  await watchCard;
   await expectTitle(/^Season/);
   await hand('hand-left', [{ pinch: 0, duration: 0.2 }]);
 }
 
 async function seasonEggs() {
-  await hand('hand-left', [
-    { anchor: 'grasp', position: { x: BOWL.x, y: 1.03, z: BOWL.z } },
-    { pinch: 1, duration: 0.2 },
-    { pinch: 0, duration: 0.3 },
-    { pinch: 1, duration: 0.2 },
-    { pinch: 0, duration: 0.3 },
+  const position = { x: BOWL.x + 0.09, y: 1.08, z: BOWL.z };
+  // Positive roll turns the top of the shaker to the left, toward the bowl.
+  const tipped = { pitch: 0, yaw: 0, roll: 105 };
+  const move = (orientation) => ({
+    anchor: 'grip',
+    position,
+    orientation,
+    duration: 0.4,
+  });
+  await hand('hand-right', [
+    {
+      target: 'Salt',
+      approach: { distance: 0.06 },
+      orientation: LEVEL,
+      pinch: { value: 1, at: 'arrival' },
+    },
+    { anchor: 'grip', position, orientation: LEVEL },
+    move(tipped),
+    move(LEVEL),
+    move(tipped),
+    move(LEVEL),
   ]);
   await expectTitle(/^Season: 2$/);
+  await hand('hand-right', [{ pinch: 0, duration: 0.2 }]);
   await sleep(600);
   await pressCardButton();
-  await expectTitle(/^Heat and pour/);
+  await expectTitle(/^Heat the pan/);
 }
 
-async function pourEggs() {
+async function heatPan() {
   await hand('hand-right', [
     { target: 'Pan', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
-    { position: { x: STOVE.x, y: 0.96, z: STOVE.z }, depart: { distance: 0.06 } },
+    { position: { x: STOVE.x, y: 0.97, z: STOVE.z }, depart: { distance: 0.06 } },
     { pinch: 0, duration: 0.25 },
   ]);
   log('      pan on the stove');
   await hand('hand-right', [
+    { target: 'Butter', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
+    { position: { x: STOVE.x, y: 1.0, z: STOVE.z }, depart: { distance: 0.06 } },
+    { pinch: 0, duration: 0.25 },
+  ]);
+  await expectTitle(/^Pour/);
+  await sleep(1500);
+  await hand('hand-right', [
     { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
   ]);
+}
+
+async function pourEggs() {
   await hand('hand-left', [
     { target: 'Bowl', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
     { position: { x: 0.2, y: 1.02, z: -0.33 }, depart: { distance: 0.05 } },
@@ -327,7 +376,7 @@ async function cookOmelette() {
   await hand('hand-right', [
     {
       anchor: 'grasp',
-      position: { x: STOVE.x, y: 0.935, z: STOVE.z + 0.175 },
+      position: { x: STOVE.x, y: 0.945, z: STOVE.z + 0.175 },
       orientation: LEVEL,
       pinch: { value: 1, at: 'arrival' },
     },
@@ -440,6 +489,7 @@ async function cook() {
   await sleep(800);
   await seasonEggs();
   await sleep(800);
+  await heatPan();
   await pourEggs();
   await cookOmelette();
   await flipAndPlate();

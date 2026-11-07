@@ -21,11 +21,14 @@ Things that cannot be confirmed without a physical headset. Each item matches a
   - **Crack:** one hand holds a 6 cm egg over the bowl and the other pinches beside
     it, so hand tracking may lose a hand when they overlap. If it does, widen
     `crackReachM`. Also confirm the right hand reaches the bowl while seated.
-  - **Whisk:** 3 turns. Near the bowl the whisk stands head down and its head stays
-    inside the bowl, even if the hand circles wider. Confirm this assist feels like
+  - **Whisk:** 3 turns. Near the bowl the whisk tilts about 25 degrees toward the hand
+    and its tip stays inside the bowl, even if the hand circles wider. Confirm this assist feels like
     stirring rather than like the whisk moving on its own.
-  - **Season:** each pinch over the bowl counts once. Confirm a shaky pinch is not
-    counted twice.
+  - **Season:** the shaker stands up in the hand, then counts one dash each time its
+    cap tips past 95 degrees over the bowl and lifts back under 60. Confirm the wrist
+    can turn that far, and that shaky tracking near the angle adds no extra dashes.
+  - **Butter:** it must be let go over the pan on the stove. Confirm the player
+    finds this without help, and that the drop feels forgiving.
   - **Pour:** the bowl must tilt 55 degrees for 1.2 s. Confirm the wrist can do this
     while seated, without losing the pinch.
   - **Flip:** the pan must turn at 6 rad/s. Confirm a real flick reaches that, and

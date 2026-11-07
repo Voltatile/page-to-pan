@@ -24,8 +24,14 @@ export const TUNING = {
   crackPullM: 0.08,
   /** The egg must be held this close over the bowl center to crack. */
   crackZoneRadiusM: 0.1,
-  /** Inside the zone the whisk head stays within this radius of the bowl center. */
-  whiskHeadRadiusM: 0.035,
+  /** Inside the zone the whisk tip stays within this radius of the bowl center. */
+  whiskHeadRadiusM: 0.026,
+  /** While stirring, the whisk leans this far from upright, like a real one. */
+  whiskMinTiltDeg: 20,
+  whiskMaxTiltDeg: 28,
+  /** The whisk leans toward a point this far beyond the hand, to its own side. */
+  whiskLeanSideM: 0.09,
+  whiskLeanTowardPlayerM: 0.08,
   /** How fast the held whisk settles into its pose, as a fraction per second. */
   whiskFollowRatePerS: 18,
   /** Outside the bowl, the whisk center hangs this far under the holding hand. */
@@ -37,8 +43,16 @@ export const TUNING = {
   /** Circles tighter than this are treated as hand jitter. */
   whiskMinRadiusM: 0.015,
   whiskTargetTurns: 3,
-  /** Salt pinches count inside this horizontal radius of the bowl. */
-  seasonZoneRadiusM: 0.16,
+  /** The shaker cap must be inside this horizontal radius of the bowl. */
+  seasonZoneRadiusM: 0.12,
+  /** Tipping the shaker past this tilt adds one dash of salt. */
+  saltTipDeg: 95,
+  /** The shaker must come back under this tilt before the next dash. */
+  saltRearmDeg: 60,
+  /** The butter lands in the pan when dropped inside this radius of it. */
+  butterDropRadiusM: 0.13,
+  butterDropHeightM: 0.25,
+  butterMeltS: 3,
   /** The pan seats on the stove when released this close to it. */
   stoveSnapRadiusM: 0.12,
   /** The bowl counts as over the pan inside this radius of the stove. */

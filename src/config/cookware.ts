@@ -8,15 +8,21 @@ import { TUNING } from './tuning.js';
 export const COOKWARE = {
   bowl: { rimRadius: 0.085, baseRadius: 0.05, height: 0.085 },
   pan: { rimRadius: 0.1, baseRadius: 0.09, height: 0.024, handleLength: 0.15 },
-  stove: { width: 0.24, height: 0.03 },
+  stove: { width: 0.3, height: 0.03, grateHeight: 0.01 },
   plate: { radius: 0.1, height: 0.012 },
   whisk: { length: 0.26 },
 } as const;
 
-/** Height of the whisk center above the bowl center when its head is in the bowl. */
-export const WHISK_IN_BOWL_OFFSET_Y =
-  COOKWARE.whisk.length / 2 - COOKWARE.bowl.height / 2 + 0.008;
+/** Height of the whisk tip above the bowl center while it stirs. */
+export const WHISK_TIP_IN_BOWL_Y = -COOKWARE.bowl.height / 2 + 0.01;
 
-/** Where the pan rests while it heats, measured from the table top. */
+/** Small gap so the pan floor and the grate top never share a plane. */
+const PAN_CLEARANCE_M = 0.003;
+
+/** Where the pan rests on the grate while it heats. */
 export const PAN_ON_STOVE_Y =
-  TUNING.tableTopHeightM + COOKWARE.stove.height + COOKWARE.pan.height / 2;
+  TUNING.tableTopHeightM +
+  COOKWARE.stove.height +
+  COOKWARE.stove.grateHeight +
+  PAN_CLEARANCE_M +
+  COOKWARE.pan.height / 2;

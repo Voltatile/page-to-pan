@@ -85,6 +85,39 @@ export class WhiskTracker {
   }
 }
 
+/** Counts each tip of a shaker over the bowl. It must lift back between tips. */
+export class TipCounter {
+  private isArmed = true;
+  private tips = 0;
+
+  get count(): number {
+    return this.tips;
+  }
+
+  /** Returns true on the frame a new tip lands. */
+  update(
+    tiltRad: number,
+    isOverBowl: boolean,
+    tipRad: number,
+    rearmRad: number,
+  ): boolean {
+    if (tiltRad <= rearmRad) {
+      this.isArmed = true;
+    }
+    if (this.isArmed && isOverBowl && tiltRad >= tipRad) {
+      this.isArmed = false;
+      this.tips += 1;
+      return true;
+    }
+    return false;
+  }
+
+  reset(): void {
+    this.isArmed = true;
+    this.tips = 0;
+  }
+}
+
 /** Counts time spent tilted past the pour angle. Time survives a pause. */
 export class PourTimer {
   private heldS = 0;
