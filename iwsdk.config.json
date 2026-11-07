@@ -21,25 +21,23 @@
     },
     "render": {
       "fov": 70,
-      "near": 0.001,
-      "far": 200,
+      "near": 0.02,
+      "far": 30,
       "camera": {
         "position": [
           0,
           1.6,
-          1
+          0
         ],
         "lookAt": [
           0,
-          0.95,
-          -1.95
+          0.92,
+          -0.5
         ]
       }
     },
     "features": {
-      "locomotion": {
-        "useWorker": true
-      },
+      "locomotion": false,
       "grabbing": true,
       "physics": false,
       "sceneUnderstanding": false,
