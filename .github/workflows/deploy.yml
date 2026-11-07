@@ -25,6 +25,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
       # NODE_ENV stays off for npm ci, which would otherwise skip dev tools.
       - run: npm run build
         env:
