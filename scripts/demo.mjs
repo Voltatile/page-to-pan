@@ -23,7 +23,7 @@ const VIDEO_LIMIT_S = 180;
 const HEAD = { x: 0, y: 1.6, z: 0 };
 /** Time on the heat after the card first says Golden, aiming for doneness 0.7. */
 const GOLDEN_EXTRA_MS = 1500;
-const BOWL = { x: -0.31, z: -0.36 };
+const BOWL = { x: -0.27, z: -0.32 };
 const STOVE = { x: 0.33, z: -0.35 };
 const PLATE = { x: 0, z: -0.31 };
 const LEVEL = { pitch: 0, yaw: 0, roll: 0 };
@@ -196,26 +196,27 @@ async function placeIngredient(device, target, x, z) {
 }
 
 async function crackEgg() {
-  const y = 0.97;
-  const z = -0.415;
+  const y = 1.03;
   await hand('hand-left', [
-    { anchor: 'grip', position: { x: -0.16, y, z } },
-    { pinch: 1, duration: 0.25 },
+    { target: 'Egg', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
+    { position: { x: BOWL.x, y, z: BOWL.z }, depart: { distance: 0.06 } },
   ]);
   await hand('hand-right', [
-    { anchor: 'grip', position: { x: -0.04, y, z } },
+    { anchor: 'grasp', position: { x: BOWL.x + 0.06, y: y + 0.02, z: BOWL.z } },
     { pinch: 1, duration: 0.25 },
   ]);
   await sleep(500);
+  const leftAt = await xr('get-transform', { device: 'hand-left' });
+  const rightAt = await xr('get-transform', { device: 'hand-right' });
   await Promise.all([
     xr('animate-to', {
       device: 'hand-left',
-      position: { x: -0.24, y, z },
+      position: { ...leftAt.position, x: leftAt.position.x - 0.06 },
       duration: 0.7,
     }),
     xr('animate-to', {
       device: 'hand-right',
-      position: { x: 0.04, y, z },
+      position: { ...rightAt.position, x: rightAt.position.x + 0.06 },
       duration: 0.7,
     }),
   ]);
@@ -229,28 +230,38 @@ async function crackEgg() {
 async function whiskEggs() {
   await hand('hand-left', [
     { target: 'Whisk', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
-    { anchor: 'grasp', position: { x: BOWL.x + 0.05, y: 1.0, z: BOWL.z } },
+    { anchor: 'grasp', position: { x: BOWL.x + 0.07, y: 1.1, z: BOWL.z } },
   ]);
-  const pointsPerTurn = 16;
-  const circle = (turns) =>
-    Array.from({ length: Math.round(turns * pointsPerTurn) }, (_, index) => {
+  // Sequence steps each arc upward, which would bounce the hand out of the
+  // bowl, so the circle is a chain of level moves. Moves queue up in order,
+  // and starting each one early keeps the queue from running dry.
+  const pointsPerTurn = 12;
+  const moveS = 0.25;
+  const circle = async (turns) => {
+    const moves = [];
+    for (let index = 0; index < turns * pointsPerTurn; index += 1) {
       const angle = ((index + 1) * Math.PI * 2) / pointsPerTurn;
-      return {
-        anchor: 'grasp',
-        position: {
-          x: BOWL.x + Math.cos(angle) * 0.05,
-          y: 1.0,
-          z: BOWL.z + Math.sin(angle) * 0.05,
-        },
-        duration: 0.09,
-      };
-    });
-  await hand('hand-left', circle(3.2));
-  for (let attempt = 0; attempt < 6; attempt += 1) {
+      moves.push(
+        xr('animate-to', {
+          device: 'hand-left',
+          position: {
+            x: BOWL.x + Math.cos(angle) * 0.07,
+            y: 1.13,
+            z: BOWL.z + Math.sin(angle) * 0.07,
+          },
+          duration: moveS,
+        }),
+      );
+      await sleep(moveS * 800);
+    }
+    await Promise.all(moves);
+  };
+  await circle(3.25);
+  for (let attempt = 0; attempt < 4; attempt += 1) {
     if (await waitForTitle(/^Season/, 400)) {
       break;
     }
-    await hand('hand-left', circle(0.5));
+    await circle(0.5);
   }
   await expectTitle(/^Season/);
   await hand('hand-left', [{ pinch: 0, duration: 0.2 }]);

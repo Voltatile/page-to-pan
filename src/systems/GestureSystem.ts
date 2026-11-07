@@ -1,11 +1,15 @@
 import {
   createSystem,
   type Entity,
+  Euler,
   Grabbed,
+  GrabSystem,
+  type Object3D,
   Quaternion,
   Vector3,
   VisibilityState,
 } from '@iwsdk/core';
+import { WHISK_IN_BOWL_OFFSET_Y } from '../config/cookware.js';
 import type { StepCompletion } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import {
@@ -20,6 +24,11 @@ import { KitchenSystem } from './KitchenSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const DEG_TO_RAD = Math.PI / 180;
+
+/** The whisk model lies along X with its head at -X; this stands it head down. */
+const WHISK_UPRIGHT = new Quaternion().setFromEuler(
+  new Euler(0, 0, Math.PI / 2),
+);
 
 /**
  * Turns hand and tool movement into recipe progress. Each frame it runs only
@@ -38,14 +47,19 @@ export class GestureSystem extends createSystem({}) {
   private readonly positionB = new Vector3();
   private readonly orientation = new Quaternion();
   private readonly up = new Vector3();
+  private readonly whiskTarget = new Vector3();
+  private readonly whiskShownAt = new Vector3();
+  private readonly whiskShownTurn = new Quaternion();
   private steps!: StepSystem;
   private kitchen!: KitchenSystem;
   private cooking!: CookingSystem;
+  private grabSystem: GrabSystem | undefined;
   private egg!: Entity;
   private activeStep: StepCompletion | null = null;
   private whiskTurnsShown = 0;
   private saltPinches = 0;
   private hasFlipped = false;
+  private isWhiskInHand = false;
 
   /** How many pinches of salt went in. The score will read this. */
   get saltPinchCount(): number {
@@ -62,6 +76,7 @@ export class GestureSystem extends createSystem({}) {
     this.steps = steps;
     this.kitchen = kitchen;
     this.cooking = cooking;
+    this.grabSystem = this.world.getSystem(GrabSystem);
     this.egg = this.world.requireSceneEntity('ingredient-egg');
   }
 
@@ -79,7 +94,7 @@ export class GestureSystem extends createSystem({}) {
         this.updateCrack();
         break;
       case 'whisk':
-        this.updateWhisk();
+        this.updateWhisk(delta);
         break;
       case 'season':
         this.updateSeason();
@@ -103,6 +118,7 @@ export class GestureSystem extends createSystem({}) {
       this.crack.reset();
     } else if (step === 'whisk') {
       this.whisk.reset();
+      this.isWhiskInHand = false;
       this.whiskTurnsShown = 0;
       this.steps.setProgress(`0/${TUNING.whiskTargetTurns}`);
     } else if (step === 'season') {
@@ -126,8 +142,20 @@ export class GestureSystem extends createSystem({}) {
     const isPinching =
       xr.getSelectState('left').active && xr.getSelectState('right').active;
     const egg = this.egg.object3D?.getWorldPosition(this.positionA);
+    const bowl = this.kitchen
+      .requireTool('bowl')
+      .object3D?.getWorldPosition(this.positionB);
     const isNearEgg =
       egg != null &&
+      bowl != null &&
+      this.egg.hasComponent(Grabbed) &&
+      isWithinSnapZone(
+        egg.x - bowl.x,
+        egg.y - bowl.y,
+        egg.z - bowl.z,
+        TUNING.crackZoneRadiusM,
+        TUNING.bowlZoneHeightM,
+      ) &&
       this.leftHand.distanceTo(egg) <= TUNING.crackReachM &&
       this.rightHand.distanceTo(egg) <= TUNING.crackReachM;
     const spread = this.leftHand.distanceTo(this.rightHand);
@@ -137,25 +165,30 @@ export class GestureSystem extends createSystem({}) {
     }
   }
 
-  private updateWhisk(): void {
+  private updateWhisk(delta: number): void {
     const whisk = this.kitchen.requireTool('whisk');
-    const bowl = this.kitchen.requireTool('bowl');
-    const whiskAt = whisk.object3D?.getWorldPosition(this.positionA);
-    const bowlAt = bowl.object3D?.getWorldPosition(this.positionB);
-    if (whiskAt == null || bowlAt == null) {
+    const object = whisk.object3D;
+    const bowlAt = this.kitchen
+      .requireTool('bowl')
+      .object3D?.getWorldPosition(this.positionB);
+    const holder = this.grabSystem?.getHolderHand(whisk) ?? null;
+    if (object == null || bowlAt == null || holder == null) {
+      this.isWhiskInHand = false;
       return;
     }
-    const offsetX = whiskAt.x - bowlAt.x;
-    const offsetZ = whiskAt.z - bowlAt.z;
-    const isInBowl =
-      whisk.hasComponent(Grabbed) &&
-      isWithinSnapZone(
-        offsetX,
-        whiskAt.y - bowlAt.y,
-        offsetZ,
-        TUNING.bowlZoneRadiusM,
-        TUNING.bowlZoneHeightM,
-      );
+    const hand = this.player.gripSpaces[holder].getWorldPosition(
+      this.positionA,
+    );
+    const offsetX = hand.x - bowlAt.x;
+    const offsetZ = hand.z - bowlAt.z;
+    const isInBowl = isWithinSnapZone(
+      offsetX,
+      hand.y - bowlAt.y,
+      offsetZ,
+      TUNING.bowlZoneRadiusM,
+      TUNING.bowlZoneHeightM,
+    );
+    this.poseWhisk(object, hand, bowlAt, isInBowl, delta);
     const turns = this.whisk.update(
       offsetX,
       offsetZ,
@@ -173,6 +206,43 @@ export class GestureSystem extends createSystem({}) {
     if (turns >= target) {
       this.steps.completeStep();
     }
+  }
+
+  /**
+   * Stands the held whisk head down and, near the bowl, keeps the head inside
+   * it. The hand may circle wider than the bowl: the head traces a smaller
+   * circle, so shaky tracking never pulls it through the wall.
+   */
+  private poseWhisk(
+    object: Object3D,
+    hand: Vector3,
+    bowlAt: Vector3,
+    isInBowl: boolean,
+    delta: number,
+  ): void {
+    if (!this.isWhiskInHand) {
+      this.isWhiskInHand = true;
+      this.whiskShownAt.copy(object.position);
+      this.whiskShownTurn.copy(object.quaternion);
+    }
+    if (isInBowl) {
+      const offsetX = hand.x - bowlAt.x;
+      const offsetZ = hand.z - bowlAt.z;
+      const radius = Math.hypot(offsetX, offsetZ);
+      const scale = Math.min(TUNING.whiskHeadRadiusM / (radius || 1), 1);
+      this.whiskTarget.set(
+        bowlAt.x + offsetX * scale,
+        bowlAt.y + WHISK_IN_BOWL_OFFSET_Y,
+        bowlAt.z + offsetZ * scale,
+      );
+    } else {
+      this.whiskTarget.set(hand.x, hand.y - TUNING.whiskUnderHandM, hand.z);
+    }
+    const blend = Math.min(TUNING.whiskFollowRatePerS * delta, 1);
+    this.whiskShownAt.lerp(this.whiskTarget, blend);
+    this.whiskShownTurn.slerp(WHISK_UPRIGHT, blend);
+    object.position.copy(this.whiskShownAt);
+    object.quaternion.copy(this.whiskShownTurn);
   }
 
   private updateSeason(): void {

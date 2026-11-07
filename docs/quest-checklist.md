@@ -18,10 +18,12 @@ Things that cannot be confirmed without a physical headset. Each item matches a
 - [ ] **Gesture thresholds** (`src/systems/GestureSystem.ts`, values in
   `src/config/tuning.ts`): every threshold below is tuned on the emulator, whose hands
   do not shake. Each one needs a real hand:
-  - **Crack:** both hands pinch close together near a 6 cm egg, so hand tracking may
-    lose a hand when they overlap. If it does, widen `crackReachM`.
-  - **Whisk:** 3 turns over the bowl. Confirm jitter neither adds false turns nor
-    stops the count, and that tracing a circle in the air feels natural.
+  - **Crack:** one hand holds a 6 cm egg over the bowl and the other pinches beside
+    it, so hand tracking may lose a hand when they overlap. If it does, widen
+    `crackReachM`. Also confirm the right hand reaches the bowl while seated.
+  - **Whisk:** 3 turns. Near the bowl the whisk stands head down and its head stays
+    inside the bowl, even if the hand circles wider. Confirm this assist feels like
+    stirring rather than like the whisk moving on its own.
   - **Season:** each pinch over the bowl counts once. Confirm a shaky pinch is not
     counted twice.
   - **Pour:** the bowl must tilt 55 degrees for 1.2 s. Confirm the wrist can do this

@@ -107,10 +107,21 @@ export class SnapSystem extends createSystem({
         grabSystem?.forceRelease(entity);
       }
       entity.setValue(Ingredient, 'placed', false);
+      this.glide.restoreStart(entity);
       this.glide.land(entity);
     }
     for (const target of this.targets.values()) {
       target.outline.material = target.restingMaterial;
+    }
+  }
+
+  /** From now on, a dropped ingredient returns to its outline. */
+  keepPlacedAtOutlines(): void {
+    for (const entity of this.queries.ingredients.entities) {
+      const target = this.targetFor(entity);
+      if (target != null && entity.getValue(Ingredient, 'placed')) {
+        this.glide.setHome(entity, target.position, target.quaternion);
+      }
     }
   }
 

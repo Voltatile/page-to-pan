@@ -349,9 +349,9 @@
       },
       "transform": {
         "position": [
-          -0.31,
-          0.91,
-          -0.36
+          -0.27,
+          0.9225,
+          -0.32
         ]
       },
       "components": {
@@ -359,7 +359,29 @@
           "toolId": "bowl"
         },
         "OneHandGrabbable": {}
-      }
+      },
+      "children": [
+        {
+          "id": "tool-bowl-contact",
+          "name": "Contact Shadow",
+          "transform": {
+            "position": [
+              0,
+              -0.042,
+              0
+            ]
+          },
+          "components": {
+            "ContactShadow": {
+              "size": [
+                0.17,
+                0.17
+              ],
+              "height": 0.0005
+            }
+          }
+        }
+      ]
     },
     {
       "id": "tool-whisk",

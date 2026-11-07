@@ -9,6 +9,7 @@ interface HomePose {
 /** Remembers where objects belong and glides them back after a release. */
 export class HomeGlide {
   private readonly homes = new Map<Entity, HomePose>();
+  private readonly starts = new Map<Entity, HomePose>();
   private readonly returning = new Set<Entity>();
 
   constructor(private readonly onLand?: (entity: Entity) => void) {}
@@ -16,11 +17,21 @@ export class HomeGlide {
   /** Records the current pose as home, once per entity. */
   remember(entity: Entity): void {
     const object = entity.object3D;
-    if (object != null && !this.homes.has(entity)) {
-      this.homes.set(entity, {
+    if (object != null && !this.starts.has(entity)) {
+      const pose = {
         position: object.position.clone(),
         quaternion: object.quaternion.clone(),
-      });
+      };
+      this.starts.set(entity, pose);
+      this.homes.set(entity, pose);
+    }
+  }
+
+  /** Makes the pose from `remember` the home again. */
+  restoreStart(entity: Entity): void {
+    const start = this.starts.get(entity);
+    if (start != null) {
+      this.homes.set(entity, start);
     }
   }
 

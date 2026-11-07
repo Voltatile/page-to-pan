@@ -66,26 +66,29 @@ export const OMELETTE: Recipe = {
       tools: [],
       grabbableTools: [],
       ingredients: ALL_INGREDIENTS,
+      grabbableIngredients: ALL_INGREDIENTS,
     },
     {
       id: 'crack',
       title: 'Crack the egg',
-      instruction: 'Hold the egg with both hands and pull apart.',
+      instruction: 'Hold the egg over the bowl with both hands and pull apart.',
       tip: 'A firm, clean crack keeps bits of shell out of the bowl.',
       completion: 'crack',
       tools: ['bowl', 'stove'],
       grabbableTools: [],
       ingredients: ALL_INGREDIENTS,
+      grabbableIngredients: ['egg'],
     },
     {
       id: 'whisk',
       title: 'Whisk',
-      instruction: 'Pinch the whisk and stir circles over the bowl.',
+      instruction: 'Pinch the whisk and stir circles in the bowl.',
       tip: 'Whisking adds air, which makes the omelette light and fluffy.',
       completion: 'whisk',
       tools: ['bowl', 'whisk', 'stove'],
       grabbableTools: ['whisk'],
       ingredients: AFTER_CRACK,
+      grabbableIngredients: [],
     },
     {
       id: 'season',
@@ -96,6 +99,7 @@ export const OMELETTE: Recipe = {
       tools: ['bowl', 'stove'],
       grabbableTools: [],
       ingredients: AFTER_CRACK,
+      grabbableIngredients: [],
     },
     {
       id: 'pour',
@@ -106,6 +110,7 @@ export const OMELETTE: Recipe = {
       tools: ['bowl', 'pan', 'stove'],
       grabbableTools: ['bowl', 'pan'],
       ingredients: [],
+      grabbableIngredients: [],
     },
     {
       id: 'cook',
@@ -116,6 +121,7 @@ export const OMELETTE: Recipe = {
       tools: ['pan', 'stove'],
       grabbableTools: ['pan'],
       ingredients: [],
+      grabbableIngredients: [],
     },
     {
       id: 'flip',
@@ -126,6 +132,7 @@ export const OMELETTE: Recipe = {
       tools: ['pan', 'stove', 'plate'],
       grabbableTools: ['pan'],
       ingredients: [],
+      grabbableIngredients: [],
     },
   ],
 };

@@ -88,6 +88,7 @@ function foodDisc(name: string, radius: number, material: MeshStandardMaterial) 
 }
 
 export function createBowl(): Group {
+  const WALL = 0.004;
   const { rimRadius, baseRadius, height } = COOKWARE.bowl;
   const half = height / 2;
   const shell = new Mesh(
@@ -96,6 +97,10 @@ export function createBowl(): Group {
       [baseRadius, -half],
       [rimRadius * 0.88, half * 0.2],
       [rimRadius, half],
+      [rimRadius - WALL, half],
+      [rimRadius * 0.88 - WALL, half * 0.2],
+      [baseRadius - WALL, -half + WALL],
+      [0, -half + WALL],
     ]),
     steelMaterial,
   );

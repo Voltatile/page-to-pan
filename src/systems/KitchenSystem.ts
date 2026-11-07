@@ -13,6 +13,7 @@ import { TUNING } from '../config/tuning.js';
 import { Ingredient, KitchenTool } from '../game-components.js';
 import { HomeGlide } from '../util/home-glide.js';
 import { isWithinSnapZone } from '../util/snap.js';
+import { SnapSystem } from './SnapSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const TOOL_IDS: readonly ToolId[] = ['bowl', 'whisk', 'pan', 'stove', 'plate'];
@@ -26,7 +27,6 @@ export class KitchenSystem extends createSystem({
   private readonly glide = new HomeGlide((entity) => this.onLanded(entity));
   private readonly stoveSeat = new Vector3();
   private readonly identity = new Quaternion();
-  private readonly panStart = new Vector3();
   private readonly tempPosition = new Vector3();
   private steps!: StepSystem;
   private grabSystem: GrabSystem | undefined;
@@ -52,7 +52,6 @@ export class KitchenSystem extends createSystem({
       this.tools.set(toolId, entity);
       this.glide.remember(entity);
     }
-    this.requireTool('pan').object3D?.getWorldPosition(this.panStart);
     const stove = this.requireTool('stove').object3D;
     stove?.getWorldPosition(this.stoveSeat);
     this.stoveSeat.y = PAN_ON_STOVE_Y;
@@ -118,10 +117,15 @@ export class KitchenSystem extends createSystem({
       this.setGrabbable(entity, step?.grabbableTools.includes(toolId) ?? false);
       entity.setValue(Visibility, 'isVisible', isShown);
     }
-    const isPreparing = step == null || step.completion === 'place-ingredients';
+    if (step != null && step.completion !== 'place-ingredients') {
+      this.world.getSystem(SnapSystem)?.keepPlacedAtOutlines();
+    }
     for (const entity of this.queries.ingredients.entities) {
       const id = entity.getValue(Ingredient, 'ingredientId') ?? '';
-      this.setGrabbable(entity, isPreparing);
+      this.setGrabbable(
+        entity,
+        step == null || step.grabbableIngredients.includes(id),
+      );
       entity.setValue(
         Visibility,
         'isVisible',
@@ -134,14 +138,10 @@ export class KitchenSystem extends createSystem({
     this.panHasSeat = false;
     this.isPanOnStove = false;
     this.setToolFlame(false);
-    const pan = this.requireTool('pan');
-    for (const [toolId, entity] of this.tools) {
-      if (toolId !== 'pan') {
-        this.glide.land(entity);
-      }
+    for (const entity of this.tools.values()) {
+      this.glide.restoreStart(entity);
+      this.glide.land(entity);
     }
-    this.glide.setHome(pan, this.panStart, this.identity);
-    this.glide.land(pan);
   }
 
   private lockEverything(): void {
@@ -162,6 +162,9 @@ export class KitchenSystem extends createSystem({
 
   private onGrab(entity: Entity): void {
     this.glide.stop(entity);
+    if (entity === this.tools.get('bowl')) {
+      this.setBowlShadowVisible(false);
+    }
     if (entity === this.tools.get('pan')) {
       this.isPanOnStove = false;
       this.setToolFlame(false);
@@ -177,6 +180,9 @@ export class KitchenSystem extends createSystem({
   }
 
   private onLanded(entity: Entity): void {
+    if (entity === this.tools.get('bowl')) {
+      this.setBowlShadowVisible(true);
+    }
     if (entity === this.tools.get('pan') && this.panHasSeat) {
       this.isPanOnStove = this.steps.state.phase === 'cooking';
       this.setToolFlame(this.isPanOnStove);
@@ -203,6 +209,13 @@ export class KitchenSystem extends createSystem({
     this.panHasSeat = true;
     this.glide.setHome(pan, this.stoveSeat, this.identity);
     this.glide.land(pan);
+  }
+
+  /** A contact shadow only makes sense while the bowl rests on the table. */
+  private setBowlShadowVisible(isVisible: boolean): void {
+    this.world
+      .requireSceneEntity('tool-bowl-contact')
+      .setValue(Visibility, 'isVisible', isVisible);
   }
 
   private setToolFlame(isLit: boolean): void {

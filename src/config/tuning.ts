@@ -19,9 +19,17 @@ export const TUNING = {
   /** Smoothing weight of each new sample in gesture detection. */
   gestureSmoothing: 0.35,
   /** Both hands must start this close to the egg to crack it. */
-  crackReachM: 0.14,
+  crackReachM: 0.16,
   /** How far the hands must pull apart to crack the egg. */
   crackPullM: 0.08,
+  /** The egg must be held this close over the bowl center to crack. */
+  crackZoneRadiusM: 0.1,
+  /** Inside the zone the whisk head stays within this radius of the bowl center. */
+  whiskHeadRadiusM: 0.035,
+  /** How fast the held whisk settles into its pose, as a fraction per second. */
+  whiskFollowRatePerS: 18,
+  /** Outside the bowl, the whisk center hangs this far under the holding hand. */
+  whiskUnderHandM: 0.08,
   /** The whisk counts anywhere inside this horizontal radius of the bowl. */
   bowlZoneRadiusM: 0.13,
   /** The whisk and a salting hand count up to this far above the bowl. */

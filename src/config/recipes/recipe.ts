@@ -42,6 +42,8 @@ export interface RecipeStep {
   grabbableTools: readonly ToolId[];
   /** Ingredients still on the table during this step. */
   ingredients: readonly string[];
+  /** Ingredients the player may pick up during this step. */
+  grabbableIngredients: readonly string[];
 }
 
 export interface Recipe {
