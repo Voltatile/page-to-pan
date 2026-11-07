@@ -3,11 +3,15 @@
 Things that cannot be confirmed without a physical headset. Each item matches a
 `// QUEST-CHECK:` comment in the code, when one applies.
 
-- [ ] **Seated table height** (`src/scene-assets/kitchen.scene-asset.ts`): the table
-  top sits at a fixed 0.88 m, which is 72 cm under the emulator's standing head
-  (about 1.6 m). A seated head on Quest is closer to 1.2 m, so the table would sit
-  too high. Planned fix for days 2-3: measure the head height when the XR session
-  starts and move the station to 72 cm under it.
+- [ ] **Seated calibration** (`src/systems/SeatedCalibrationSystem.ts`): the player rig
+  is lifted once per session so the head sits `tableBelowHeadM` above the table. The
+  emulator confirms this at a 1.2 m head height. Check it on a real seated player, and
+  check that the first tracked pose is already stable.
+- [ ] **Hand ray on the card button**: the button is about 13 x 6 cm at 75 cm, pressed
+  by pointing and pinching. The emulator's aim is exact, so confirm a real shaky hand
+  can hit it without several tries. If not, make the whole card the button.
+- [ ] **Pinch grab**: confirm the thin green onion and small egg are easy to grab, and
+  that the 7 cm snap radius feels forgiving.
 - [ ] **Neck comfort**: with the table 72 cm under the head, the recipe sheet is about
   65 degrees below eye level and only the card's top edge shows at a level gaze.
   Check that this is comfortable for a full session.
