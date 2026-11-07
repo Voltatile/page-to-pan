@@ -1,5 +1,12 @@
 import { createComponent, Types } from '@iwsdk/core';
 
+/** Tag: a hand is close enough to grab this object with a pinch. */
+export const InReach = createComponent(
+  'InReach',
+  {},
+  'A hand is close enough to grab this object',
+);
+
 /** An ingredient the player can carry to its outline on the recipe sheet. */
 export const Ingredient = createComponent(
   'Ingredient',

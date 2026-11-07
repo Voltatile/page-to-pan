@@ -1,5 +1,6 @@
 import { World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
+import { ReachHighlightSystem } from './systems/ReachHighlightSystem.js';
 import { SeatedCalibrationSystem } from './systems/SeatedCalibrationSystem.js';
 import { SnapSystem } from './systems/SnapSystem.js';
 import { StepSystem } from './systems/StepSystem.js';
@@ -13,4 +14,5 @@ World.create(
   world.registerSystem(SnapSystem);
   world.registerSystem(StepSystem);
   world.registerSystem(UISystem);
+  world.registerSystem(ReachHighlightSystem);
 });

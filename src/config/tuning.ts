@@ -13,6 +13,9 @@ export const TUNING = {
   returnRatePerS: 10,
   /** A gliding ingredient lands once it is this close to home. */
   returnSettleM: 0.002,
+  /** Glow on an object a pinch would catch right now. */
+  reachGlowColor: '#FFB347',
+  reachGlowIntensity: 0.45,
   /** Table surface height above the virtual floor. */
   tableTopHeightM: 0.88,
   /** Seated calibration keeps the table this far under the player's head. */
