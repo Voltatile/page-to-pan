@@ -9,9 +9,7 @@ import { TUNING } from '../config/tuning.js';
 import {
   advanceCook,
   COOK_ZONE,
-  COOK_ZONE_LABEL,
-  type CookZone,
-  cookZone,
+  cookLabel,
 } from '../game/cooking.js';
 import { KitchenSystem } from './KitchenSystem.js';
 import { StepSystem } from './StepSystem.js';
@@ -43,10 +41,18 @@ export class CookingSystem extends createSystem({}) {
   private butterMeltS = 0;
   private progress = 0;
   private hasEggInPan = false;
-  private zone: CookZone = 'raw';
+  private label = '';
+  private isFolded = false;
+  private tossT = 1;
+  private panEggRestY = 0;
 
   get cookProgress(): number {
     return this.progress;
+  }
+
+  /** True while the omelette is in the air. */
+  get isTossing(): boolean {
+    return this.tossT < 1;
   }
 
   init(): void {
@@ -59,6 +65,7 @@ export class CookingSystem extends createSystem({}) {
     this.kitchen = kitchen;
     this.bowlEgg = this.ownedMesh('bowl', 'BowlEgg');
     this.panEgg = this.ownedMesh('pan', 'PanEgg');
+    this.panEggRestY = this.panEgg.position.y;
     this.panButter = this.ownedMesh('pan', 'PanButter');
     this.plateOmelette = this.ownedMesh('plate', 'PlateOmelette');
     this.cleanupFuncs.push(
@@ -76,6 +83,7 @@ export class CookingSystem extends createSystem({}) {
       return;
     }
     this.updateButter(delta);
+    this.updateToss(delta);
     if (!this.hasEggInPan) {
       return;
     }
@@ -83,9 +91,7 @@ export class CookingSystem extends createSystem({}) {
       this.progress = advanceCook(this.progress, delta, TUNING.cookDurationS);
     }
     this.paintDoneness();
-    const zone = cookZone(this.progress);
-    if (zone !== this.zone) {
-      this.zone = zone;
+    if (cookLabel(this.progress, this.isFolded) !== this.label) {
       this.showDoneness();
     }
   }
@@ -124,9 +130,9 @@ export class CookingSystem extends createSystem({}) {
     this.hasEggInPan = true;
   }
 
-  fold(): void {
-    this.panEgg.scale.z = FOLDED_SCALE_Z;
-    this.panEgg.position.z = FOLDED_SHIFT_Z;
+  /** Sends the omelette up out of the pan. It lands folded. */
+  toss(): void {
+    this.tossT = 0;
   }
 
   /** Slides the finished omelette onto the plate. */
@@ -141,7 +147,28 @@ export class CookingSystem extends createSystem({}) {
 
   /** Writes the doneness after the step title. */
   showDoneness(): void {
-    this.steps.setProgress(COOK_ZONE_LABEL[cookZone(this.progress)]);
+    const label = cookLabel(this.progress, this.isFolded);
+    this.label = label;
+    this.steps.setProgress(label);
+  }
+
+  /** Rises and falls on an arc while turning over once. */
+  private updateToss(delta: number): void {
+    if (this.tossT >= 1) {
+      return;
+    }
+    this.tossT = Math.min(this.tossT + delta / TUNING.tossDurationS, 1);
+    const t = this.tossT;
+    this.panEgg.position.y =
+      this.panEggRestY + 4 * TUNING.tossHeightM * t * (1 - t);
+    this.panEgg.rotation.x = Math.PI * 2 * t;
+    if (t >= 1) {
+      this.panEgg.position.y = this.panEggRestY;
+      this.panEgg.rotation.x = 0;
+      this.panEgg.scale.z = FOLDED_SCALE_Z;
+      this.panEgg.position.z = FOLDED_SHIFT_Z;
+      this.isFolded = true;
+    }
   }
 
   private updateButter(delta: number): void {
@@ -182,14 +209,18 @@ export class CookingSystem extends createSystem({}) {
   private reset(): void {
     this.progress = 0;
     this.hasEggInPan = false;
-    this.zone = 'raw';
+    this.label = '';
+    this.isFolded = false;
+    this.tossT = 1;
     this.butterMeltS = 0;
     this.bowlEgg.visible = false;
     this.panEgg.visible = false;
     this.panButter.visible = false;
     this.plateOmelette.visible = false;
     this.panEgg.scale.setScalar(1);
+    this.panEgg.position.y = this.panEggRestY;
     this.panEgg.position.z = 0;
+    this.panEgg.rotation.x = 0;
     this.material(this.panEgg).color.copy(RAW_COLOR);
   }
 

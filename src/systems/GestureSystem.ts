@@ -13,6 +13,7 @@ import { COOKWARE, WHISK_TIP_IN_BOWL_Y } from '../config/cookware.js';
 import { OMELETTE_INGREDIENTS } from '../config/recipes/omelette.js';
 import type { StepCompletion } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
+import { COOK_ZONE, FLIP_READY_PROGRESS } from '../game/cooking.js';
 import {
   CrackDetector,
   FlickDetector,
@@ -72,7 +73,7 @@ export class GestureSystem extends createSystem({}) {
   private activeStep: StepCompletion | null = null;
   private whiskTurnsShown = 0;
   private isButterOverPan = false;
-  private hasFlipped = false;
+  private hasTossed = false;
   private isWhiskInHand = false;
   private isShakerInHand = false;
 
@@ -123,10 +124,16 @@ export class GestureSystem extends createSystem({}) {
         this.updatePour(delta);
         break;
       case 'cook':
-        this.updateCook();
+        this.updatePanLift(FLIP_READY_PROGRESS);
         break;
       case 'flip':
         this.updateFlip(delta);
+        break;
+      case 'finish':
+        this.updatePanLift(COOK_ZONE.rawBelow);
+        break;
+      case 'plate':
+        this.updatePlate();
         break;
       default:
         break;
@@ -149,12 +156,11 @@ export class GestureSystem extends createSystem({}) {
       this.isButterOverPan = false;
     } else if (step === 'pour') {
       this.pour.reset();
-    } else if (step === 'cook') {
+    } else if (step === 'cook' || step === 'finish') {
       this.cooking.showDoneness();
     } else if (step === 'flip') {
       this.flick.reset();
-      this.hasFlipped = false;
-      this.cooking.showDoneness();
+      this.hasTossed = false;
     }
   }
 
@@ -418,10 +424,13 @@ export class GestureSystem extends createSystem({}) {
     }
   }
 
-  /** The player decides when it is done by lifting the pan off the heat. */
-  private updateCook(): void {
+  /** The player decides when to take the pan off the heat, once it is ready. */
+  private updatePanLift(minProgress: number): void {
     const pan = this.kitchen.requireTool('pan');
-    if (!pan.hasComponent(Grabbed)) {
+    if (
+      !pan.hasComponent(Grabbed) ||
+      this.cooking.cookProgress < minProgress
+    ) {
       return;
     }
     const seat = this.kitchen.copyStoveSeat(this.positionB);
@@ -431,7 +440,14 @@ export class GestureSystem extends createSystem({}) {
     }
   }
 
+  /** A flick starts the toss. The step ends when the omelette has landed. */
   private updateFlip(delta: number): void {
+    if (this.hasTossed) {
+      if (!this.cooking.isTossing) {
+        this.steps.completeStep();
+      }
+      return;
+    }
     const pan = this.kitchen.requireTool('pan');
     const object = pan.object3D;
     if (object == null) {
@@ -441,30 +457,32 @@ export class GestureSystem extends createSystem({}) {
       this.flick.reset();
       return;
     }
-    if (!this.hasFlipped) {
-      object.getWorldQuaternion(this.orientation);
-      const { x, y, z, w } = this.orientation;
-      const speed = this.flick.update(
-        x,
-        y,
-        z,
-        w,
-        delta,
-        TUNING.gestureSmoothing,
-      );
-      if (speed >= TUNING.flickMinRadPerS) {
-        this.hasFlipped = true;
-        this.cooking.fold();
-        this.steps.setProgress('Flipped');
-      }
-      return;
+    object.getWorldQuaternion(this.orientation);
+    const { x, y, z, w } = this.orientation;
+    const speed = this.flick.update(
+      x,
+      y,
+      z,
+      w,
+      delta,
+      TUNING.gestureSmoothing,
+    );
+    if (speed >= TUNING.flickMinRadPerS) {
+      this.hasTossed = true;
+      this.cooking.toss();
     }
+  }
+
+  private updatePlate(): void {
+    const pan = this.kitchen.requireTool('pan');
     const plateAt = this.kitchen
       .requireTool('plate')
       .object3D?.getWorldPosition(this.positionB);
-    const panAt = object.getWorldPosition(this.positionA);
+    const panAt = pan.object3D?.getWorldPosition(this.positionA);
     if (
       plateAt != null &&
+      panAt != null &&
+      pan.hasComponent(Grabbed) &&
       isWithinSnapZone(
         panAt.x - plateAt.x,
         panAt.y - plateAt.y,

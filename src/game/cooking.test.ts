@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advanceCook, cookZone } from './cooking.js';
+import { advanceCook, cookLabel, cookZone } from './cooking.js';
 
 describe('cookZone', () => {
   it.each([
@@ -13,6 +13,20 @@ describe('cookZone', () => {
     [1.01, 'burnt'],
   ])('reads %f as %s', (progress, zone) => {
     expect(cookZone(progress)).toBe(zone);
+  });
+});
+
+describe('cookLabel', () => {
+  it('asks for the flip on the first side', () => {
+    expect(cookLabel(0.2, false)).toBe('Raw');
+    expect(cookLabel(0.35, false)).toBe('Ready');
+    expect(cookLabel(0.7, false)).toBe('Ready');
+    expect(cookLabel(0.9, false)).toBe('Burning');
+  });
+
+  it('reports doneness once flipped', () => {
+    expect(cookLabel(0.4, true)).toBe('Raw');
+    expect(cookLabel(0.7, true)).toBe('Golden');
   });
 });
 

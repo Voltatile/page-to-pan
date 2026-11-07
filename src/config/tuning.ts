@@ -62,8 +62,12 @@ export const TUNING = {
   pourHoldS: 1.2,
   /** Seconds on the heat for cookProgress to go from 0 to 1. */
   cookDurationS: 25,
-  /** Lifting the pan this far off the stove ends the cook step. */
+  /** Lifting the pan this far off the stove counts as taking it off the heat. */
   panLiftM: 0.05,
+  /** How long the tossed omelette stays in the air. */
+  tossDurationS: 1.4,
+  /** How high the tossed omelette rises above the pan. */
+  tossHeightM: 0.2,
   /** Smoothed pan turn speed that counts as a flick. */
   flickMinRadPerS: 6,
   /** The pan serves the omelette inside this radius of the plate. */

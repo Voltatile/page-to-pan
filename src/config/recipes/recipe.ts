@@ -26,7 +26,9 @@ export type StepCompletion =
   | 'heat'
   | 'pour'
   | 'cook'
-  | 'flip';
+  | 'flip'
+  | 'finish'
+  | 'plate';
 
 export type ToolId = 'bowl' | 'whisk' | 'pan' | 'stove' | 'plate';
 

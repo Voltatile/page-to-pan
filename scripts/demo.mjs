@@ -27,6 +27,7 @@ const BOWL = { x: -0.27, z: -0.32 };
 const STOVE = { x: 0.35, z: -0.35 };
 const PLATE = { x: 0, z: -0.31 };
 const LEVEL = { pitch: 0, yaw: 0, roll: 0 };
+const PAN_LIFTED = { x: 0.3, y: 1.04, z: -0.2 };
 
 const env = { ...process.env };
 const startedAt = Date.now();
@@ -366,52 +367,72 @@ async function pourEggs() {
   ]);
 }
 
-async function cookOmelette() {
-  await lookAt({ x: STOVE.x, y: 0.92, z: STOVE.z });
-  if (!(await waitForTitle(/Golden/, 25000))) {
-    throw new Error('The omelette never turned golden');
-  }
-  await expectTitle(/^Cook: Golden/);
-  await sleep(GOLDEN_EXTRA_MS);
+async function grabPanOffStove() {
   await hand('hand-right', [
     {
       anchor: 'grasp',
-      position: { x: STOVE.x, y: 0.945, z: STOVE.z + 0.175 },
+      position: { x: STOVE.x, y: 0.948, z: STOVE.z + 0.175 },
       orientation: LEVEL,
       pinch: { value: 1, at: 'arrival' },
     },
-    { anchor: 'grip', position: { x: 0.3, y: 1.04, z: -0.2 } },
+    { anchor: 'grip', position: PAN_LIFTED, orientation: LEVEL },
   ]);
-  await expectTitle(/^Flip and plate: Golden/);
 }
 
-async function flipAndPlate() {
-  const position = { x: 0.3, y: 1.04, z: -0.2 };
-  await hand('hand-right', [
-    { anchor: 'grip', position, orientation: LEVEL, duration: 0.5 },
-  ]);
+async function cookFirstSide() {
+  await lookAt({ x: STOVE.x, y: 0.92, z: STOVE.z });
+  if (!(await waitForTitle(/Cook: Ready/, 20000))) {
+    throw new Error('The omelette never got ready to flip');
+  }
+  await expectTitle(/^Cook: Ready/);
+  await sleep(1000);
+  await grabPanOffStove();
+  await expectTitle(/^Flip/);
+}
+
+async function flipOmelette() {
+  const position = PAN_LIFTED;
+  await sleep(500);
   for (let attempt = 0; attempt < 4; attempt += 1) {
     await hand('hand-right', [
       {
         anchor: 'grip',
         position,
         orientation: { pitch: 60, yaw: 0, roll: 0 },
-        duration: 0.1,
+        duration: 0.12,
       },
       {
         anchor: 'grip',
         position,
         orientation: { pitch: -30, yaw: 0, roll: 0 },
-        duration: 0.1,
+        duration: 0.12,
       },
-      { anchor: 'grip', position, orientation: LEVEL, duration: 0.25 },
+      { anchor: 'grip', position, orientation: LEVEL, duration: 0.3 },
     ]);
-    if (await waitForTitle(/Flipped/, 500)) {
+    if (await waitForTitle(/^Finish/, 2500)) {
       break;
     }
   }
-  await expectTitle(/^Flip and plate: Flipped/);
-  await sleep(700);
+  await expectTitle(/^Finish/);
+}
+
+async function finishOmelette() {
+  await hand('hand-right', [
+    {
+      anchor: 'grasp',
+      position: { x: STOVE.x, y: 0.97, z: STOVE.z + 0.175 },
+      orientation: LEVEL,
+    },
+    { pinch: 0, duration: 0.25 },
+  ]);
+  if (!(await waitForTitle(/Golden/, 25000))) {
+    throw new Error('The omelette never turned golden');
+  }
+  await expectTitle(/^Finish: Golden/);
+  await sleep(GOLDEN_EXTRA_MS);
+  await grabPanOffStove();
+  await expectTitle(/^Serve/);
+  await sleep(500);
   await hand('hand-right', [
     { anchor: 'grip', position: { x: PLATE.x + 0.02, y: 1.05, z: PLATE.z + 0.175 } },
   ]);
@@ -491,8 +512,9 @@ async function cook() {
   await sleep(800);
   await heatPan();
   await pourEggs();
-  await cookOmelette();
-  await flipAndPlate();
+  await cookFirstSide();
+  await flipOmelette();
+  await finishOmelette();
 
   await lookAt({ x: PLATE.x, y: 0.9, z: PLATE.z }, 1.2);
   await sleep(4000);

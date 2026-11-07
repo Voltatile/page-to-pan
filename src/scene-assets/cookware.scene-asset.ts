@@ -67,9 +67,11 @@ const panButterMaterial = new MeshStandardMaterial({
   color: '#F5D76E',
   roughness: 0.4,
 });
+/** Double-sided: the omelette shows its underside as it turns in the air. */
 const omeletteMaterial = new MeshStandardMaterial({
   color: '#F6E27A',
   roughness: 0.6,
+  side: DoubleSide,
 });
 const plateOmeletteMaterial = new MeshStandardMaterial({
   color: '#E0A93B',

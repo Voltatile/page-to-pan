@@ -31,8 +31,9 @@ Things that cannot be confirmed without a physical headset. Each item matches a
     finds this without help, and that the drop feels forgiving.
   - **Pour:** the bowl must tilt 55 degrees for 1.2 s. Confirm the wrist can do this
     while seated, without losing the pinch.
-  - **Flip:** the pan must turn at 6 rad/s. Confirm a real flick reaches that, and
-    that carrying the pan to the plate does not trigger it by accident.
+  - **Flip:** the pan must turn at 6 rad/s, then the omelette stays in the air for
+    1.4 s. Confirm a real flick reaches that speed, that lifting the pan does not
+    trigger it by accident, and that the toss is easy to follow in a headset.
 - [ ] **Table layout**: the bowl and stove sit about 58 cm from a seated chest, at the
   edge of the 60 cm rule. Confirm they are reachable without leaning, and that the pan
   handle is easy to catch.
