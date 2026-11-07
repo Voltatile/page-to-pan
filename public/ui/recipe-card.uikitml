@@ -2,6 +2,8 @@
   Authored in pixel-like units and placed at scale 0.1, so 1 unit is 1 mm:
   this 440 x 165 card is 44 x 16.5 cm. Viewed from about 0.85 m, the 26-unit
   body text meets the 24-32 px readability rule.
+  The button is about 13 x 6 cm, sized for shaky hand rays.
+  Note: comments inside the style block break the UIKitML parser.
 -->
 <style>
   .card {
@@ -32,6 +34,16 @@
     color: #fafaf7;
   }
 
+  .card-button {
+    width: 130px;
+    height: 60px;
+    justify-content: center;
+  }
+
+  .card-button-label {
+    font-size: 26px;
+  }
+
   .instruction {
     color: #3a3b40;
     font-size: 26px;
@@ -45,8 +57,8 @@
 <Panel class="card">
   <div class="header">
     <div id="recipe-title" class="title">Omelette</div>
-    <Button id="enter-vr-button">
-      <ButtonLabel>Enter VR</ButtonLabel>
+    <Button id="card-button" class="card-button">
+      <ButtonLabel id="card-button-label" class="card-button-label">Enter VR</ButtonLabel>
     </Button>
   </div>
   <div id="recipe-instruction" class="instruction">Place each ingredient on its outline.</div>

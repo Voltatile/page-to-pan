@@ -7,6 +7,7 @@ const egg: RecipeIngredient = {
   lengthM: 0.06,
   widthM: 0.045,
   sheetPosition: [-0.1, -0.085],
+  restHeightM: 0.0225,
 };
 
 const salt: RecipeIngredient = {
@@ -16,6 +17,8 @@ const salt: RecipeIngredient = {
   lengthM: 0.1,
   widthM: 0.05,
   sheetPosition: [0.1, -0.085],
+  restHeightM: 0.025,
+  snapRollDeg: -90,
 };
 
 const butter: RecipeIngredient = {
@@ -25,6 +28,7 @@ const butter: RecipeIngredient = {
   lengthM: 0.09,
   widthM: 0.04,
   sheetPosition: [-0.1, 0.085],
+  restHeightM: 0.015,
 };
 
 const greenOnion: RecipeIngredient = {
@@ -34,6 +38,7 @@ const greenOnion: RecipeIngredient = {
   lengthM: 0.16,
   widthM: 0.035,
   sheetPosition: [0.1, 0.085],
+  restHeightM: 0.007,
   optional: true,
 };
 
@@ -44,9 +49,61 @@ const greenOnion: RecipeIngredient = {
 export const OMELETTE: Recipe = {
   id: 'omelette',
   title: 'Omelette',
-  instruction: 'Place each ingredient on its outline.',
+  intro: 'Point at Start and pinch to begin.',
+  outro: 'Nicely done! Press Again to cook once more.',
   sheetSizeM: [0.4, 0.32],
   ingredients: [egg, salt, butter, greenOnion],
+  steps: [
+    {
+      id: 'prepare',
+      title: 'Ingredients',
+      instruction: 'Place each ingredient on its outline.',
+      tip: 'Having everything within reach keeps you calm once the pan is hot.',
+      completion: 'place-ingredients',
+    },
+    {
+      id: 'crack',
+      title: 'Crack the egg',
+      instruction: 'Hold the egg with both hands and pull apart.',
+      tip: 'A firm, clean crack keeps bits of shell out of the bowl.',
+      completion: 'manual',
+    },
+    {
+      id: 'whisk',
+      title: 'Whisk',
+      instruction: 'Stir the whisk in circles inside the bowl.',
+      tip: 'Whisking adds air, which makes the omelette light and fluffy.',
+      completion: 'manual',
+    },
+    {
+      id: 'season',
+      title: 'Season',
+      instruction: 'Pinch salt over the bowl twice.',
+      tip: 'Salting the eggs early seasons them evenly all the way through.',
+      completion: 'manual',
+    },
+    {
+      id: 'pour',
+      title: 'Heat and pour',
+      instruction: 'Put the pan on the stove, then tilt the bowl.',
+      tip: 'A pan that is already hot sets the eggs before they can stick.',
+      completion: 'manual',
+    },
+    {
+      id: 'cook',
+      title: 'Cook',
+      instruction: 'Watch the color change until it looks golden.',
+      tip: 'Eggs keep cooking in the hot pan, so take them off a little early.',
+      completion: 'manual',
+    },
+    {
+      id: 'flip',
+      title: 'Flip and plate',
+      instruction: 'Flick the pan, then move the omelette to the plate.',
+      tip: 'A quick flick of the wrist folds the omelette in one clean move.',
+      completion: 'manual',
+    },
+  ],
 };
 
 export const OMELETTE_INGREDIENTS = { egg, salt, butter, greenOnion } as const;

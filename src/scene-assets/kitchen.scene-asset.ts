@@ -9,13 +9,9 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
 } from '@iwsdk/core';
+import { TUNING } from '../config/tuning.js';
 
-/**
- * Table surface height above the floor, in meters.
- * QUEST-CHECK: matches the emulator's standing head, not a seated one. See
- * docs/quest-checklist.md.
- */
-export const TABLE_TOP_HEIGHT_M = 0.88;
+const TABLE_TOP_HEIGHT_M = TUNING.tableTopHeightM;
 
 const woodMaterial = createSceneMaterial({
   id: 'kitchen-wood',

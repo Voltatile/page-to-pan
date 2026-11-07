@@ -3,9 +3,24 @@
   "units": "meters",
   "components": {
     "com.iwsdk.components.IBLGradient": {
-      "sky": [1, 0.97, 0.92, 1],
-      "equator": [0.9, 0.84, 0.76, 1],
-      "ground": [0.55, 0.46, 0.38, 1],
+      "sky": [
+        1,
+        0.97,
+        0.92,
+        1
+      ],
+      "equator": [
+        0.9,
+        0.84,
+        0.76,
+        1
+      ],
+      "ground": [
+        0.55,
+        0.46,
+        0.38,
+        1
+      ],
       "intensity": 0.75
     }
   },
@@ -21,8 +36,16 @@
         "id": "hero",
         "role": "hero",
         "projection": "perspective",
-        "position": [0, 1.6, 0],
-        "target": [0, 0.92, -0.5],
+        "position": [
+          0,
+          1.6,
+          0
+        ],
+        "target": [
+          0,
+          0.92,
+          -0.5
+        ],
         "fov": 70
       }
     ]
@@ -32,31 +55,69 @@
       "id": "kitchen-room",
       "name": "Kitchen Room",
       "framingRole": "support",
-      "content": { "type": "asset", "asset": "kitchen-room" }
+      "content": {
+        "type": "asset",
+        "asset": "kitchen-room"
+      }
     },
     {
       "id": "kitchen-table",
       "name": "Kitchen Table",
       "framingRole": "support",
-      "content": { "type": "asset", "asset": "kitchen-table" },
-      "transform": { "position": [0, 0, -0.5] },
+      "content": {
+        "type": "asset",
+        "asset": "kitchen-table"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          -0.5
+        ]
+      },
       "components": {
-        "ContactShadow": { "size": [1.45, 0.95], "height": 0.003 }
+        "ContactShadow": {
+          "size": [
+            1.45,
+            0.95
+          ],
+          "height": 0.003
+        }
       }
     },
     {
       "id": "recipe-sheet",
       "name": "Recipe Sheet",
-      "content": { "type": "asset", "asset": "recipe-sheet-omelette" },
-      "transform": { "position": [0, 0.88, -0.33] },
+      "content": {
+        "type": "asset",
+        "asset": "recipe-sheet-omelette"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.88,
+          -0.33
+        ]
+      },
       "children": [
         {
           "id": "recipe-labels",
           "name": "Recipe Labels",
-          "content": { "type": "asset", "asset": "recipe-labels" },
+          "content": {
+            "type": "asset",
+            "asset": "recipe-labels"
+          },
           "transform": {
-            "position": [0, 0.0045, 0],
-            "rotationDeg": [-90, 0, 0],
+            "position": [
+              0,
+              0.0045,
+              0
+            ],
+            "rotationDeg": [
+              -90,
+              0,
+              0
+            ],
             "scale": 0.1
           }
         }
@@ -65,96 +126,243 @@
     {
       "id": "recipe-stand",
       "name": "Recipe Stand",
-      "content": { "type": "asset", "asset": "recipe-stand" },
-      "transform": { "position": [0, 0.88, -0.6] },
+      "content": {
+        "type": "asset",
+        "asset": "recipe-stand"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.88,
+          -0.6
+        ]
+      },
       "children": [
         {
           "id": "recipe-card",
           "name": "Recipe Card",
-          "content": { "type": "asset", "asset": "recipe-card" },
+          "content": {
+            "type": "asset",
+            "asset": "recipe-card"
+          },
           "transform": {
-            "position": [0, 0.0796, -0.069],
-            "rotationDeg": [-45, 0, 0],
+            "position": [
+              0,
+              0.0796,
+              -0.069
+            ],
+            "rotationDeg": [
+              -45,
+              0,
+              0
+            ],
             "scale": 0.1
           },
-          "components": { "RayInteractable": {} }
+          "components": {
+            "RayInteractable": {}
+          }
         }
       ]
     },
     {
       "id": "ingredient-egg",
       "name": "Egg",
-      "content": { "type": "asset", "asset": "ingredient-egg" },
-      "transform": { "position": [-0.29, 0.9025, -0.33] },
+      "content": {
+        "type": "asset",
+        "asset": "ingredient-egg"
+      },
+      "transform": {
+        "position": [
+          -0.29,
+          0.9025,
+          -0.33
+        ]
+      },
       "children": [
         {
           "id": "ingredient-egg-contact",
           "name": "Contact Shadow",
-          "transform": { "position": [0, -0.022, 0] },
+          "transform": {
+            "position": [
+              0,
+              -0.022,
+              0
+            ]
+          },
           "components": {
-            "ContactShadow": { "size": [0.1, 0.08], "height": 0.0005 }
+            "ContactShadow": {
+              "size": [
+                0.1,
+                0.08
+              ],
+              "height": 0.0005
+            }
           }
         }
-      ]
+      ],
+      "components": {
+        "Ingredient": {
+          "ingredientId": "egg",
+          "placed": false
+        },
+        "OneHandGrabbable": {}
+      }
     },
     {
       "id": "ingredient-butter",
       "name": "Butter",
-      "content": { "type": "asset", "asset": "ingredient-butter" },
-      "transform": { "position": [-0.29, 0.895, -0.2] },
+      "content": {
+        "type": "asset",
+        "asset": "ingredient-butter"
+      },
+      "transform": {
+        "position": [
+          -0.29,
+          0.895,
+          -0.2
+        ]
+      },
       "children": [
         {
           "id": "ingredient-butter-contact",
           "name": "Contact Shadow",
-          "transform": { "position": [0, -0.0145, 0] },
+          "transform": {
+            "position": [
+              0,
+              -0.0145,
+              0
+            ]
+          },
           "components": {
-            "ContactShadow": { "size": [0.13, 0.08], "height": 0.0005 }
+            "ContactShadow": {
+              "size": [
+                0.13,
+                0.08
+              ],
+              "height": 0.0005
+            }
           }
         }
-      ]
+      ],
+      "components": {
+        "Ingredient": {
+          "ingredientId": "butter",
+          "placed": false
+        },
+        "OneHandGrabbable": {}
+      }
     },
     {
       "id": "ingredient-salt",
       "name": "Salt",
-      "content": { "type": "asset", "asset": "ingredient-salt" },
-      "transform": { "position": [0.29, 0.93, -0.36] },
+      "content": {
+        "type": "asset",
+        "asset": "ingredient-salt"
+      },
+      "transform": {
+        "position": [
+          0.29,
+          0.93,
+          -0.36
+        ]
+      },
       "children": [
         {
           "id": "ingredient-salt-contact",
           "name": "Contact Shadow",
-          "transform": { "position": [0, -0.0495, 0] },
+          "transform": {
+            "position": [
+              0,
+              -0.0495,
+              0
+            ]
+          },
           "components": {
-            "ContactShadow": { "size": [0.09, 0.09], "height": 0.0005 }
+            "ContactShadow": {
+              "size": [
+                0.09,
+                0.09
+              ],
+              "height": 0.0005
+            }
           }
         }
-      ]
+      ],
+      "components": {
+        "Ingredient": {
+          "ingredientId": "salt",
+          "placed": false
+        },
+        "OneHandGrabbable": {}
+      }
     },
     {
       "id": "ingredient-green-onion",
       "name": "Green Onion",
-      "content": { "type": "asset", "asset": "ingredient-green-onion" },
-      "transform": { "position": [0.29, 0.887, -0.21] },
+      "content": {
+        "type": "asset",
+        "asset": "ingredient-green-onion"
+      },
+      "transform": {
+        "position": [
+          0.29,
+          0.887,
+          -0.21
+        ]
+      },
       "children": [
         {
           "id": "ingredient-green-onion-contact",
           "name": "Contact Shadow",
-          "transform": { "position": [0, -0.0065, 0] },
+          "transform": {
+            "position": [
+              0,
+              -0.0065,
+              0
+            ]
+          },
           "components": {
-            "ContactShadow": { "size": [0.2, 0.07], "height": 0.0005 }
+            "ContactShadow": {
+              "size": [
+                0.2,
+                0.07
+              ],
+              "height": 0.0005
+            }
           }
         }
-      ]
+      ],
+      "components": {
+        "Ingredient": {
+          "ingredientId": "green-onion",
+          "placed": false
+        },
+        "OneHandGrabbable": {}
+      }
     },
     {
       "id": "key-light",
       "name": "Key Light",
       "transform": {
-        "position": [-1.2, 2.5, 0.6],
-        "rotationDeg": [-60, -25, 0]
+        "position": [
+          -1.2,
+          2.5,
+          0.6
+        ],
+        "rotationDeg": [
+          -60,
+          -25,
+          0
+        ]
       },
       "components": {
         "DirectionalLight": {
-          "color": [1, 0.95, 0.88, 1],
+          "color": [
+            1,
+            0.95,
+            0.88,
+            1
+          ],
           "intensity": 1.6,
           "castShadow": false
         }
