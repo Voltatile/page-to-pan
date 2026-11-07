@@ -14,7 +14,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "demo": "node scripts/demo.mjs"
   },
   "dependencies": {
     "@iwsdk/core": "1.1.0-rc.2",
