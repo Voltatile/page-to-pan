@@ -17,11 +17,17 @@ export interface RecipeIngredient {
   optional?: boolean;
 }
 
-/**
- * How a step finishes. `manual` is a stand-in for the gesture steps: the card
- * button advances them until gesture detection replaces it.
- */
-export type StepCompletion = 'place-ingredients' | 'manual';
+/** Which detector finishes a step. */
+export type StepCompletion =
+  | 'place-ingredients'
+  | 'crack'
+  | 'whisk'
+  | 'season'
+  | 'pour'
+  | 'cook'
+  | 'flip';
+
+export type ToolId = 'bowl' | 'whisk' | 'pan' | 'stove' | 'plate';
 
 export interface RecipeStep {
   id: string;
@@ -30,6 +36,12 @@ export interface RecipeStep {
   /** Short note on why the step matters, shown on the tips card. */
   tip: string;
   completion: StepCompletion;
+  /** Tools on the table during this step. */
+  tools: readonly ToolId[];
+  /** Tools the player may pick up during this step. */
+  grabbableTools: readonly ToolId[];
+  /** Ingredients still on the table during this step. */
+  ingredients: readonly string[];
 }
 
 export interface Recipe {

@@ -4,6 +4,13 @@ import {
   OMELETTE_INGREDIENTS,
 } from './config/recipes/omelette.js';
 import {
+  createBowl,
+  createPan,
+  createPlate,
+  createStove,
+  createWhisk,
+} from './scene-assets/cookware.scene-asset.js';
+import {
   createButter,
   createEgg,
   createGreenOnion,
@@ -34,6 +41,11 @@ export default defineAssets({
   'ingredient-salt': createSaltShaker(OMELETTE_INGREDIENTS.salt),
   'ingredient-butter': createButter(OMELETTE_INGREDIENTS.butter),
   'ingredient-green-onion': createGreenOnion(OMELETTE_INGREDIENTS.greenOnion),
+  'tool-bowl': createBowl(),
+  'tool-whisk': createWhisk(),
+  'tool-pan': createPan(),
+  'tool-stove': createStove(),
+  'tool-plate': createPlate(),
   'recipe-card': uikitml('recipe-card.uikitml', 'Recipe Card'),
   'recipe-labels': uikitml('recipe-labels.uikitml', 'Recipe Labels'),
 });

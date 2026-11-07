@@ -1,5 +1,6 @@
 import { createSystem, eq } from '@iwsdk/core';
 import { OMELETTE } from '../config/recipes/omelette.js';
+import type { RecipeStep } from '../config/recipes/recipe.js';
 import { Ingredient } from '../game-components.js';
 import {
   completeStep,
@@ -28,10 +29,12 @@ export class StepSystem extends createSystem({
     where: [eq(Ingredient, 'placed', true)],
   },
 }) {
-  private state: GameState = TITLE_STATE;
+  private gameState: GameState = TITLE_STATE;
   private readonly recipe = OMELETTE;
   private readonly placedIds = new Set<string>();
   private readonly listeners = new Set<() => void>();
+  private progress = '';
+  private isActionReady = false;
 
   init(): void {
     const onPlacedChange = () => this.onPlacedChange();
@@ -46,8 +49,16 @@ export class StepSystem extends createSystem({
     return () => this.listeners.delete(listener);
   }
 
+  get state(): GameState {
+    return this.gameState;
+  }
+
+  get step(): RecipeStep | null {
+    return currentStep(this.gameState, this.recipe);
+  }
+
   get view(): StepView {
-    const { state, recipe } = this;
+    const { gameState: state, recipe } = this;
     if (state.phase === 'title') {
       return {
         state,
@@ -64,16 +75,17 @@ export class StepSystem extends createSystem({
         action: 'Again',
       };
     }
-    const step = currentStep(state, recipe);
+    const step = this.step;
     const isPreparing = step?.completion === 'place-ingredients';
+    const isReady = isPreparing
+      ? isPreparationReady(recipe, this.placedIds)
+      : this.isActionReady;
+    const title = step?.title ?? '';
     return {
       state,
-      title: step?.title ?? '',
+      title: this.progress === '' ? title : `${title}: ${this.progress}`,
       instruction: step?.instruction ?? '',
-      action:
-        isPreparing && !isPreparationReady(recipe, this.placedIds)
-          ? null
-          : 'Next',
+      action: isReady ? 'Next' : null,
     };
   }
 
@@ -82,14 +94,35 @@ export class StepSystem extends createSystem({
     if (this.view.action == null) {
       return;
     }
-    if (this.state.phase === 'title') {
-      this.state = startRecipe(this.recipe);
+    if (this.gameState.phase === 'title') {
+      this.gameState = startRecipe(this.recipe);
       this.advanceIfPrepared();
-    } else if (this.state.phase === 'done') {
+    } else if (this.gameState.phase === 'done') {
       this.world.getSystem(SnapSystem)?.reset();
       this.setState(TITLE_STATE);
     } else {
-      this.setState(completeStep(this.state, this.recipe));
+      this.completeStep();
+    }
+  }
+
+  /** A gesture or the card button finished the current step. */
+  completeStep(): void {
+    this.setState(completeStep(this.gameState, this.recipe));
+  }
+
+  /** Short status shown after the step title, such as a turn count. */
+  setProgress(progress: string): void {
+    if (progress !== this.progress) {
+      this.progress = progress;
+      this.notify();
+    }
+  }
+
+  /** Lets the player end the current step with the card button. */
+  setActionReady(isReady: boolean): void {
+    if (isReady !== this.isActionReady) {
+      this.isActionReady = isReady;
+      this.notify();
     }
   }
 
@@ -103,18 +136,19 @@ export class StepSystem extends createSystem({
 
   /** Moves past preparation once every ingredient, optional too, is placed. */
   private advanceIfPrepared(): void {
-    const step = currentStep(this.state, this.recipe);
     if (
-      step?.completion === 'place-ingredients' &&
+      this.step?.completion === 'place-ingredients' &&
       isPreparationComplete(this.recipe, this.placedIds)
     ) {
-      this.state = completeStep(this.state, this.recipe);
+      this.gameState = completeStep(this.gameState, this.recipe);
     }
     this.notify();
   }
 
   private setState(state: GameState): void {
-    this.state = state;
+    this.gameState = state;
+    this.progress = '';
+    this.isActionReady = false;
     this.notify();
   }
 

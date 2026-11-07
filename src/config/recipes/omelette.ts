@@ -42,6 +42,9 @@ const greenOnion: RecipeIngredient = {
   optional: true,
 };
 
+const ALL_INGREDIENTS = ['egg', 'salt', 'butter', 'green-onion'];
+const AFTER_CRACK = ['salt', 'butter', 'green-onion'];
+
 /**
  * Outline centers sit at least 17 cm apart, so two 8 cm snap zones never
  * overlap and a held ingredient always has one unambiguous target.
@@ -60,48 +63,69 @@ export const OMELETTE: Recipe = {
       instruction: 'Place each ingredient on its outline.',
       tip: 'Having everything within reach keeps you calm once the pan is hot.',
       completion: 'place-ingredients',
+      tools: [],
+      grabbableTools: [],
+      ingredients: ALL_INGREDIENTS,
     },
     {
       id: 'crack',
       title: 'Crack the egg',
       instruction: 'Hold the egg with both hands and pull apart.',
       tip: 'A firm, clean crack keeps bits of shell out of the bowl.',
-      completion: 'manual',
+      completion: 'crack',
+      tools: ['bowl', 'stove'],
+      grabbableTools: [],
+      ingredients: ALL_INGREDIENTS,
     },
     {
       id: 'whisk',
       title: 'Whisk',
-      instruction: 'Stir the whisk in circles inside the bowl.',
+      instruction: 'Pinch the whisk and stir circles over the bowl.',
       tip: 'Whisking adds air, which makes the omelette light and fluffy.',
-      completion: 'manual',
+      completion: 'whisk',
+      tools: ['bowl', 'whisk', 'stove'],
+      grabbableTools: ['whisk'],
+      ingredients: AFTER_CRACK,
     },
     {
       id: 'season',
       title: 'Season',
       instruction: 'Pinch salt over the bowl twice.',
       tip: 'Salting the eggs early seasons them evenly all the way through.',
-      completion: 'manual',
+      completion: 'season',
+      tools: ['bowl', 'stove'],
+      grabbableTools: [],
+      ingredients: AFTER_CRACK,
     },
     {
       id: 'pour',
       title: 'Heat and pour',
-      instruction: 'Put the pan on the stove, then tilt the bowl.',
+      instruction: 'Set the pan on the stove, then tip the bowl over it.',
       tip: 'A pan that is already hot sets the eggs before they can stick.',
-      completion: 'manual',
+      completion: 'pour',
+      tools: ['bowl', 'pan', 'stove'],
+      grabbableTools: ['bowl', 'pan'],
+      ingredients: [],
     },
     {
       id: 'cook',
       title: 'Cook',
-      instruction: 'Watch the color change until it looks golden.',
+      instruction: 'When it turns golden, lift the pan off the stove.',
       tip: 'Eggs keep cooking in the hot pan, so take them off a little early.',
-      completion: 'manual',
+      completion: 'cook',
+      tools: ['pan', 'stove'],
+      grabbableTools: ['pan'],
+      ingredients: [],
     },
     {
       id: 'flip',
       title: 'Flip and plate',
       instruction: 'Flick the pan, then move the omelette to the plate.',
       tip: 'A quick flick of the wrist folds the omelette in one clean move.',
-      completion: 'manual',
+      completion: 'flip',
+      tools: ['pan', 'stove', 'plate'],
+      grabbableTools: ['pan'],
+      ingredients: [],
     },
   ],
 };

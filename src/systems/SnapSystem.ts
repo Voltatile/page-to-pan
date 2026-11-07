@@ -16,17 +16,13 @@ import { OMELETTE } from '../config/recipes/omelette.js';
 import type { RecipeIngredient } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import { Ingredient } from '../game-components.js';
+import { HomeGlide } from '../util/home-glide.js';
 import { isWithinSnapZone } from '../util/snap.js';
 
 interface SnapTarget {
   ingredient: RecipeIngredient;
   outline: Mesh;
   restingMaterial: Material;
-  position: Vector3;
-  quaternion: Quaternion;
-}
-
-interface HomePose {
   position: Vector3;
   quaternion: Quaternion;
 }
@@ -39,8 +35,9 @@ export class SnapSystem extends createSystem({
   held: { required: [Ingredient, Grabbed] },
 }) {
   private readonly targets = new Map<string, SnapTarget>();
-  private readonly homes = new Map<Entity, HomePose>();
-  private readonly returning = new Set<Entity>();
+  private readonly glide = new HomeGlide((entity) =>
+    this.setShadowVisible(entity, true),
+  );
   private readonly tempPosition = new Vector3();
   private hoverMaterial!: Material;
 
@@ -74,7 +71,7 @@ export class SnapSystem extends createSystem({
 
     this.cleanupFuncs.push(
       this.queries.ingredients.subscribe('qualify', (entity) =>
-        this.rememberHome(entity),
+        this.glide.remember(entity),
       ),
       this.queries.held.subscribe('qualify', (entity) => this.onGrab(entity)),
       this.queries.held.subscribe('disqualify', (entity) =>
@@ -82,7 +79,7 @@ export class SnapSystem extends createSystem({
       ),
     );
     for (const entity of this.queries.ingredients.entities) {
-      this.rememberHome(entity);
+      this.glide.remember(entity);
     }
   }
 
@@ -99,20 +96,7 @@ export class SnapSystem extends createSystem({
       }
     }
 
-    const blend = Math.min(TUNING.returnRatePerS * delta, 1);
-    for (const entity of this.returning) {
-      const home = this.homes.get(entity);
-      const object = entity.object3D;
-      if (home == null || object == null) {
-        this.returning.delete(entity);
-        continue;
-      }
-      object.position.lerp(home.position, blend);
-      object.quaternion.slerp(home.quaternion, blend);
-      if (object.position.distanceTo(home.position) < TUNING.returnSettleM) {
-        this.land(entity, home);
-      }
-    }
+    this.glide.update(delta);
   }
 
   /** Puts every ingredient back at its starting pose. */
@@ -123,28 +107,15 @@ export class SnapSystem extends createSystem({
         grabSystem?.forceRelease(entity);
       }
       entity.setValue(Ingredient, 'placed', false);
-      const home = this.homes.get(entity);
-      if (home != null) {
-        this.land(entity, home);
-      }
+      this.glide.land(entity);
     }
     for (const target of this.targets.values()) {
       target.outline.material = target.restingMaterial;
     }
   }
 
-  private rememberHome(entity: Entity): void {
-    const object = entity.object3D;
-    if (object != null && !this.homes.has(entity)) {
-      this.homes.set(entity, {
-        position: object.position.clone(),
-        quaternion: object.quaternion.clone(),
-      });
-    }
-  }
-
   private onGrab(entity: Entity): void {
-    this.returning.delete(entity);
+    this.glide.stop(entity);
     entity.setValue(Ingredient, 'placed', false);
     this.setShadowVisible(entity, false);
   }
@@ -160,15 +131,8 @@ export class SnapSystem extends createSystem({
       entity.object3D.quaternion.copy(target.quaternion);
       entity.setValue(Ingredient, 'placed', true);
     } else {
-      this.returning.add(entity);
+      this.glide.start(entity);
     }
-  }
-
-  private land(entity: Entity, home: HomePose): void {
-    this.returning.delete(entity);
-    entity.object3D?.position.copy(home.position);
-    entity.object3D?.quaternion.copy(home.quaternion);
-    this.setShadowVisible(entity, true);
   }
 
   private targetFor(entity: Entity): SnapTarget | undefined {

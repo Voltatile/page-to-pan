@@ -16,6 +16,37 @@ export const TUNING = {
   /** Glow on an object a pinch would catch right now. */
   reachGlowColor: '#FFB347',
   reachGlowIntensity: 0.45,
+  /** Smoothing weight of each new sample in gesture detection. */
+  gestureSmoothing: 0.35,
+  /** Both hands must start this close to the egg to crack it. */
+  crackReachM: 0.14,
+  /** How far the hands must pull apart to crack the egg. */
+  crackPullM: 0.08,
+  /** The whisk counts anywhere inside this horizontal radius of the bowl. */
+  bowlZoneRadiusM: 0.13,
+  /** The whisk and a salting hand count up to this far above the bowl. */
+  bowlZoneHeightM: 0.3,
+  /** Circles tighter than this are treated as hand jitter. */
+  whiskMinRadiusM: 0.015,
+  whiskTargetTurns: 3,
+  /** Salt pinches count inside this horizontal radius of the bowl. */
+  seasonZoneRadiusM: 0.16,
+  /** The pan seats on the stove when released this close to it. */
+  stoveSnapRadiusM: 0.12,
+  /** The bowl counts as over the pan inside this radius of the stove. */
+  pourZoneRadiusM: 0.24,
+  pourMaxHeightM: 0.4,
+  pourMinTiltDeg: 55,
+  pourHoldS: 1.2,
+  /** Seconds on the heat for cookProgress to go from 0 to 1. */
+  cookDurationS: 25,
+  /** Lifting the pan this far off the stove ends the cook step. */
+  panLiftM: 0.05,
+  /** Smoothed pan turn speed that counts as a flick. */
+  flickMinRadPerS: 6,
+  /** The pan serves the omelette inside this radius of the plate. */
+  plateZoneRadiusM: 0.16,
+  plateZoneHeightM: 0.35,
   /** Table surface height above the virtual floor. */
   tableTopHeightM: 0.88,
   /** Seated calibration keeps the table this far under the player's head. */
