@@ -14,14 +14,26 @@ export function startRecipe(recipe: Recipe): GameState {
     : { phase: 'done' };
 }
 
-export function completeStep(state: GameState, recipe: Recipe): GameState {
+/** Moves on, skipping steps for optional ingredients the player left out. */
+export function completeStep(
+  state: GameState,
+  recipe: Recipe,
+  placedIds?: ReadonlySet<string>,
+): GameState {
   if (state.phase !== 'cooking') {
     return state;
   }
-  const nextIndex = state.stepIndex + 1;
-  return nextIndex < recipe.steps.length
-    ? { phase: 'cooking', stepIndex: nextIndex }
-    : { phase: 'done' };
+  for (
+    let nextIndex = state.stepIndex + 1;
+    nextIndex < recipe.steps.length;
+    nextIndex += 1
+  ) {
+    const needed = recipe.steps[nextIndex]?.onlyIfPlaced;
+    if (needed == null || placedIds == null || placedIds.has(needed)) {
+      return { phase: 'cooking', stepIndex: nextIndex };
+    }
+  }
+  return { phase: 'done' };
 }
 
 export function currentStep(

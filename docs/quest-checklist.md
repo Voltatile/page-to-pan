@@ -27,10 +27,14 @@ Things that cannot be confirmed without a physical headset. Each item matches a
   - **Season:** the shaker stands up in the hand, then counts one dash each time its
     cap tips past 95 degrees over the bowl and lifts back under 60. Confirm the wrist
     can turn that far, and that shaky tracking near the angle adds no extra dashes.
+  - **Green onion:** it must be let go over the bowl. It is a thin object, so confirm
+    the pinch holds it steadily on the way there.
   - **Butter:** it must be let go over the pan on the stove. Confirm the player
     finds this without help, and that the drop feels forgiving.
   - **Pour:** the bowl must tilt 55 degrees for 1.2 s. Confirm the wrist can do this
     while seated, without losing the pinch.
+  - **Held pan:** it eases toward the hand to soften jolts. Confirm the lag does not
+    feel like the pan is disconnected from the hand.
   - **Flip:** the pan must turn at 4.5 rad/s, then the omelette stays in the air for
     1.4 s. Confirm a real flick reaches that speed, that lifting the pan does not
     trigger it by accident, and that the toss is easy to follow in a headset.

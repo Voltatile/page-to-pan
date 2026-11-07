@@ -23,6 +23,7 @@ export type StepCompletion =
   | 'crack'
   | 'whisk'
   | 'season'
+  | 'garnish'
   | 'heat'
   | 'pour'
   | 'cook'
@@ -47,6 +48,8 @@ export interface RecipeStep {
   ingredients: readonly string[];
   /** Ingredients the player may pick up during this step. */
   grabbableIngredients: readonly string[];
+  /** Skip this step unless this optional ingredient was set out. */
+  onlyIfPlaced?: string;
 }
 
 export interface Recipe {

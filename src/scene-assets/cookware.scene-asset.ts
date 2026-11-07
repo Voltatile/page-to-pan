@@ -1,9 +1,11 @@
 import {
   BoxGeometry,
+  BufferGeometry,
   CircleGeometry,
   createSceneMaterial,
   CylinderGeometry,
   DoubleSide,
+  Float32BufferAttribute,
   Group,
   LatheGeometry,
   Mesh,
@@ -68,6 +70,11 @@ const panButterMaterial = new MeshStandardMaterial({
   roughness: 0.4,
 });
 /** Double-sided: the omelette shows its underside as it turns in the air. */
+const onionSpeckMaterial = new MeshStandardMaterial({
+  color: '#5FA845',
+  roughness: 0.7,
+  side: DoubleSide,
+});
 const omeletteMaterial = new MeshStandardMaterial({
   color: '#F6E27A',
   roughness: 0.6,
@@ -108,6 +115,44 @@ function omeletteMesh(
   return mesh;
 }
 
+/**
+ * Chopped green onion: small flat slivers in one mesh, one draw call. A spiral
+ * spreads them evenly and keeps the asset deterministic.
+ */
+function onionSpecks(name: string, radius: number): Mesh {
+  const count = 16;
+  const halfLength = 0.004;
+  const halfWidth = 0.0013;
+  const positions: number[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const spread = radius * Math.sqrt((index + 0.5) / count);
+    const angle = index * 2.4;
+    const x = Math.cos(angle) * spread;
+    const z = Math.sin(angle) * spread;
+    const lengthX = Math.cos(angle * 3) * halfLength;
+    const lengthZ = Math.sin(angle * 3) * halfLength;
+    const widthX = -lengthZ * (halfWidth / halfLength);
+    const widthZ = lengthX * (halfWidth / halfLength);
+    const corners = [
+      [x - lengthX - widthX, z - lengthZ - widthZ],
+      [x + lengthX - widthX, z + lengthZ - widthZ],
+      [x + lengthX + widthX, z + lengthZ + widthZ],
+      [x - lengthX + widthX, z - lengthZ + widthZ],
+    ];
+    for (const corner of [0, 1, 2, 0, 2, 3]) {
+      const [cornerX = 0, cornerZ = 0] = corners[corner] ?? [];
+      positions.push(cornerX, 0, cornerZ);
+    }
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.computeVertexNormals();
+  const mesh = new Mesh(geometry, onionSpeckMaterial);
+  mesh.name = name;
+  mesh.visible = false;
+  return mesh;
+}
+
 /** A flat food disc facing up. */
 function foodDisc(name: string, radius: number, material: MeshStandardMaterial) {
   const geometry = new CircleGeometry(radius, 24);
@@ -138,6 +183,9 @@ export function createBowl(): Group {
   shell.name = 'BowlShell';
   const egg = foodDisc('BowlEgg', rimRadius * 0.72, bowlEggMaterial);
   egg.position.y = -half * 0.35;
+  const onion = onionSpecks('BowlOnion', rimRadius * 0.6);
+  onion.position.y = 0.001;
+  egg.add(onion);
 
   const bowl = new Group();
   bowl.name = 'Bowl';
@@ -197,7 +245,10 @@ export function createPan(): Group {
   handle.position.set(0, half * 0.6, rimRadius + handleLength / 2 - 0.004);
   const egg = omeletteMesh('PanEgg', baseRadius * 0.95, omeletteMaterial);
   egg.position.y = -half + 0.003 + COOKWARE.omelette.thickness / 2;
-  const butter = foodDisc('PanButter', baseRadius * 0.8, panButterMaterial);
+  const onion = onionSpecks('PanOnion', baseRadius * 0.65);
+  onion.position.y = COOKWARE.omelette.thickness / 2 + 0.0006;
+  egg.add(onion);
+  const butter = foodDisc('PanButter', 0.04, panButterMaterial);
   butter.position.y = -half + 0.002;
 
   const pan = new Group();
@@ -270,6 +321,9 @@ export function createPlate(): Group {
   );
   omelette.position.y = 0.004 + COOKWARE.omelette.thickness * 0.8;
   omelette.scale.set(1, 1.6, 0.55);
+  const onion = onionSpecks('PlateOnion', radius * 0.45);
+  onion.position.y = COOKWARE.omelette.thickness / 2 + 0.0006;
+  omelette.add(onion);
 
   const plate = new Group();
   plate.name = 'Plate';

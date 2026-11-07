@@ -65,3 +65,20 @@ describe('preparation', () => {
     expect(isPreparationComplete(OMELETTE, EVERYTHING)).toBe(true);
   });
 });
+
+describe('optional steps', () => {
+  const seasonIndex = OMELETTE.steps.findIndex(
+    (step) => step.completion === 'season',
+  );
+  const atSeason: GameState = { phase: 'cooking', stepIndex: seasonIndex };
+
+  it('runs the green onion step when it was set out', () => {
+    const next = completeStep(atSeason, OMELETTE, new Set(['green-onion']));
+    expect(currentStep(next, OMELETTE)?.completion).toBe('garnish');
+  });
+
+  it('skips the green onion step when it was left out', () => {
+    const next = completeStep(atSeason, OMELETTE, new Set());
+    expect(currentStep(next, OMELETTE)?.completion).toBe('heat');
+  });
+});

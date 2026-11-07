@@ -24,12 +24,12 @@ const BURNT_COLOR = new Color('#2A1E14');
 const YOLK_COLOR = new Color('#F5B335');
 
 /** The omelette's shape when lying folded in half. */
-const FOLDED_SCALE_Z = 0.55;
+const FOLDED_SCALE_X = 0.85;
 const FOLDED_SCALE_Y = 1.6;
-const FOLDED_SHIFT_Z = 0.03;
+const FOLDED_SCALE_Z = 0.6;
 
 /** Size of the butter disc, against fully melted, when it lands. */
-const BUTTER_START_SCALE = 0.35;
+const BUTTER_START_SCALE = 0.7;
 
 const SPIN_AXIS = new Vector3(1, 0, 0);
 
@@ -44,6 +44,10 @@ export class CookingSystem extends createSystem({}) {
   private panEgg!: Mesh;
   private panButter!: Mesh;
   private plateOmelette!: Mesh;
+  private bowlOnion!: Object3D;
+  private panOnion!: Object3D;
+  private plateOnion!: Object3D;
+  private hasOnion = false;
   private butterMeltS = 0;
   private progress = 0;
   private hasEggInPan = false;
@@ -80,6 +84,9 @@ export class CookingSystem extends createSystem({}) {
     this.panEggRestY = this.panEgg.position.y;
     this.panButter = this.ownedMesh('pan', 'PanButter');
     this.plateOmelette = this.ownedMesh('plate', 'PlateOmelette');
+    this.bowlOnion = this.requirePart(this.bowlEgg, 'BowlOnion');
+    this.panOnion = this.requirePart(this.panEgg, 'PanOnion');
+    this.plateOnion = this.requirePart(this.plateOmelette, 'PlateOnion');
     this.cleanupFuncs.push(
       steps.subscribe(() => {
         if (steps.state.phase === 'title') {
@@ -106,6 +113,12 @@ export class CookingSystem extends createSystem({}) {
     if (cookLabel(this.progress, this.isFolded) !== this.label) {
       this.showDoneness();
     }
+  }
+
+  /** Green onion goes in the bowl and stays in the egg from there on. */
+  addOnion(): void {
+    this.hasOnion = true;
+    this.bowlOnion.visible = true;
   }
 
   /** The butter lands in the hot pan and starts to spread. */
@@ -137,6 +150,7 @@ export class CookingSystem extends createSystem({}) {
   /** The whole egg is in the pan, so the heat now counts. */
   startCooking(): void {
     this.setPourProgress(1);
+    this.panOnion.visible = this.hasOnion;
     this.bowlEgg.visible = false;
     this.panButter.visible = false;
     this.hasEggInPan = true;
@@ -157,6 +171,7 @@ export class CookingSystem extends createSystem({}) {
     this.hasEggInPan = false;
     this.panEgg.visible = false;
     this.plateOmelette.visible = true;
+    this.plateOnion.visible = this.hasOnion;
     this.material(this.plateOmelette).color.copy(
       this.material(this.panEgg).color,
     );
@@ -180,12 +195,12 @@ export class CookingSystem extends createSystem({}) {
     const eased = t * t * (3 - 2 * t);
     const egg = this.panEgg;
     egg.scale.set(
-      1,
+      1 + (FOLDED_SCALE_X - 1) * eased,
       1 + (FOLDED_SCALE_Y - 1) * eased,
       1 + (FOLDED_SCALE_Z - 1) * eased,
     );
     // The landing spot is read every frame, so it follows the pan as it moves.
-    this.tossLanding.set(0, this.panEggRestY, FOLDED_SHIFT_Z * eased);
+    this.tossLanding.set(0, this.panEggRestY, 0);
     this.pan.localToWorld(this.tossLanding);
     egg.position.lerpVectors(this.tossStart, this.tossLanding, eased);
     egg.position.y += 4 * TUNING.tossHeightM * eased * (1 - eased);
@@ -194,7 +209,7 @@ export class CookingSystem extends createSystem({}) {
     egg.quaternion.copy(this.panTurn).multiply(this.tossSpin);
     if (t >= 1) {
       this.returnEggToPan();
-      egg.position.set(0, this.panEggRestY, FOLDED_SHIFT_Z);
+      egg.position.set(0, this.panEggRestY, 0);
       this.isFolded = true;
     }
   }
@@ -246,6 +261,10 @@ export class CookingSystem extends createSystem({}) {
     this.isFolded = false;
     this.tossT = 1;
     this.butterMeltS = 0;
+    this.hasOnion = false;
+    this.bowlOnion.visible = false;
+    this.panOnion.visible = false;
+    this.plateOnion.visible = false;
     this.bowlEgg.visible = false;
     this.panEgg.visible = false;
     this.panButter.visible = false;
@@ -265,6 +284,14 @@ export class CookingSystem extends createSystem({}) {
     }
     mesh.material = this.material(mesh).clone();
     return mesh;
+  }
+
+  private requirePart(parent: Object3D, name: string): Object3D {
+    const part = parent.getObjectByName(name);
+    if (part == null) {
+      throw new Error(`Missing ${name}`);
+    }
+    return part;
   }
 
   /** Read fresh each time: the reach glow can swap this mesh's material. */

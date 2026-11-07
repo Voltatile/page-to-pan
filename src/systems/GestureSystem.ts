@@ -61,6 +61,8 @@ export class GestureSystem extends createSystem({}) {
   private readonly whiskShownAt = new Vector3();
   private readonly whiskShownTurn = new Quaternion();
   private readonly gripAtGrab = new Quaternion();
+  private readonly panShownAt = new Vector3();
+  private readonly panShownTurn = new Quaternion();
   private readonly shakerTurn = new Quaternion();
   private readonly shakerShownTurn = new Quaternion();
   private steps!: StepSystem;
@@ -70,9 +72,12 @@ export class GestureSystem extends createSystem({}) {
   private egg!: Entity;
   private saltShaker!: Entity;
   private butter!: Entity;
+  private greenOnion!: Entity;
   private activeStep: StepCompletion | null = null;
   private whiskTurnsShown = 0;
   private isButterOverPan = false;
+  private isOnionOverBowl = false;
+  private isPanInHand = false;
   private hasTossed = false;
   private isWhiskInHand = false;
   private isShakerInHand = false;
@@ -96,12 +101,14 @@ export class GestureSystem extends createSystem({}) {
     this.egg = this.world.requireSceneEntity('ingredient-egg');
     this.saltShaker = this.world.requireSceneEntity('ingredient-salt');
     this.butter = this.world.requireSceneEntity('ingredient-butter');
+    this.greenOnion = this.world.requireSceneEntity('ingredient-green-onion');
   }
 
   update(delta: number): void {
     if (this.world.visibilityState.peek() !== VisibilityState.Visible) {
       return;
     }
+    this.updatePanHold(delta);
     const step = this.steps.step?.completion ?? null;
     if (step !== this.activeStep) {
       this.activeStep = step;
@@ -116,6 +123,9 @@ export class GestureSystem extends createSystem({}) {
         break;
       case 'season':
         this.updateSeason(delta);
+        break;
+      case 'garnish':
+        this.updateGarnish();
         break;
       case 'heat':
         this.updateHeat();
@@ -152,6 +162,8 @@ export class GestureSystem extends createSystem({}) {
       this.salt.reset();
       this.isShakerInHand = false;
       this.steps.setProgress('0');
+    } else if (step === 'garnish') {
+      this.isOnionOverBowl = false;
     } else if (step === 'heat') {
       this.isButterOverPan = false;
     } else if (step === 'pour') {
@@ -364,6 +376,55 @@ export class GestureSystem extends createSystem({}) {
     }
   }
 
+  /**
+   * The pan swings around its long handle, so a small flick of the hand would
+   * jolt it. A held pan eases toward the hand instead.
+   */
+  private updatePanHold(delta: number): void {
+    const pan = this.kitchen.requireTool('pan');
+    const object = pan.object3D;
+    if (object == null || !pan.hasComponent(Grabbed)) {
+      this.isPanInHand = false;
+      return;
+    }
+    if (!this.isPanInHand) {
+      this.isPanInHand = true;
+      this.panShownAt.copy(object.position);
+      this.panShownTurn.copy(object.quaternion);
+    }
+    const blend = Math.min(TUNING.panFollowRatePerS * delta, 1);
+    this.panShownAt.lerp(object.position, blend);
+    this.panShownTurn.slerp(object.quaternion, blend);
+    object.position.copy(this.panShownAt);
+    object.quaternion.copy(this.panShownTurn);
+  }
+
+  /** The green onion counts once it is let go over the bowl. */
+  private updateGarnish(): void {
+    if (this.greenOnion.hasComponent(Grabbed)) {
+      const bowlAt = this.kitchen
+        .requireTool('bowl')
+        .object3D?.getWorldPosition(this.positionB);
+      const onionAt = this.greenOnion.object3D?.getWorldPosition(
+        this.positionA,
+      );
+      this.isOnionOverBowl =
+        bowlAt != null &&
+        onionAt != null &&
+        isWithinSnapZone(
+          onionAt.x - bowlAt.x,
+          onionAt.y - bowlAt.y,
+          onionAt.z - bowlAt.z,
+          TUNING.bowlZoneRadiusM,
+          TUNING.bowlZoneHeightM,
+        );
+    } else if (this.isOnionOverBowl) {
+      this.isOnionOverBowl = false;
+      this.cooking.addOnion();
+      this.steps.completeStep();
+    }
+  }
+
   /** The butter counts once it is let go over the pan on the stove. */
   private updateHeat(): void {
     if (this.butter.hasComponent(Grabbed)) {
@@ -449,15 +510,13 @@ export class GestureSystem extends createSystem({}) {
       return;
     }
     const pan = this.kitchen.requireTool('pan');
-    const object = pan.object3D;
-    if (object == null) {
-      return;
-    }
-    if (!pan.hasComponent(Grabbed)) {
+    const holder = this.grabSystem?.getHolderHand(pan) ?? null;
+    if (holder == null) {
       this.flick.reset();
       return;
     }
-    object.getWorldQuaternion(this.orientation);
+    // Read the hand, not the pan: the pan is deliberately eased.
+    this.player.gripSpaces[holder].getWorldQuaternion(this.orientation);
     const { x, y, z, w } = this.orientation;
     const speed = this.flick.update(
       x,

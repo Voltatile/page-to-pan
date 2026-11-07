@@ -107,7 +107,7 @@ export class StepSystem extends createSystem({
 
   /** A gesture or the card button finished the current step. */
   completeStep(): void {
-    this.setState(completeStep(this.gameState, this.recipe));
+    this.setState(completeStep(this.gameState, this.recipe, this.placedIds));
   }
 
   /** Short status shown after the step title, such as a turn count. */

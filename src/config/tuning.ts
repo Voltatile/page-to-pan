@@ -49,6 +49,8 @@ export const TUNING = {
   saltTipDeg: 95,
   /** The shaker must come back under this tilt before the next dash. */
   saltRearmDeg: 60,
+  /** How fast a held pan catches up with the hand, as a fraction per second. */
+  panFollowRatePerS: 9,
   /** The butter lands in the pan when dropped inside this radius of it. */
   butterDropRadiusM: 0.13,
   butterDropHeightM: 0.25,

@@ -284,6 +284,22 @@ async function seasonEggs() {
   await hand('hand-right', [{ pinch: 0, duration: 0.2 }]);
   await sleep(600);
   await pressCardButton();
+  await expectTitle(/^Green onion/);
+}
+
+async function addGreenOnion() {
+  await hand('hand-right', [
+    {
+      target: 'Green Onion',
+      approach: { distance: 0.06 },
+      pinch: { value: 1, at: 'arrival' },
+    },
+    {
+      position: { x: BOWL.x + 0.09, y: 1.03, z: BOWL.z },
+      depart: { distance: 0.06 },
+    },
+    { pinch: 0, duration: 0.25 },
+  ]);
   await expectTitle(/^Heat the pan/);
 }
 
@@ -364,16 +380,16 @@ async function flipOmelette() {
       {
         anchor: 'grip',
         position,
-        orientation: { pitch: 25, yaw: 0, roll: 0 },
-        duration: 0.2,
+        orientation: { pitch: -14, yaw: 0, roll: 0 },
+        duration: 0.5,
       },
       {
         anchor: 'grip',
         position,
-        orientation: { pitch: -12, yaw: 0, roll: 0 },
-        duration: 0.14,
+        orientation: { pitch: 26, yaw: 0, roll: 0 },
+        duration: 0.16,
       },
-      { anchor: 'grip', position, orientation: LEVEL, duration: 0.3 },
+      { anchor: 'grip', position, orientation: LEVEL, duration: 0.6 },
     ]);
     if (await waitForTitle(/^Finish/, 2500)) {
       break;
@@ -475,6 +491,8 @@ async function cook() {
   await whiskEggs();
   await sleep(800);
   await seasonEggs();
+  await sleep(800);
+  await addGreenOnion();
   await sleep(800);
   await heatPan();
   await pourEggs();

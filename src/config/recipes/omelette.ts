@@ -102,6 +102,18 @@ export const OMELETTE: Recipe = {
       grabbableIngredients: ['salt'],
     },
     {
+      id: 'garnish',
+      title: 'Green onion',
+      instruction: 'Hold the green onion over the bowl and let go.',
+      tip: 'Adding it now spreads its mild, fresh flavor through the eggs.',
+      completion: 'garnish',
+      tools: ['bowl', 'stove'],
+      grabbableTools: [],
+      ingredients: AFTER_CRACK,
+      grabbableIngredients: ['green-onion'],
+      onlyIfPlaced: 'green-onion',
+    },
+    {
       id: 'heat',
       title: 'Heat the pan',
       instruction: 'Set the pan on the stove, then drop the butter in.',
