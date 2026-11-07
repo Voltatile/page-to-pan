@@ -284,6 +284,7 @@ export class GestureSystem extends createSystem({}) {
       if (speed >= TUNING.flickMinRadPerS) {
         this.hasFlipped = true;
         this.cooking.fold();
+        this.steps.setProgress('Flipped');
       }
       return;
     }
