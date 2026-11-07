@@ -14,6 +14,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { BOWL } from './demo-layout.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLI = join(ROOT, 'node_modules/@iwsdk/cli/bin/iwsdk.js');
@@ -23,7 +24,6 @@ const VIDEO_LIMIT_S = 180;
 const HEAD = { x: 0, y: 1.6, z: 0 };
 /** Time on the heat after the card first says Golden, aiming for doneness 0.7. */
 const GOLDEN_EXTRA_MS = 1500;
-const BOWL = { x: -0.27, z: -0.32 };
 const STOVE = { x: 0.35, z: -0.35 };
 const PLATE = { x: 0, z: -0.31 };
 const LEVEL = { pitch: 0, yaw: 0, roll: 0 };
@@ -247,46 +247,12 @@ async function whiskEggs() {
     { target: 'Whisk', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
     { anchor: 'grasp', position: { x: BOWL.x + 0.07, y: 1.1, z: BOWL.z } },
   ]);
-  // A sequence places a held object by its base, which fights the whisk pose
-  // the game sets, so the circle is a chain of plain moves. Moves queue up in
-  // order, and starting each one early keeps the queue from running dry. A
-  // lost move only skips a corner: the loop below circles until the step ends.
-  const pointsPerTurn = 8;
-  const moveS = 0.45;
-  let isWhisked = false;
-  const watchCard = (async () => {
-    while (!isWhisked) {
-      isWhisked = /^Season/.test(await cardTitle());
-      await sleep(400);
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    await runCli(['browser', 'run', 'scripts/demo-whisk-circle.mjs']);
+    if (await waitForTitle(/^Season/, 400)) {
+      break;
     }
-  })();
-  const circle = async (turns) => {
-    const moves = [];
-    for (let index = 0; index < turns * pointsPerTurn; index += 1) {
-      if (isWhisked) {
-        break;
-      }
-      const angle = ((index + 1) * Math.PI * 2) / pointsPerTurn;
-      moves.push(
-        xr('animate-to', {
-          device: 'hand-left',
-          position: {
-            x: BOWL.x + Math.cos(angle) * 0.07,
-            y: 1.13,
-            z: BOWL.z + Math.sin(angle) * 0.07,
-          },
-          duration: moveS,
-        }).catch(() => {}),
-      );
-      await sleep(moveS * 900);
-    }
-    await Promise.all(moves);
-  };
-  for (let attempt = 0; attempt < 12 && !isWhisked; attempt += 1) {
-    await circle(1);
   }
-  isWhisked = true;
-  await watchCard;
   await expectTitle(/^Season/);
   await hand('hand-left', [{ pinch: 0, duration: 0.2 }]);
 }
@@ -398,14 +364,14 @@ async function flipOmelette() {
       {
         anchor: 'grip',
         position,
-        orientation: { pitch: 60, yaw: 0, roll: 0 },
-        duration: 0.12,
+        orientation: { pitch: 25, yaw: 0, roll: 0 },
+        duration: 0.2,
       },
       {
         anchor: 'grip',
         position,
-        orientation: { pitch: -30, yaw: 0, roll: 0 },
-        duration: 0.12,
+        orientation: { pitch: -12, yaw: 0, roll: 0 },
+        duration: 0.14,
       },
       { anchor: 'grip', position, orientation: LEVEL, duration: 0.3 },
     ]);

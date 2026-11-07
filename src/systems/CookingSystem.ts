@@ -3,6 +3,9 @@ import {
   createSystem,
   type Mesh,
   type MeshStandardMaterial,
+  type Object3D,
+  Quaternion,
+  Vector3,
   VisibilityState,
 } from '@iwsdk/core';
 import { TUNING } from '../config/tuning.js';
@@ -22,10 +25,13 @@ const YOLK_COLOR = new Color('#F5B335');
 
 /** The omelette's shape when lying folded in half. */
 const FOLDED_SCALE_Z = 0.55;
+const FOLDED_SCALE_Y = 1.6;
 const FOLDED_SHIFT_Z = 0.03;
 
 /** Size of the butter disc, against fully melted, when it lands. */
 const BUTTER_START_SCALE = 0.35;
+
+const SPIN_AXIS = new Vector3(1, 0, 0);
 
 const GOLDEN_MOMENT = 0.7;
 const BURNT_MOMENT = 1.2;
@@ -45,6 +51,11 @@ export class CookingSystem extends createSystem({}) {
   private isFolded = false;
   private tossT = 1;
   private panEggRestY = 0;
+  private pan!: Object3D;
+  private readonly tossStart = new Vector3();
+  private readonly tossLanding = new Vector3();
+  private readonly panTurn = new Quaternion();
+  private readonly tossSpin = new Quaternion();
 
   get cookProgress(): number {
     return this.progress;
@@ -65,6 +76,7 @@ export class CookingSystem extends createSystem({}) {
     this.kitchen = kitchen;
     this.bowlEgg = this.ownedMesh('bowl', 'BowlEgg');
     this.panEgg = this.ownedMesh('pan', 'PanEgg');
+    this.pan = this.panEgg.parent as Object3D;
     this.panEggRestY = this.panEgg.position.y;
     this.panButter = this.ownedMesh('pan', 'PanButter');
     this.plateOmelette = this.ownedMesh('plate', 'PlateOmelette');
@@ -130,9 +142,14 @@ export class CookingSystem extends createSystem({}) {
     this.hasEggInPan = true;
   }
 
-  /** Sends the omelette up out of the pan. It lands folded. */
+  /**
+   * Sends the omelette up out of the pan. In the air it belongs to the room,
+   * not the pan, so a tilted pan cannot throw it sideways.
+   */
   toss(): void {
     this.tossT = 0;
+    this.panEgg.getWorldPosition(this.tossStart);
+    this.world.scene.attach(this.panEgg);
   }
 
   /** Slides the finished omelette onto the plate. */
@@ -159,16 +176,32 @@ export class CookingSystem extends createSystem({}) {
     }
     this.tossT = Math.min(this.tossT + delta / TUNING.tossDurationS, 1);
     const t = this.tossT;
-    this.panEgg.position.y =
-      this.panEggRestY + 4 * TUNING.tossHeightM * t * (1 - t);
-    this.panEgg.rotation.x = Math.PI * 2 * t;
+    // Eases in and out, so the omelette neither jerks away nor slams down.
+    const eased = t * t * (3 - 2 * t);
+    const egg = this.panEgg;
+    egg.scale.set(
+      1,
+      1 + (FOLDED_SCALE_Y - 1) * eased,
+      1 + (FOLDED_SCALE_Z - 1) * eased,
+    );
+    // The landing spot is read every frame, so it follows the pan as it moves.
+    this.tossLanding.set(0, this.panEggRestY, FOLDED_SHIFT_Z * eased);
+    this.pan.localToWorld(this.tossLanding);
+    egg.position.lerpVectors(this.tossStart, this.tossLanding, eased);
+    egg.position.y += 4 * TUNING.tossHeightM * eased * (1 - eased);
+    this.pan.getWorldQuaternion(this.panTurn);
+    this.tossSpin.setFromAxisAngle(SPIN_AXIS, Math.PI * 2 * eased);
+    egg.quaternion.copy(this.panTurn).multiply(this.tossSpin);
     if (t >= 1) {
-      this.panEgg.position.y = this.panEggRestY;
-      this.panEgg.rotation.x = 0;
-      this.panEgg.scale.z = FOLDED_SCALE_Z;
-      this.panEgg.position.z = FOLDED_SHIFT_Z;
+      this.returnEggToPan();
+      egg.position.set(0, this.panEggRestY, FOLDED_SHIFT_Z);
       this.isFolded = true;
     }
+  }
+
+  private returnEggToPan(): void {
+    this.pan.add(this.panEgg);
+    this.panEgg.rotation.set(0, 0, 0);
   }
 
   private updateButter(delta: number): void {
@@ -217,10 +250,9 @@ export class CookingSystem extends createSystem({}) {
     this.panEgg.visible = false;
     this.panButter.visible = false;
     this.plateOmelette.visible = false;
+    this.returnEggToPan();
     this.panEgg.scale.setScalar(1);
-    this.panEgg.position.y = this.panEggRestY;
-    this.panEgg.position.z = 0;
-    this.panEgg.rotation.x = 0;
+    this.panEgg.position.set(0, this.panEggRestY, 0);
     this.material(this.panEgg).color.copy(RAW_COLOR);
   }
 

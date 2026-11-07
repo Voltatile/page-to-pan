@@ -69,7 +69,7 @@ export const TUNING = {
   /** How high the tossed omelette rises above the pan. */
   tossHeightM: 0.2,
   /** Smoothed pan turn speed that counts as a flick. */
-  flickMinRadPerS: 6,
+  flickMinRadPerS: 4.5,
   /** The pan serves the omelette inside this radius of the plate. */
   plateZoneRadiusM: 0.16,
   plateZoneHeightM: 0.35,

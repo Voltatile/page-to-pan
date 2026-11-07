@@ -85,6 +85,29 @@ function lathe(points: readonly (readonly [number, number])[], segments = 24) {
   );
 }
 
+/** A soft, thick omelette, with its origin at the middle of its thickness. */
+function omeletteMesh(
+  name: string,
+  radius: number,
+  material: MeshStandardMaterial,
+) {
+  const half = COOKWARE.omelette.thickness / 2;
+  const mesh = new Mesh(
+    lathe([
+      [0, -half],
+      [radius * 0.9, -half],
+      [radius, 0],
+      [radius * 0.92, half * 0.8],
+      [radius * 0.5, half],
+      [0, half],
+    ]),
+    material,
+  );
+  mesh.name = name;
+  mesh.visible = false;
+  return mesh;
+}
+
 /** A flat food disc facing up. */
 function foodDisc(name: string, radius: number, material: MeshStandardMaterial) {
   const geometry = new CircleGeometry(radius, 24);
@@ -172,8 +195,8 @@ export function createPan(): Group {
   );
   handle.name = 'PanHandle';
   handle.position.set(0, half * 0.6, rimRadius + handleLength / 2 - 0.004);
-  const egg = foodDisc('PanEgg', baseRadius * 0.95, omeletteMaterial);
-  egg.position.y = -half + 0.003;
+  const egg = omeletteMesh('PanEgg', baseRadius * 0.95, omeletteMaterial);
+  egg.position.y = -half + 0.003 + COOKWARE.omelette.thickness / 2;
   const butter = foodDisc('PanButter', baseRadius * 0.8, panButterMaterial);
   butter.position.y = -half + 0.002;
 
@@ -240,9 +263,13 @@ export function createPlate(): Group {
     plateMaterial,
   );
   dish.name = 'PlateDish';
-  const omelette = foodDisc('PlateOmelette', radius * 0.6, plateOmeletteMaterial);
-  omelette.position.y = 0.004;
-  omelette.scale.z = 0.55;
+  const omelette = omeletteMesh(
+    'PlateOmelette',
+    radius * 0.6,
+    plateOmeletteMaterial,
+  );
+  omelette.position.y = 0.004 + COOKWARE.omelette.thickness * 0.8;
+  omelette.scale.set(1, 1.6, 0.55);
 
   const plate = new Group();
   plate.name = 'Plate';
