@@ -1,6 +1,10 @@
 import { World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
 import { CookingSystem } from './systems/CookingSystem.js';
+import {
+  DebugOverlaySystem,
+  isDebugEnabled,
+} from './systems/DebugOverlaySystem.js';
 import { EffectsSystem } from './systems/EffectsSystem.js';
 import { GestureSystem } from './systems/GestureSystem.js';
 import { KitchenSystem } from './systems/KitchenSystem.js';
@@ -31,4 +35,7 @@ World.create(
   world.registerSystem(UISystem);
   world.registerSystem(ResultStarsSystem);
   world.registerSystem(ReachHighlightSystem);
+  if (isDebugEnabled()) {
+    world.registerSystem(DebugOverlaySystem);
+  }
 });

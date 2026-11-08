@@ -53,7 +53,12 @@ Things that cannot be confirmed without a physical headset. Each item matches a
 - [ ] **Depth precision**: outlines and labels sit a few millimeters above the paper.
   Confirm there is no flicker at the near plane of 0.02 m.
 - [ ] **Frame rate**: minimum 60 fps on Quest 2. The emulator only proves draw call
-  and triangle counts, not real GPU time.
+  and triangle counts, not real GPU time. Open the game with `?debug=1`: a board left
+  of the table shows FPS, the worst frame, draw calls and triangles, turning red past
+  the budget. The same numbers go to the console every 5 s with a list of the scenery
+  holding the most meshes. In the emulator the busiest moment was 76 draw calls (both
+  eyes counted together) and about 11k scene triangles. Check what the board says on
+  a Quest 2 during the cook step, when the pan steams.
 - [ ] **Enter VR**: the card button must start an immersive session from Quest Browser.
 - [ ] **Palm-up pause** (`src/systems/PauseSystem.ts`): the palm direction in grip space
   (+X for the left hand, -X for the right) was read from the emulator hands. Confirm a
