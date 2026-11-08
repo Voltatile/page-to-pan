@@ -1,68 +1,43 @@
 import {
   BackSide,
   BoxGeometry,
-  createSceneMaterial,
   createScenePrimitiveObject,
   Group,
-  type Material,
   Mesh,
   MeshStandardMaterial,
   PlaneGeometry,
 } from '@iwsdk/core';
 import { TUNING } from '../config/tuning.js';
+import { type ColoredPart, mergeColored } from './lib/merge-colored.js';
 
 const TABLE_TOP_HEIGHT_M = TUNING.tableTopHeightM;
 
-const woodMaterial = createSceneMaterial({
-  id: 'kitchen-wood',
-  model: 'standard',
-  baseColor: '#B98A5E',
+const WOOD = '#B98A5E';
+const DARK_WOOD = '#7C5A3C';
+const FLOOR = '#8C6B4F';
+const CABINET = '#7E9C8E';
+const COUNTER = '#D9D4C9';
+const TILE = '#F4EFE6';
+
+/**
+ * Static scenery is baked into one mesh per asset with vertex colors, so the
+ * table, the counter run and the stand cost one draw call each.
+ */
+const sceneryMaterial = new MeshStandardMaterial({
+  vertexColors: true,
   roughness: 0.7,
-});
-const darkWoodMaterial = createSceneMaterial({
-  id: 'kitchen-dark-wood',
-  model: 'standard',
-  baseColor: '#7C5A3C',
-  roughness: 0.75,
 });
 const wallMaterial = new MeshStandardMaterial({
   color: '#EADFCB',
   roughness: 0.95,
   side: BackSide,
 });
-const floorMaterial = createSceneMaterial({
-  id: 'kitchen-floor',
-  model: 'standard',
-  baseColor: '#8C6B4F',
-  roughness: 0.85,
-});
-const cabinetMaterial = createSceneMaterial({
-  id: 'kitchen-cabinet',
-  model: 'standard',
-  baseColor: '#7E9C8E',
-  roughness: 0.6,
-});
-const counterMaterial = createSceneMaterial({
-  id: 'kitchen-counter',
-  model: 'standard',
-  baseColor: '#D9D4C9',
-  roughness: 0.45,
-});
-const tileMaterial = createSceneMaterial({
-  id: 'kitchen-tile',
-  model: 'standard',
-  baseColor: '#F4EFE6',
-  roughness: 0.35,
-});
 
 function boxMesh(
-  name: string,
   size: readonly [number, number, number],
   position: readonly [number, number, number],
-  material: Material,
 ): Mesh {
-  const mesh = new Mesh(new BoxGeometry(...size), material);
-  mesh.name = name;
+  const mesh = new Mesh(new BoxGeometry(...size));
   mesh.position.set(...position);
   return mesh;
 }
@@ -82,39 +57,36 @@ export function createKitchenTable(): Group {
         segments: 2,
       },
     },
-    woodMaterial,
+    sceneryMaterial,
   );
-  top.name = 'TableTop';
+  if (!(top instanceof Mesh)) {
+    throw new Error('A rounded box primitive should be a mesh');
+  }
   top.position.y = TABLE_TOP_HEIGHT_M - thickness / 2;
 
   const legHeight = TABLE_TOP_HEIGHT_M - thickness;
   const apronHeight = 0.07;
-  const table = new Group();
-  table.name = 'KitchenTable';
-  table.add(
-    top,
-    boxMesh(
-      'Apron',
-      [1.06, apronHeight, 0.56],
-      [0, legHeight - apronHeight / 2, 0],
-      darkWoodMaterial,
-    ),
-  );
-  for (const [index, [x, z]] of [
+  const parts: ColoredPart[] = [
+    [top, WOOD],
+    [
+      boxMesh([1.06, apronHeight, 0.56], [0, legHeight - apronHeight / 2, 0]),
+      DARK_WOOD,
+    ],
+  ];
+  for (const [x, z] of [
     [-0.54, -0.29],
     [0.54, -0.29],
     [-0.54, 0.29],
     [0.54, 0.29],
-  ].entries()) {
-    table.add(
-      boxMesh(
-        `Leg${index}`,
-        [0.06, legHeight, 0.06],
-        [x, legHeight / 2, z],
-        darkWoodMaterial,
-      ),
-    );
+  ] as const) {
+    parts.push([
+      boxMesh([0.06, legHeight, 0.06], [x, legHeight / 2, z]),
+      DARK_WOOD,
+    ]);
   }
+  const table = new Group();
+  table.name = 'KitchenTable';
+  table.add(mergeColored('Table', parts, sceneryMaterial));
   return table;
 }
 
@@ -132,21 +104,21 @@ export function createKitchenRoom(): Group {
 
   const floorGeometry = new PlaneGeometry(4.6, 4.4);
   floorGeometry.rotateX(-Math.PI / 2);
-  const floor = new Mesh(floorGeometry, floorMaterial);
-  floor.name = 'Floor';
+  const floor = new Mesh(floorGeometry);
   floor.position.set(0, 0.001, -0.4);
 
   room.add(
     shell,
-    floor,
-    boxMesh('BaseCabinets', [3.4, 0.86, 0.6], [0, 0.43, -2.28], cabinetMaterial),
-    boxMesh('Countertop', [3.5, 0.04, 0.66], [0, 0.88, -2.26], counterMaterial),
-    boxMesh('Backsplash', [3.4, 0.56, 0.02], [0, 1.18, -2.59], tileMaterial),
-    boxMesh(
-      'WallCabinets',
-      [3.4, 0.72, 0.34],
-      [0, 1.82, -2.42],
-      cabinetMaterial,
+    mergeColored(
+      'FloorAndCounter',
+      [
+        [floor, FLOOR],
+        [boxMesh([3.4, 0.86, 0.6], [0, 0.43, -2.28]), CABINET],
+        [boxMesh([3.5, 0.04, 0.66], [0, 0.88, -2.26]), COUNTER],
+        [boxMesh([3.4, 0.56, 0.02], [0, 1.18, -2.59]), TILE],
+        [boxMesh([3.4, 0.72, 0.34], [0, 1.82, -2.42]), CABINET],
+      ],
+      sceneryMaterial,
     ),
   );
   return room;
@@ -160,22 +132,18 @@ export function createRecipeStand(): Group {
   const stand = new Group();
   stand.name = 'RecipeStand';
 
-  const board = boxMesh(
-    'Board',
-    [0.5, 0.27, 0.012],
-    [0, 0.0955, -0.0955],
-    woodMaterial,
-  );
+  const board = boxMesh([0.5, 0.27, 0.012], [0, 0.0955, -0.0955]);
   board.rotation.x = -Math.PI / 4;
 
   stand.add(
-    board,
-    boxMesh('FrontLip', [0.5, 0.014, 0.03], [0, 0.007, 0.01], woodMaterial),
-    boxMesh(
-      'RearStrut',
-      [0.4, 0.11, 0.012],
-      [0, 0.055, -0.125],
-      darkWoodMaterial,
+    mergeColored(
+      'Stand',
+      [
+        [board, WOOD],
+        [boxMesh([0.5, 0.014, 0.03], [0, 0.007, 0.01]), WOOD],
+        [boxMesh([0.4, 0.11, 0.012], [0, 0.055, -0.125]), DARK_WOOD],
+      ],
+      sceneryMaterial,
     ),
   );
   return stand;
