@@ -49,4 +49,5 @@ export default defineAssets({
   'recipe-card': uikitml('recipe-card.uikitml', 'Recipe Card'),
   'recipe-labels': uikitml('recipe-labels.uikitml', 'Recipe Labels'),
   'title-logo': uikitml('title-logo.uikitml', 'Title Logo'),
+  'result-banner': uikitml('result-banner.uikitml', 'Result Banner'),
 });

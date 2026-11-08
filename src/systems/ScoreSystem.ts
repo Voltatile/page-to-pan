@@ -26,10 +26,16 @@ export class ScoreSystem extends createSystem({}) {
   private cooking!: CookingSystem;
   private lastScore: CookScore | null = null;
   private best = 0;
+  private beatBest = false;
 
   /** The score of the cook that just ended, or null before the end. */
   get result(): CookScore | null {
     return this.lastScore;
+  }
+
+  /** True when the cook that just ended earned more stars than ever before. */
+  get isNewBest(): boolean {
+    return this.beatBest;
   }
 
   /** Best stars ever earned on this recipe, 0 before the first cook. */
@@ -69,6 +75,7 @@ export class ScoreSystem extends createSystem({}) {
     const phase = this.steps.state.phase;
     if (phase === 'title') {
       this.lastScore = null;
+      this.beatBest = false;
       this.record.saltDashes = 0;
       this.record.servedProgress = 0;
       this.record.flipProgress = 0;
@@ -77,6 +84,7 @@ export class ScoreSystem extends createSystem({}) {
     } else if (phase === 'done' && this.lastScore == null) {
       this.record.servedProgress = this.cooking.cookProgress;
       this.lastScore = scoreCook(this.record, TUNING.whiskTargetTurns);
+      this.beatBest = this.lastScore.stars > this.best;
       this.best = saveBestStars(
         this.storage,
         this.steps.recipeId,

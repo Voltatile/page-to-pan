@@ -489,6 +489,9 @@ async function prepareStage() {
     120000,
   );
   await runCli(['runtime', 'wait'], 90000);
+  await runCli(['browser', 'run', 'scripts/demo-fresh-start.mjs']);
+  await sleep(2000);
+  await runCli(['runtime', 'wait'], 90000);
   if (IS_DEBUG) {
     await runCli(['browser', 'run', 'scripts/demo-debug-view.mjs']);
     await sleep(2000);
@@ -553,12 +556,9 @@ async function cook() {
   await sleep(4000);
 }
 
-/** Again must clear the table, so a second cook starts from the beginning. */
+/** Again must clear the table and start a second cook from the beginning. */
 async function cookAgain() {
   await lookAt({ x: 0, y: 1.0, z: -0.6 }, 0.6);
-  await pressCardButton();
-  await expectTitle(/^Omelette$/);
-  await sleep(800);
   await pressCardButton();
   await expectTitle(/^Ingredients$/);
 }

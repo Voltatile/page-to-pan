@@ -31,6 +31,7 @@ export interface StepView {
 }
 
 const PAUSED_TITLE = 'Paused';
+const MENU_LABEL = 'Menu';
 const PAUSED_INSTRUCTION = 'Take your time. The pan waits for you.';
 const PAUSED_TIP = 'Turn a hand palm up and hold it to pause again.';
 
@@ -150,7 +151,7 @@ export class StepSystem extends createSystem({
         title: recipe.title,
         instruction: recipe.outro,
         action: 'Again',
-        secondaryAction: null,
+        secondaryAction: MENU_LABEL,
         tip: '',
         menu: false,
       };
@@ -161,7 +162,7 @@ export class StepSystem extends createSystem({
         title: PAUSED_TITLE,
         instruction: PAUSED_INSTRUCTION,
         action: 'Resume',
-        secondaryAction: 'Restart',
+        secondaryAction: MENU_LABEL,
         tip: PAUSED_TIP,
         menu: false,
       };
@@ -196,7 +197,9 @@ export class StepSystem extends createSystem({
       this.gameState = startRecipe(this.recipe);
       this.advanceIfPrepared();
     } else if (this.gameState.phase === 'done') {
+      // A fresh cook: clear the table through the title, then start at once.
       this.restart();
+      this.performAction();
     } else {
       this.completeStep();
     }
@@ -210,9 +213,9 @@ export class StepSystem extends createSystem({
     }
   }
 
-  /** The second card button. While paused it starts the recipe over. */
+  /** The second card button. While paused or at the end it opens the menu. */
   performSecondaryAction(): void {
-    if (this.isPausedNow) {
+    if (this.isPausedNow || this.gameState.phase === 'done') {
       this.restart();
     }
   }

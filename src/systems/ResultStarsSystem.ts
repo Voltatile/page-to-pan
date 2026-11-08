@@ -4,8 +4,10 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
+  type Object3D,
   Shape,
   Vector3,
+  Visibility,
 } from '@iwsdk/core';
 import { EffectsSystem } from './EffectsSystem.js';
 import { ScoreSystem } from './ScoreSystem.js';
@@ -23,6 +25,8 @@ const ROW_POSITION = [0, 0.235, -0.2] as const;
 const ROW_TILT_RAD = -0.2;
 const POP_DELAY_S = 0.3;
 const POP_S = 0.35;
+/** The "New best!" ribbon pops in just after the last star has landed. */
+const BANNER_DELAY_S = (STAR_COUNT - 1) * POP_DELAY_S + POP_S + 0.15;
 /** Overshoot of the pop, as in an ease-out-back curve. */
 const OVERSHOOT = 1.7;
 
@@ -76,6 +80,10 @@ export class ResultStarsSystem extends createSystem({}) {
   private popped = 0;
   private earnedCount = 0;
   private readonly starAt = new Vector3();
+  private banner: Object3D | undefined;
+  private bannerScale = 1;
+  private showsBanner = false;
+  private setBannerShown: (isShown: boolean) => void = () => undefined;
   private sound: SoundSystem | undefined;
   private effects: EffectsSystem | undefined;
 
@@ -102,6 +110,12 @@ export class ResultStarsSystem extends createSystem({}) {
     this.row.rotation.x = ROW_TILT_RAD;
     this.row.visible = false;
     this.world.requireSceneEntity('recipe-stand').object3D?.add(this.row);
+    const bannerEntity = this.world.requireSceneEntity('result-banner');
+    this.banner = bannerEntity.object3D;
+    this.bannerScale = this.banner?.scale.x ?? 1;
+    this.setBannerShown = (isShown: boolean) =>
+      bannerEntity.setValue(Visibility, 'isVisible', isShown);
+    this.setBannerShown(false);
     this.cleanupFuncs.push(
       steps.subscribe(() => this.onStepChange()),
       () => this.row.removeFromParent(),
@@ -130,6 +144,16 @@ export class ResultStarsSystem extends createSystem({}) {
       // A scale of exactly 0 makes a degenerate matrix, so start just above.
       this.stars[index]?.scale.setScalar(Math.max(easeOutBack(t), 0.001));
     }
+    if (this.showsBanner && this.banner != null) {
+      const t = Math.min(
+        Math.max((this.showS - BANNER_DELAY_S) / POP_S, 0),
+        1,
+      );
+      isSettled &&= t >= 1;
+      this.banner.scale.setScalar(
+        this.bannerScale * Math.max(easeOutBack(t), 0.001),
+      );
+    }
     if (isSettled) {
       this.showS = -1;
     }
@@ -139,6 +163,8 @@ export class ResultStarsSystem extends createSystem({}) {
     const result = this.steps.state.phase === 'done' ? this.score.result : null;
     if (result == null) {
       this.row.visible = false;
+      this.showsBanner = false;
+      this.setBannerShown(false);
       this.showS = -1;
       return;
     }
@@ -153,6 +179,9 @@ export class ResultStarsSystem extends createSystem({}) {
     this.showS = 0;
     this.popped = 0;
     this.earnedCount = result.stars;
+    this.showsBanner = this.score.isNewBest;
+    this.banner?.scale.setScalar(this.bannerScale * 0.001);
+    this.setBannerShown(this.showsBanner);
   }
 
   /** Each earned star rings a little higher and throws a few sparkles. */

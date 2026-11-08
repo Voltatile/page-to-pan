@@ -33,7 +33,7 @@ play session from start to finish, so it can be worked through in order.
 - [ ] **Table layout**: the bowl and stove sit about 58 cm from a seated chest, at the
   edge of the 60 cm rule. Confirm they are reachable without leaning, and that the pan
   handle is easy to catch.
-- [ ] **Hand ray on the card button**: the button is 13 x 7.2 cm on a card leaning back
+- [ ] **Hand ray on the card button**: the button is 12 x 7.2 cm on a card leaning back
   45 degrees, 80 cm away, pressed by pointing and pinching. The emulator's aim is exact, so confirm a real
   shaky hand can hit it without several tries. If not, make the whole card the button.
 - [ ] **Label readability**: the 24-unit sheet labels and 26-unit card text must stay
@@ -100,10 +100,10 @@ Every threshold is tuned on the emulator, whose hands do not shake
   thresholds in `src/config/tuning.ts` do not fire while cooking normally, and flip
   the signs if the ring shows with the palm down.
 - [ ] **Auto pause**: open the Quest system menu or take the headset off mid-recipe.
-  The card must say Paused with Resume when you come back. The emulator could not blur
+  The card must say Paused with Resume and Menu when you come back. The emulator could not blur
   the session, so this path is untested.
-- [ ] **Resume and Restart**: Resume continues where the recipe stopped, with the pan
-  still at the same doneness. Restart sends every ingredient home and shows the title.
+- [ ] **Resume and Menu**: Resume continues where the recipe stopped, with the pan
+  still at the same doneness. Menu sends every ingredient home and shows the title.
 
 ## 4. Sound and effects
 
@@ -140,7 +140,10 @@ Every threshold is tuned on the emulator, whose hands do not shake
   hide the card text.
 - [ ] **Results**: the score, the chef note and the three stars must be readable from
   the seat, and the stars must pop in one by one with their chime.
-- [ ] **Again**: the button returns to the title with every ingredient home, and a
-  second cook starts from the ingredients step (the emulator demo proves the logic).
+- [ ] **Again and Menu**: Again clears the table and starts a second cook at the
+  ingredients step at once (the emulator demo proves the logic). Menu returns to the
+  title. In pause, Menu leaves the recipe for the title.
+- [ ] **New best ribbon**: after a record, the "New best!" ribbon pops over the stars.
+  Confirm it is in view from the seat and does not cover the stars.
 - [ ] **Best stars**: close the tab and open the game again. The title card must still
   say "Your best: N of 3 stars", which proves Quest Browser keeps localStorage.

@@ -1,0 +1,25 @@
+<!--
+  Shown over the result stars when the cook earns more stars than ever before.
+  Authored at 1 unit = 1 mm (placed at scale 0.1): a 24 x 7 cm ribbon with
+  44-unit letters.
+  Note: comments inside the style block break the UIKitML parser.
+-->
+<style>
+  .ribbon {
+    align-items: center;
+    justify-content: center;
+    width: 240px;
+    height: 70px;
+    border-radius: 35px;
+    background-color: #c9893a;
+  }
+
+  .ribbon-text {
+    color: #ffffff;
+    font-size: 44px;
+    font-weight: 700;
+  }
+</style>
+<div class="ribbon">
+  <div id="banner-text" class="ribbon-text">New best!</div>
+</div>

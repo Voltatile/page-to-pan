@@ -10,6 +10,9 @@ import { ScoreSystem } from './ScoreSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const ENTER_VR_LABEL = 'Enter VR';
+/** Title size, smaller when two buttons share the header with it. */
+const TITLE_FONT_SIZE = 46;
+const CROWDED_TITLE_FONT_SIZE = 40;
 
 /** A short swell of the card that draws the eye to new text. */
 const NUDGE_S = 0.4;
@@ -94,6 +97,8 @@ export class UISystem extends createSystem({}) {
       logo.setValue(Visibility, 'isVisible', state.phase === 'title');
       title.setProperties({
         text: result == null ? view.title : `Score: ${result.total}`,
+        fontSize:
+          secondaryAction == null ? TITLE_FONT_SIZE : CROWDED_TITLE_FONT_SIZE,
       });
       instruction.setProperties({ text: result?.note ?? instructionText });
       label.setProperties({ text: action ?? '' });

@@ -182,6 +182,27 @@
             ],
             "scale": 0.1
           }
+        },
+        {
+          "id": "result-banner",
+          "name": "Result Banner",
+          "content": {
+            "type": "asset",
+            "asset": "result-banner"
+          },
+          "transform": {
+            "position": [
+              0,
+              0.31,
+              -0.215
+            ],
+            "rotationDeg": [
+              -10,
+              0,
+              0
+            ],
+            "scale": 0.1
+          }
         }
       ]
     },
