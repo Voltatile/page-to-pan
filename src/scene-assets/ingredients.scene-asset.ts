@@ -11,6 +11,16 @@ import {
   Vector2,
 } from '@iwsdk/core';
 import type { RecipeIngredient } from '../config/recipes/recipe.js';
+import { mergeColored } from './lib/merge-colored.js';
+
+/**
+ * Multi-part props bake into one vertex-colored mesh each, so a prop costs
+ * one draw call per eye however many parts it has.
+ */
+const propMaterial = new MeshStandardMaterial({
+  vertexColors: true,
+  roughness: 0.4,
+});
 
 /**
  * Real-size placeholder ingredients, to be replaced by CC0 models. Each origin
@@ -24,19 +34,6 @@ const eggMaterial = createSceneMaterial({
   model: 'standard',
   baseColor: '#E8C9A0',
   roughness: 0.6,
-});
-const shakerBodyMaterial = createSceneMaterial({
-  id: 'ingredient-shaker-body',
-  model: 'standard',
-  baseColor: '#F2F3F4',
-  roughness: 0.35,
-});
-const shakerCapMaterial = createSceneMaterial({
-  id: 'ingredient-shaker-cap',
-  model: 'standard',
-  baseColor: '#8A9099',
-  roughness: 0.4,
-  metalness: 0.6,
 });
 const butterMaterial = createSceneMaterial({
   id: 'ingredient-butter',
@@ -91,7 +88,6 @@ export function createSaltShaker({ lengthM, widthM }: RecipeIngredient): Group {
       ],
       12,
     ),
-    shakerBodyMaterial,
   );
   body.name = 'ShakerBody';
   const cap = new Mesh(
@@ -105,12 +101,20 @@ export function createSaltShaker({ lengthM, widthM }: RecipeIngredient): Group {
       ],
       12,
     ),
-    shakerCapMaterial,
   );
   cap.name = 'ShakerCap';
   const shaker = new Group();
   shaker.name = 'SaltShaker';
-  shaker.add(body, cap);
+  shaker.add(
+    mergeColored(
+      'ShakerBody',
+      [
+        [body, '#F2F3F4'],
+        [cap, '#8A9099'],
+      ],
+      propMaterial,
+    ),
+  );
   return shaker;
 }
 
@@ -156,28 +160,15 @@ export function createGreenOnion({ lengthM, widthM }: RecipeIngredient): Group {
   const bundle = new Group();
   bundle.name = 'GreenOnion';
   const spread = widthM * 0.3;
-  for (const [index, offset] of [-spread, 0, spread].entries()) {
-    const stalk = new Mesh(geometry, onionMaterial);
-    stalk.name = `Stalk${index}`;
+  const stalks = [-spread, 0, spread].map((offset) => {
+    const stalk = new Mesh(geometry);
     stalk.position.z = offset;
-    bundle.add(stalk);
-  }
+    return [stalk, null] as const;
+  });
+  bundle.add(mergeColored('Stalks', stalks, onionMaterial));
   return bundle;
 }
 
-const soyGlassMaterial = new MeshStandardMaterial({
-  color: '#3A1D0E',
-  roughness: 0.25,
-});
-const soyCapMaterial = new MeshStandardMaterial({
-  color: '#B5382B',
-  roughness: 0.5,
-});
-/** A plain paper band: no brand, no writing. */
-const soyLabelMaterial = new MeshStandardMaterial({
-  color: '#EFE3C8',
-  roughness: 0.8,
-});
 const riceBowlMaterial = new MeshStandardMaterial({
   color: '#DCE6EE',
   roughness: 0.4,
@@ -203,7 +194,6 @@ export function createSoyBottle({ lengthM, widthM }: RecipeIngredient): Group {
       ],
       12,
     ),
-    soyGlassMaterial,
   );
   glass.name = 'SoyGlass';
   const cap = new Mesh(
@@ -216,18 +206,27 @@ export function createSoyBottle({ lengthM, widthM }: RecipeIngredient): Group {
       ],
       12,
     ),
-    soyCapMaterial,
   );
   cap.name = 'SoyCap';
   const label = new Mesh(
     new CylinderGeometry(r * 1.01, r * 1.01, lengthM * 0.32, 12, 1, true),
-    soyLabelMaterial,
   );
   label.name = 'SoyLabel';
   label.position.y = -h * 0.25;
   const bottle = new Group();
   bottle.name = 'SoyBottle';
-  bottle.add(glass, cap, label);
+  bottle.add(
+    mergeColored(
+      'SoyBody',
+      [
+        [glass, '#3A1D0E'],
+        [cap, '#B5382B'],
+        // A plain paper band: no brand, no writing.
+        [label, '#EFE3C8'],
+      ],
+      propMaterial,
+    ),
+  );
   return bottle;
 }
 

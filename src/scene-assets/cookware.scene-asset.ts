@@ -24,6 +24,19 @@ import { type ColoredPart, mergeColored } from './lib/merge-colored.js';
  * systems reveal and recolor them by name.
  */
 
+const STEEL = '#B9BEC4';
+const HANDLE = '#2A2118';
+/** Shared by the tools, which bake their parts into one mesh each. */
+const toolMaterial = new MeshStandardMaterial({
+  vertexColors: true,
+  roughness: 0.45,
+  metalness: 0.45,
+  side: DoubleSide,
+});
+const stoveBodyMaterial = new MeshStandardMaterial({
+  vertexColors: true,
+  roughness: 0.7,
+});
 const steelMaterial = new MeshStandardMaterial({
   color: '#B9BEC4',
   roughness: 0.35,
@@ -272,7 +285,16 @@ export function createWhisk(): Group {
 
   const whisk = new Group();
   whisk.name = 'Whisk';
-  whisk.add(handle, balloon);
+  whisk.add(
+    mergeColored(
+      'WhiskBody',
+      [
+        [handle, HANDLE],
+        [balloon, STEEL],
+      ],
+      toolMaterial,
+    ),
+  );
   return whisk;
 }
 
@@ -305,7 +327,17 @@ export function createSpatula(): Group {
 
   const spatula = new Group();
   spatula.name = 'Spatula';
-  spatula.add(handle, neck, blade);
+  spatula.add(
+    mergeColored(
+      'SpatulaBody',
+      [
+        [handle, HANDLE],
+        [neck, STEEL],
+        [blade, STEEL],
+      ],
+      toolMaterial,
+    ),
+  );
   return spatula;
 }
 
@@ -346,7 +378,21 @@ export function createPan(): Group {
 
   const pan = new Group();
   pan.name = 'Pan';
-  pan.add(body, handle, egg, butter, rice, scramble, riceOnion);
+  pan.add(
+    mergeColored(
+      'PanShell',
+      [
+        [body, '#34363A'],
+        [handle, HANDLE],
+      ],
+      toolMaterial,
+    ),
+    egg,
+    butter,
+    rice,
+    scramble,
+    riceOnion,
+  );
   return pan;
 }
 
@@ -389,9 +435,21 @@ export function createStove(): Group {
   flame.position.y = height + 0.002;
   flame.visible = false;
 
+  grate.updateMatrix();
+  const bars = grate.children.map((bar) => {
+    const mesh = bar as Mesh;
+    return [mesh, '#1E1F22'] as const;
+  });
   const stove = new Group();
   stove.name = 'Stove';
-  stove.add(base, burner, grate, flame);
+  stove.add(
+    mergeColored(
+      'StoveBody',
+      [[base, '#3C3F44'], [burner, '#1E1F22'], ...bars],
+      stoveBodyMaterial,
+    ),
+    flame,
+  );
   return stove;
 }
 

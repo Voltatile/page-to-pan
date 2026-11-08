@@ -6,8 +6,11 @@ import {
   Mesh,
 } from '@iwsdk/core';
 
-/** A positioned mesh and the color its vertices take in the merged mesh. */
-export type ColoredPart = readonly [mesh: Mesh, color: string];
+/**
+ * A positioned mesh and the color its vertices take in the merged mesh, or
+ * null to keep the part's own vertex colors (white where it has none).
+ */
+export type ColoredPart = readonly [mesh: Mesh, color: string | null];
 
 /**
  * Bakes several static meshes into one, keeping each part's color as a
@@ -22,7 +25,7 @@ export function mergeColored(
   const baked = parts.map(([mesh, color]) => {
     mesh.updateMatrix();
     const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrix);
-    return { geometry, color: new Color(color) };
+    return { geometry, color: color == null ? null : new Color(color) };
   });
   let vertexCount = 0;
   let indexCount = 0;
@@ -43,6 +46,9 @@ export function mergeColored(
   for (const { geometry, color } of baked) {
     const position = geometry.getAttribute('position');
     const normal = geometry.getAttribute('normal');
+    const ownColor = geometry.getAttribute('color') as
+      | ReturnType<typeof geometry.getAttribute>
+      | undefined;
     for (let vertex = 0; vertex < position.count; vertex += 1) {
       const at = (vertexOffset + vertex) * 3;
       positions[at] = position.getX(vertex);
@@ -51,9 +57,9 @@ export function mergeColored(
       normals[at] = normal.getX(vertex);
       normals[at + 1] = normal.getY(vertex);
       normals[at + 2] = normal.getZ(vertex);
-      colors[at] = color.r;
-      colors[at + 1] = color.g;
-      colors[at + 2] = color.b;
+      colors[at] = color?.r ?? ownColor?.getX(vertex) ?? 1;
+      colors[at + 1] = color?.g ?? ownColor?.getY(vertex) ?? 1;
+      colors[at + 2] = color?.b ?? ownColor?.getZ(vertex) ?? 1;
     }
     const index = geometry.index;
     const count = index?.count ?? position.count;

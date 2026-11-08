@@ -148,7 +148,8 @@ Every threshold is tuned on the emulator, whose hands do not shake
   and triangle counts, not real GPU time. The `?debug=1` board shows FPS, the worst
   frame, draw calls and triangles, turning red past the budget. The same numbers go to
   the console every 5 s with a list of the scenery holding the most meshes. In the
-  emulator the busiest moment was 76 draw calls and about 11k scene triangles. Read
+  emulator the busiest moment is the title screen with both recipes in the book: 86 draw
+  calls and about 11.5k scene triangles. Read
   the board during the cook step, when the pan steams and the particles show.
 - [ ] **Draw call count** (`src/systems/DebugOverlaySystem.ts`): in the emulator
   `renderer.info` counts both eyes of one XR frame together. If Quest Browser renders

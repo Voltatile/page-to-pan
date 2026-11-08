@@ -1,6 +1,7 @@
 import {
   BoxGeometry,
   Color,
+  Float32BufferAttribute,
   Mesh,
   MeshStandardMaterial,
   PlaneGeometry,
@@ -46,6 +47,21 @@ describe('mergeColored', () => {
     const green = new Color('#00FF00');
     expect(color.getY(0)).toBeCloseTo(green.g);
     expect(color.getX(0)).toBeCloseTo(green.r);
+  });
+
+  it('keeps the own vertex colors of a part given no color', () => {
+    const geometry = new BoxGeometry();
+    const count = geometry.getAttribute('position').count;
+    geometry.setAttribute(
+      'color',
+      new Float32BufferAttribute(new Array(count * 3).fill(0.25), 3),
+    );
+    const merged = mergeColored(
+      'Merged',
+      [[new Mesh(geometry), null]],
+      material,
+    );
+    expect(merged.geometry.getAttribute('color').getX(0)).toBeCloseTo(0.25);
   });
 
   it('points each part index at its own vertices', () => {
