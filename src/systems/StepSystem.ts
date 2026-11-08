@@ -28,6 +28,8 @@ export interface StepView {
   tip: string;
   /** True when the card shows the title menu row. */
   menu: boolean;
+  /** True when the card shows the volume and recenter controls. */
+  settings: boolean;
 }
 
 const PAUSED_TITLE = 'Paused';
@@ -133,6 +135,7 @@ export class StepSystem extends createSystem({
           secondaryAction: null,
           tip: page.tip,
           menu: false,
+          settings: this.titlePage === 'settings',
         };
       }
       return {
@@ -143,6 +146,7 @@ export class StepSystem extends createSystem({
         secondaryAction: null,
         tip: '',
         menu: true,
+        settings: false,
       };
     }
     if (state.phase === 'done') {
@@ -154,6 +158,7 @@ export class StepSystem extends createSystem({
         secondaryAction: MENU_LABEL,
         tip: '',
         menu: false,
+        settings: false,
       };
     }
     if (this.isPausedNow) {
@@ -165,6 +170,7 @@ export class StepSystem extends createSystem({
         secondaryAction: MENU_LABEL,
         tip: PAUSED_TIP,
         menu: false,
+        settings: false,
       };
     }
     const step = this.step;
@@ -181,6 +187,7 @@ export class StepSystem extends createSystem({
       secondaryAction: null,
       tip: (this.isHintingNow ? step?.hint : step?.tip) ?? '',
       menu: false,
+      settings: false,
     };
   }
 

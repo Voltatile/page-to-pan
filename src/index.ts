@@ -16,6 +16,7 @@ import { ReachHighlightSystem } from './systems/ReachHighlightSystem.js';
 import { ResultStarsSystem } from './systems/ResultStarsSystem.js';
 import { ScoreSystem } from './systems/ScoreSystem.js';
 import { SeatedCalibrationSystem } from './systems/SeatedCalibrationSystem.js';
+import { SettingsSystem } from './systems/SettingsSystem.js';
 import { SnapSystem } from './systems/SnapSystem.js';
 import { SoundSystem } from './systems/SoundSystem.js';
 import { StepSystem } from './systems/StepSystem.js';
@@ -39,6 +40,7 @@ World.create(
   world.registerSystem(EggShellSystem);
   world.registerSystem(GestureSystem);
   world.registerSystem(PauseSystem);
+  world.registerSystem(SettingsSystem);
   world.registerSystem(UISystem);
   world.registerSystem(ResultStarsSystem);
   world.registerSystem(TitlePreviewSystem);

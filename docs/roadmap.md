@@ -19,11 +19,12 @@ dan kesan pertama.
   (duduk, pakai tangan, nyalakan suara).
 - [x] **Layar judul 3D**: papan "Page to Pan" di atas kartu, kartu judul dengan **Start** dan baris
   menu **How to Play** dan **Credits** (masing-masing punya halaman dengan tombol Back). Omelette yang
-  berputar tetap dipakai sebagai hiasan. Tombol **Settings** masuk ke baris menu ini bersama item Settings.
+  berputar tetap dipakai sebagai hiasan. Tombol **Settings** sudah masuk ke baris menu ini.
 - [x] **Menu di Hasil dan Pause**: banner **"New best!"** yang pop setelah bintang saat rekor pecah;
   di hasil **Again** langsung memulai masak baru dan **Menu** kembali ke judul; pause berisi **Resume**
   dan **Menu**.
-- [ ] **Settings sederhana**: volume, dan **Recenter table** untuk mengkalibrasi ulang tinggi meja.
+- [x] **Settings sederhana**: halaman Settings di kartu judul dengan volume (tombol - dan +, per 10%,
+  disimpan di localStorage) dan **Recenter** untuk mengkalibrasi ulang tinggi meja.
 
 ## Prioritas 2: rasa "game" (target 11–12 Nov)
 

@@ -1,5 +1,5 @@
 /** Pages the title card can show besides the recipe itself. */
-export type TitlePage = 'main' | 'how-to-play' | 'credits';
+export type TitlePage = 'main' | 'how-to-play' | 'settings' | 'credits';
 
 interface TitlePageText {
   title: string;
@@ -17,6 +17,12 @@ export const TITLE_PAGES: Readonly<
     instruction:
       'Pinch to pick things up. Point at a button and pinch to press it.',
     tip: 'A ring shows where things go. Hold a palm up to pause.',
+  },
+  settings: {
+    title: 'Settings',
+    instruction:
+      'Change the sound, or recenter if the table feels too high or low.',
+    tip: '',
   },
   credits: {
     title: 'Credits',

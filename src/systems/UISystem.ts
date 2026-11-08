@@ -7,6 +7,7 @@ import {
   VisibilityState,
 } from '@iwsdk/core';
 import { ScoreSystem } from './ScoreSystem.js';
+import { SettingsSystem } from './SettingsSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const ENTER_VR_LABEL = 'Enter VR';
@@ -58,10 +59,21 @@ export class UISystem extends createSystem({}) {
     const menu = card.requireElementById('card-menu');
     const howToPlay = card.requireElementById('menu-how-to-play');
     const credits = card.requireElementById('menu-credits');
+    const settingsButton = card.requireElementById('menu-settings');
+    const settingsRow = card.requireElementById('card-settings');
+    const volumeText = card.requireElementById<UIKit.Text>('settings-volume');
+    const volumeDown = card.requireElementById('settings-volume-down');
+    const volumeUp = card.requireElementById('settings-volume-up');
+    const recenter = card.requireElementById('settings-recenter');
+    const settings = this.world.getSystem(SettingsSystem);
     const logo = this.world.requireSceneEntity('title-logo');
     secondary.name = 'card-button-secondary';
     howToPlay.name = 'menu-how-to-play';
     credits.name = 'menu-credits';
+    settingsButton.name = 'menu-settings';
+    volumeDown.name = 'settings-volume-down';
+    volumeUp.name = 'settings-volume-up';
+    recenter.name = 'settings-recenter';
     this.cardObject = this.world.requireSceneEntity('recipe-card').object3D;
     this.cardScale = this.cardObject?.scale.x ?? 1;
     const steps = this.world.getSystem(StepSystem);
@@ -90,6 +102,7 @@ export class UISystem extends createSystem({}) {
       const result = view.state.phase === 'done' ? score.result : null;
       const tipText = view.tip;
       const showMenu = view.menu && !isFlat;
+      const showSettings = view.settings && !isFlat;
       const instructionText = view.menu
         ? titleLine(view.instruction, score.bestStars)
         : view.instruction;
@@ -112,10 +125,16 @@ export class UISystem extends createSystem({}) {
         display: result == null && tipText !== '' ? 'flex' : 'none',
       });
       menu.setProperties({ display: showMenu ? 'flex' : 'none' });
+      settingsRow.setProperties({ display: showSettings ? 'flex' : 'none' });
+      volumeText.setProperties({
+        text: `Volume ${Math.round((settings?.volume ?? 0) * 100)}%`,
+      });
       stats.setProperties({ display: result == null ? 'none' : 'flex' });
       strip.setProperties({
         display:
-          result == null && tipText === '' && !showMenu ? 'none' : 'flex',
+          result == null && tipText === '' && !showMenu && !showSettings
+            ? 'none'
+            : 'flex',
       });
       if (result != null) {
         accuracy.setProperties({ text: percent(result.accuracy) });
@@ -136,16 +155,34 @@ export class UISystem extends createSystem({}) {
     const onSecondaryClick = () => steps.performSecondaryAction();
     const onHowToPlay = () => steps.openTitlePage('how-to-play');
     const onCredits = () => steps.openTitlePage('credits');
+    const onSettings = () => steps.openTitlePage('settings');
+    const onVolumeDown = () => {
+      settings?.changeVolume(-1);
+      render();
+    };
+    const onVolumeUp = () => {
+      settings?.changeVolume(1);
+      render();
+    };
+    const onRecenter = () => settings?.recenter();
 
     button.addEventListener('click', onClick);
     secondary.addEventListener('click', onSecondaryClick);
     howToPlay.addEventListener('click', onHowToPlay);
     credits.addEventListener('click', onCredits);
+    settingsButton.addEventListener('click', onSettings);
+    volumeDown.addEventListener('click', onVolumeDown);
+    volumeUp.addEventListener('click', onVolumeUp);
+    recenter.addEventListener('click', onRecenter);
     this.cleanupFuncs.push(
       () => button.removeEventListener('click', onClick),
       () => secondary.removeEventListener('click', onSecondaryClick),
       () => howToPlay.removeEventListener('click', onHowToPlay),
       () => credits.removeEventListener('click', onCredits),
+      () => settingsButton.removeEventListener('click', onSettings),
+      () => volumeDown.removeEventListener('click', onVolumeDown),
+      () => volumeUp.removeEventListener('click', onVolumeUp),
+      () => recenter.removeEventListener('click', onRecenter),
       steps.subscribe(render),
       this.world.visibilityState.subscribe(render),
     );

@@ -119,6 +119,7 @@ export class SoundSystem extends createSystem({
   private shownGain = -1;
   private shownBurn = -1;
   private masterGain = -1;
+  private gameVolume: number = TUNING.masterVolume;
   private readonly pan: PanState = {
     isOnHeat: false,
     hasButter: false,
@@ -193,7 +194,7 @@ export class SoundSystem extends createSystem({
     }
     const isVisible =
       this.world.visibilityState.peek() === VisibilityState.Visible;
-    const master = isVisible ? TUNING.masterVolume : 0;
+    const master = isVisible ? this.gameVolume : 0;
     if (master !== this.masterGain) {
       this.masterGain = master;
       this.listener.setMasterVolume(master);
@@ -204,6 +205,11 @@ export class SoundSystem extends createSystem({
       this.playSound('clank', this.kitchen.requireTool('pan').object3D ?? null);
     }
     this.wasPanOnStove = isPanOnStove;
+  }
+
+  /** The player's volume from the settings, 0 to 1. */
+  setGameVolume(volume: number): void {
+    this.gameVolume = Math.min(Math.max(volume, 0), 1);
   }
 
   /**

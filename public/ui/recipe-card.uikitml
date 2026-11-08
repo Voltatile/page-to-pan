@@ -90,13 +90,40 @@
 
   .menu-button {
     height: 56px;
-    padding-left: 22px;
-    padding-right: 22px;
+    padding-left: 14px;
+    padding-right: 14px;
     justify-content: center;
   }
 
   .menu-button-label {
+    font-size: 22px;
+  }
+
+  .settings {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .step-button {
+    width: 56px;
+    height: 56px;
+    justify-content: center;
+  }
+
+  .step-button-label {
+    font-size: 30px;
+  }
+
+  .settings-value {
+    width: 172px;
+    color: #3a3b40;
     font-size: 24px;
+    text-align: center;
+  }
+
+  .settings-value:dark {
+    color: #eceef2;
   }
 
   .stats {
@@ -149,8 +176,23 @@
       <Button id="menu-how-to-play" class="menu-button">
         <ButtonLabel class="menu-button-label">How to Play</ButtonLabel>
       </Button>
+      <Button id="menu-settings" class="menu-button">
+        <ButtonLabel class="menu-button-label">Settings</ButtonLabel>
+      </Button>
       <Button id="menu-credits" class="menu-button">
         <ButtonLabel class="menu-button-label">Credits</ButtonLabel>
+      </Button>
+    </div>
+    <div id="card-settings" class="settings">
+      <Button id="settings-volume-down" class="step-button">
+        <ButtonLabel class="step-button-label">-</ButtonLabel>
+      </Button>
+      <div id="settings-volume" class="settings-value">Volume 90%</div>
+      <Button id="settings-volume-up" class="step-button">
+        <ButtonLabel class="step-button-label">+</ButtonLabel>
+      </Button>
+      <Button id="settings-recenter" class="menu-button">
+        <ButtonLabel class="menu-button-label">Recenter</ButtonLabel>
       </Button>
     </div>
     <div id="card-stats" class="stats">

@@ -21,6 +21,11 @@ export class SeatedCalibrationSystem extends createSystem({}) {
     );
   }
 
+  /** Fits the table to the head again, on the next tracked frame. */
+  recalibrate(): void {
+    this.isCalibrated = false;
+  }
+
   update(): void {
     if (
       this.isCalibrated ||
