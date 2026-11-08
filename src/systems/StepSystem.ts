@@ -7,8 +7,8 @@ import {
   type TitlePage,
   type TitlePageText,
 } from '../config/menu.js';
-import { OMELETTE } from '../config/recipes/omelette.js';
-import type { RecipeStep } from '../config/recipes/recipe.js';
+import { initialRecipe } from '../config/recipes/index.js';
+import type { Recipe, RecipeStep } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import { Ingredient } from '../game-components.js';
 import {
@@ -52,7 +52,7 @@ export class StepSystem extends createSystem({
   },
 }) {
   private gameState: GameState = TITLE_STATE;
-  private readonly recipe = OMELETTE;
+  private recipe: Recipe = initialRecipe();
   private readonly placedIds = new Set<string>();
   private readonly listeners = new Set<() => void>();
   private progress = '';
@@ -65,6 +65,7 @@ export class StepSystem extends createSystem({
   private isHintingNow = false;
 
   init(): void {
+    this.world.getSystem(SnapSystem)?.setRecipe(this.recipe);
     const onPlacedChange = () => this.onPlacedChange();
     this.cleanupFuncs.push(
       this.queries.placed.subscribe('qualify', onPlacedChange),
@@ -109,6 +110,24 @@ export class StepSystem extends createSystem({
 
   get recipeId(): string {
     return this.recipe.id;
+  }
+
+  /** The recipe being cooked, or shown on the title card. */
+  get activeRecipe(): Recipe {
+    return this.recipe;
+  }
+
+  /** Switches the recipe while the title card is up. */
+  selectRecipe(recipe: Recipe): void {
+    if (this.gameState.phase !== 'title' || recipe === this.recipe) {
+      return;
+    }
+    this.recipe = recipe;
+    this.titlePage = 'main';
+    const snap = this.world.getSystem(SnapSystem);
+    snap?.setRecipe(recipe);
+    snap?.reset();
+    this.notify();
   }
 
   /** Only a recipe in progress can pause. */

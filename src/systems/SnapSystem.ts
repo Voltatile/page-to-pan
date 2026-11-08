@@ -12,7 +12,8 @@ import {
   Vector3,
   Visibility,
 } from '@iwsdk/core';
-import { OMELETTE } from '../config/recipes/omelette.js';
+import { sheetNodeId } from '../config/recipes/index.js';
+import type { Recipe } from '../config/recipes/recipe.js';
 import type { RecipeIngredient } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import { Ingredient } from '../game-components.js';
@@ -34,7 +35,9 @@ export class SnapSystem extends createSystem({
   ingredients: { required: [Ingredient] },
   held: { required: [Ingredient, Grabbed] },
 }) {
-  private readonly targets = new Map<string, SnapTarget>();
+  /** Snap targets of the active recipe, by ingredient id. */
+  private targets = new Map<string, SnapTarget>();
+  private readonly targetsByRecipe = new Map<string, Map<string, SnapTarget>>();
   private readonly glide = new HomeGlide((entity) =>
     this.setShadowVisible(entity, true),
   );
@@ -48,26 +51,6 @@ export class SnapSystem extends createSystem({
       baseColor: '#2FA866',
       roughness: 0.9,
     });
-
-    const sheet = this.world.requireSceneObject<Object3D>('recipe-sheet');
-    sheet.updateWorldMatrix(true, true);
-    for (const ingredient of OMELETTE.ingredients) {
-      const outline = sheet.getObjectByName(
-        `Silhouette_${ingredient.id}`,
-      ) as Mesh;
-      const [x, z] = ingredient.sheetPosition;
-      this.targets.set(ingredient.id, {
-        ingredient,
-        outline,
-        restingMaterial: outline.material as Material,
-        position: sheet.localToWorld(
-          new Vector3(x, ingredient.restHeightM + 0.0035, z),
-        ),
-        quaternion: new Quaternion().setFromEuler(
-          new Euler(0, 0, (ingredient.snapRollDeg ?? 0) * DEG_TO_RAD),
-        ),
-      });
-    }
 
     this.cleanupFuncs.push(
       this.queries.ingredients.subscribe('qualify', (entity) =>
@@ -97,6 +80,37 @@ export class SnapSystem extends createSystem({
     }
 
     this.glide.update(delta);
+  }
+
+  /** Uses the outlines on this recipe's sheet from now on. */
+  setRecipe(recipe: Recipe): void {
+    let targets = this.targetsByRecipe.get(recipe.id);
+    if (targets == null) {
+      targets = new Map();
+      const sheet = this.world.requireSceneObject<Object3D>(
+        sheetNodeId(recipe),
+      );
+      sheet.updateWorldMatrix(true, true);
+      for (const ingredient of recipe.ingredients) {
+        const outline = sheet.getObjectByName(
+          `Silhouette_${ingredient.id}`,
+        ) as Mesh;
+        const [x, z] = ingredient.sheetPosition;
+        targets.set(ingredient.id, {
+          ingredient,
+          outline,
+          restingMaterial: outline.material as Material,
+          position: sheet.localToWorld(
+            new Vector3(x, ingredient.restHeightM + 0.0035, z),
+          ),
+          quaternion: new Quaternion().setFromEuler(
+            new Euler(0, 0, (ingredient.snapRollDeg ?? 0) * DEG_TO_RAD),
+          ),
+        });
+      }
+      this.targetsByRecipe.set(recipe.id, targets);
+    }
+    this.targets = targets;
   }
 
   /** Puts every ingredient back at its starting pose. */

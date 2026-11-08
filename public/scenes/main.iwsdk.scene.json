@@ -86,8 +86,8 @@
       }
     },
     {
-      "id": "recipe-sheet",
-      "name": "Recipe Sheet",
+      "id": "recipe-sheet-omelette",
+      "name": "Recipe Sheet Omelette",
       "content": {
         "type": "asset",
         "asset": "recipe-sheet-omelette"

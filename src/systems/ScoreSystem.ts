@@ -79,6 +79,7 @@ export class ScoreSystem extends createSystem({}) {
   private onStepChange(): void {
     const phase = this.steps.state.phase;
     if (phase === 'title') {
+      this.best = loadBestStars(this.storage, this.steps.recipeId);
       this.lastScore = null;
       this.beatBest = false;
       this.record.saltDashes = 0;

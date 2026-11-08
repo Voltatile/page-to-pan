@@ -8,6 +8,8 @@ import {
   Visibility,
 } from '@iwsdk/core';
 import { PAN_ON_STOVE_Y } from '../config/cookware.js';
+import { RECIPES, sheetNodeId } from '../config/recipes/index.js';
+import type { Recipe } from '../config/recipes/recipe.js';
 import type { ToolId } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import { Ingredient, KitchenTool } from '../game-components.js';
@@ -100,16 +102,19 @@ export class KitchenSystem extends createSystem({
       this.isPanOnStove = false;
       this.setToolFlame(false);
     }
-    const key = this.steps.isGamePaused
+    const recipe = this.steps.activeRecipe;
+    const phaseKey = this.steps.isGamePaused
       ? 'paused'
       : state.phase === 'cooking'
         ? `step-${state.stepIndex}`
         : state.phase;
+    const key = `${recipe.id}:${phaseKey}`;
     if (key === this.stageKey) {
       return;
     }
     this.stageKey = key;
-    if (key === 'paused') {
+    this.showRecipeSheet(recipe);
+    if (phaseKey === 'paused') {
       // Nothing moves while paused: held things go back and hands pass through.
       this.lockEverything();
       for (const entity of this.queries.ingredients.entities) {
@@ -134,15 +139,27 @@ export class KitchenSystem extends createSystem({
     }
     for (const entity of this.queries.ingredients.entities) {
       const id = entity.getValue(Ingredient, 'ingredientId') ?? '';
+      const isInRecipe = recipe.ingredients.some(
+        (ingredient) => ingredient.id === id,
+      );
       this.setGrabbable(
         entity,
-        step == null || step.grabbableIngredients.includes(id),
+        isInRecipe && (step == null || step.grabbableIngredients.includes(id)),
       );
       entity.setValue(
         Visibility,
         'isVisible',
-        step == null || step.ingredients.includes(id),
+        isInRecipe && (step == null || step.ingredients.includes(id)),
       );
+    }
+  }
+
+  /** Only the active recipe's sheet lies on the table. */
+  private showRecipeSheet(active: Recipe): void {
+    for (const recipe of RECIPES) {
+      this.world
+        .requireSceneEntity(sheetNodeId(recipe))
+        .setValue(Visibility, 'isVisible', recipe === active);
     }
   }
 
