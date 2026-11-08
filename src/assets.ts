@@ -48,4 +48,5 @@ export default defineAssets({
   'tool-plate': createPlate(),
   'recipe-card': uikitml('recipe-card.uikitml', 'Recipe Card'),
   'recipe-labels': uikitml('recipe-labels.uikitml', 'Recipe Labels'),
+  'title-logo': uikitml('title-logo.uikitml', 'Title Logo'),
 });

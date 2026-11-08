@@ -1,0 +1,44 @@
+<!--
+  The game name over the recipe card on the title screen. Authored at
+  1 unit = 1 mm (placed at scale 0.1): this sign is 52 x 12 cm, and its
+  76-unit letters are about 5.5 cm tall, easy to read from the seat.
+  Note: comments inside the style block break the UIKitML parser.
+-->
+<style>
+  .sign {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 520px;
+    height: 120px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .word {
+    color: #1c1d20;
+    font-size: 76px;
+    font-weight: 700;
+  }
+
+  .word:dark {
+    color: #fafaf7;
+  }
+
+  .accent {
+    color: #c9893a;
+    font-size: 76px;
+    font-weight: 700;
+    margin-left: 22px;
+    margin-right: 22px;
+  }
+
+  .accent:dark {
+    color: #ffc46b;
+  }
+</style>
+<Panel class="sign">
+  <div class="word">Page</div>
+  <div class="accent">to</div>
+  <div class="word">Pan</div>
+</Panel>

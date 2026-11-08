@@ -17,9 +17,9 @@ dan kesan pertama.
 - [x] **Halaman pembuka 2D** sebelum masuk VR, yaitu yang pertama dilihat juri di Quest Browser:
   judul **Page to Pan**, satu kalimat penjelasan, tombol besar **Enter VR**, dan petunjuk singkat
   (duduk, pakai tangan, nyalakan suara).
-- [ ] **Layar judul 3D**: teks besar "Page to Pan" di atas meja, kartu menu berisi **Play**,
-  **How to Play**, **Settings**, **Credits**. Omelette yang berputar tetap dipakai sebagai hiasan.
-  Saat ini nama game belum muncul di mana pun di dalam VR.
+- [x] **Layar judul 3D**: papan "Page to Pan" di atas kartu, kartu judul dengan **Start** dan baris
+  menu **How to Play** dan **Credits** (masing-masing punya halaman dengan tombol Back). Omelette yang
+  berputar tetap dipakai sebagai hiasan. Tombol **Settings** masuk ke baris menu ini bersama item Settings.
 - [ ] **Menu di Hasil dan Pause**: banner **"New best!"** saat rekor pecah, tombol **Menu** di samping
   Again, dan **Quit to Menu** di pause.
 - [ ] **Settings sederhana**: volume, dan **Recenter table** untuk mengkalibrasi ulang tinggi meja.

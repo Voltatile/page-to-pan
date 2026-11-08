@@ -3,13 +3,13 @@ import {
   UIKit,
   UIKitMLAsset,
   type Object3D,
+  Visibility,
   VisibilityState,
 } from '@iwsdk/core';
 import { ScoreSystem } from './ScoreSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const ENTER_VR_LABEL = 'Enter VR';
-const PAUSE_HINT = 'Turn a hand palm up and hold it to pause.';
 
 /** A short swell of the card that draws the eye to new text. */
 const NUDGE_S = 0.4;
@@ -17,11 +17,12 @@ const NUDGE_GROWTH = 0.05;
 
 const percent = (part: number) => String(Math.round(part * 100));
 
-function bestLine(stars: number): string {
+/** The intro, plus the best result once there is one. */
+function titleLine(intro: string, stars: number): string {
   if (stars <= 0) {
-    return PAUSE_HINT;
+    return intro;
   }
-  return `Your best: ${stars} of 3 ${stars === 1 ? 'star' : 'stars'}.`;
+  return `${intro} Your best: ${stars} of 3 ${stars === 1 ? 'star' : 'stars'}.`;
 }
 
 /**
@@ -51,7 +52,13 @@ export class UISystem extends createSystem({}) {
     const accuracy = card.requireElementById<UIKit.Text>('stat-accuracy');
     const timing = card.requireElementById<UIKit.Text>('stat-timing');
     const technique = card.requireElementById<UIKit.Text>('stat-technique');
+    const menu = card.requireElementById('card-menu');
+    const howToPlay = card.requireElementById('menu-how-to-play');
+    const credits = card.requireElementById('menu-credits');
+    const logo = this.world.requireSceneEntity('title-logo');
     secondary.name = 'card-button-secondary';
+    howToPlay.name = 'menu-how-to-play';
+    credits.name = 'menu-credits';
     this.cardObject = this.world.requireSceneEntity('recipe-card').object3D;
     this.cardScale = this.cardObject?.scale.x ?? 1;
     const steps = this.world.getSystem(StepSystem);
@@ -67,6 +74,7 @@ export class UISystem extends createSystem({}) {
         state.phase === 'cooking' ? state.stepIndex : state.phase,
         steps.isGamePaused,
         steps.isHinting,
+        state.phase === 'title' ? view.title : '',
       ].join(':');
       if (key !== this.nudgeKey) {
         this.nudgeKey = key;
@@ -77,13 +85,17 @@ export class UISystem extends createSystem({}) {
       const action = isFlat ? ENTER_VR_LABEL : view.action;
       const secondaryAction = isFlat ? null : view.secondaryAction;
       const result = view.state.phase === 'done' ? score.result : null;
-      const tipText =
-        view.state.phase === 'title' ? bestLine(score.bestStars) : view.tip;
+      const tipText = view.tip;
+      const showMenu = view.menu && !isFlat;
+      const instructionText = view.menu
+        ? titleLine(view.instruction, score.bestStars)
+        : view.instruction;
 
+      logo.setValue(Visibility, 'isVisible', state.phase === 'title');
       title.setProperties({
         text: result == null ? view.title : `Score: ${result.total}`,
       });
-      instruction.setProperties({ text: result?.note ?? view.instruction });
+      instruction.setProperties({ text: result?.note ?? instructionText });
       label.setProperties({ text: action ?? '' });
       button.setProperties({ display: action == null ? 'none' : 'flex' });
       secondaryLabel.setProperties({ text: secondaryAction ?? '' });
@@ -91,10 +103,14 @@ export class UISystem extends createSystem({}) {
         display: secondaryAction == null ? 'none' : 'flex',
       });
       tip.setProperties({ text: tipText });
-      tip.setProperties({ display: result == null ? 'flex' : 'none' });
+      tip.setProperties({
+        display: result == null && tipText !== '' ? 'flex' : 'none',
+      });
+      menu.setProperties({ display: showMenu ? 'flex' : 'none' });
       stats.setProperties({ display: result == null ? 'none' : 'flex' });
       strip.setProperties({
-        display: result == null && tipText === '' ? 'none' : 'flex',
+        display:
+          result == null && tipText === '' && !showMenu ? 'none' : 'flex',
       });
       if (result != null) {
         accuracy.setProperties({ text: percent(result.accuracy) });
@@ -113,12 +129,18 @@ export class UISystem extends createSystem({}) {
       }
     };
     const onSecondaryClick = () => steps.performSecondaryAction();
+    const onHowToPlay = () => steps.openTitlePage('how-to-play');
+    const onCredits = () => steps.openTitlePage('credits');
 
     button.addEventListener('click', onClick);
     secondary.addEventListener('click', onSecondaryClick);
+    howToPlay.addEventListener('click', onHowToPlay);
+    credits.addEventListener('click', onCredits);
     this.cleanupFuncs.push(
       () => button.removeEventListener('click', onClick),
       () => secondary.removeEventListener('click', onSecondaryClick),
+      () => howToPlay.removeEventListener('click', onHowToPlay),
+      () => credits.removeEventListener('click', onCredits),
       steps.subscribe(render),
       this.world.visibilityState.subscribe(render),
     );

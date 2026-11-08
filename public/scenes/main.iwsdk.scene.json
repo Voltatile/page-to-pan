@@ -161,6 +161,27 @@
           "components": {
             "RayInteractable": {}
           }
+        },
+        {
+          "id": "title-logo",
+          "name": "Title Logo",
+          "content": {
+            "type": "asset",
+            "asset": "title-logo"
+          },
+          "transform": {
+            "position": [
+              0,
+              0.4,
+              -0.21
+            ],
+            "rotationDeg": [
+              -10,
+              0,
+              0
+            ],
+            "scale": 0.1
+          }
         }
       ]
     },

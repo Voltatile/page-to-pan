@@ -1,4 +1,5 @@
 import { createSystem, eq, VisibilityState } from '@iwsdk/core';
+import { BACK_LABEL, TITLE_PAGES, type TitlePage } from '../config/menu.js';
 import { OMELETTE } from '../config/recipes/omelette.js';
 import type { RecipeStep } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
@@ -25,6 +26,8 @@ export interface StepView {
   secondaryAction: string | null;
   /** Why the current step matters, shown under the instruction. */
   tip: string;
+  /** True when the card shows the title menu row. */
+  menu: boolean;
 }
 
 const PAUSED_TITLE = 'Paused';
@@ -45,6 +48,7 @@ export class StepSystem extends createSystem({
   private progress = '';
   private isActionReady = false;
   private isPausedNow = false;
+  private titlePage: TitlePage = 'main';
   /** Seconds of play since the step started or last showed progress. */
   private idleS = 0;
   private isHintingNow = false;
@@ -118,6 +122,18 @@ export class StepSystem extends createSystem({
   get view(): StepView {
     const { gameState: state, recipe } = this;
     if (state.phase === 'title') {
+      if (this.titlePage !== 'main') {
+        const page = TITLE_PAGES[this.titlePage];
+        return {
+          state,
+          title: page.title,
+          instruction: page.instruction,
+          action: BACK_LABEL,
+          secondaryAction: null,
+          tip: page.tip,
+          menu: false,
+        };
+      }
       return {
         state,
         title: recipe.title,
@@ -125,6 +141,7 @@ export class StepSystem extends createSystem({
         action: 'Start',
         secondaryAction: null,
         tip: '',
+        menu: true,
       };
     }
     if (state.phase === 'done') {
@@ -135,6 +152,7 @@ export class StepSystem extends createSystem({
         action: 'Again',
         secondaryAction: null,
         tip: '',
+        menu: false,
       };
     }
     if (this.isPausedNow) {
@@ -145,6 +163,7 @@ export class StepSystem extends createSystem({
         action: 'Resume',
         secondaryAction: 'Restart',
         tip: PAUSED_TIP,
+        menu: false,
       };
     }
     const step = this.step;
@@ -160,6 +179,7 @@ export class StepSystem extends createSystem({
       action: isReady ? 'Next' : null,
       secondaryAction: null,
       tip: (this.isHintingNow ? step?.hint : step?.tip) ?? '',
+      menu: false,
     };
   }
 
@@ -170,6 +190,8 @@ export class StepSystem extends createSystem({
     }
     if (this.isPausedNow) {
       this.resumeGame();
+    } else if (this.gameState.phase === 'title' && this.titlePage !== 'main') {
+      this.openTitlePage('main');
     } else if (this.gameState.phase === 'title') {
       this.gameState = startRecipe(this.recipe);
       this.advanceIfPrepared();
@@ -177,6 +199,14 @@ export class StepSystem extends createSystem({
       this.restart();
     } else {
       this.completeStep();
+    }
+  }
+
+  /** Shows How to Play, Credits, or the recipe itself on the title card. */
+  openTitlePage(page: TitlePage): void {
+    if (this.gameState.phase === 'title' && page !== this.titlePage) {
+      this.titlePage = page;
+      this.notify();
     }
   }
 
@@ -237,6 +267,7 @@ export class StepSystem extends createSystem({
 
   private setState(state: GameState): void {
     this.gameState = state;
+    this.titlePage = 'main';
     if (state.phase !== 'cooking') {
       this.isPausedNow = false;
     }

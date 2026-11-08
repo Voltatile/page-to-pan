@@ -4,7 +4,8 @@
   body text and the 24-unit tip text meet the 24-32 px readability rule.
   The buttons are 13 x 7.2 cm, sized for shaky hand rays: the card leans back
   45 degrees, so their height is the side that looks smallest.
-  The bottom strip shows why the step matters, or the score breakdown at the end.
+  The bottom strip shows why the step matters, the menu on the title card, or the
+  score breakdown at the end.
   Note: comments inside the style block break the UIKitML parser.
 -->
 <style>
@@ -82,6 +83,22 @@
     color: #ffc46b;
   }
 
+  .menu {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .menu-button {
+    height: 56px;
+    padding-left: 22px;
+    padding-right: 22px;
+    justify-content: center;
+  }
+
+  .menu-button-label {
+    font-size: 24px;
+  }
+
   .stats {
     flex-direction: row;
     justify-content: space-between;
@@ -128,6 +145,14 @@
   <div id="card-strip" class="strip">
     <div class="divider"></div>
     <div id="card-tip" class="tip">Why: having everything within reach keeps you calm.</div>
+    <div id="card-menu" class="menu">
+      <Button id="menu-how-to-play" class="menu-button">
+        <ButtonLabel class="menu-button-label">How to Play</ButtonLabel>
+      </Button>
+      <Button id="menu-credits" class="menu-button">
+        <ButtonLabel class="menu-button-label">Credits</ButtonLabel>
+      </Button>
+    </div>
     <div id="card-stats" class="stats">
       <div class="stat">
         <div id="stat-accuracy" class="stat-value">100</div>

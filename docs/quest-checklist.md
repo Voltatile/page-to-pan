@@ -132,6 +132,9 @@ Every threshold is tuned on the emulator, whose hands do not shake
 
 ## 6. After the cook
 
+- [ ] **Title sign and menu**: the "Page to Pan" sign floats at eye height over the card,
+  and the How to Play and Credits buttons (56 units tall, smaller than the main button)
+  must be easy to hit with a hand ray. Each page returns with Back.
 - [ ] **Title preview** (`src/systems/TitlePreviewSystem.ts`): a finished omelette turns
   above the card on the title screen. Confirm it reads as an omelette and does not
   hide the card text.
