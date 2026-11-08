@@ -8,6 +8,11 @@
  * It restarts the dev session, hides the emulator UI, counts down so you can
  * start your screen recorder, then cooks. Exit code 0 means every step passed
  * and the console stayed free of errors.
+ *
+ *   DEMO_DEBUG=1 npm run demo
+ *
+ * also opens the page with ?debug=1 and ends with the performance numbers the
+ * debug overlay logged while cooking.
  */
 import { execFile, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -21,6 +26,7 @@ const CLI = join(ROOT, 'node_modules/@iwsdk/cli/bin/iwsdk.js');
 const SYSTEM_CHROME = 'C:\\Program Files\\Google\\Chrome\\Application';
 const COUNTDOWN_S = 5;
 const VIDEO_LIMIT_S = 180;
+const IS_DEBUG = process.env.DEMO_DEBUG === '1';
 /** Seated eye height: the game keeps the table 42 cm under the head. */
 const HEAD = { x: 0, y: 1.3, z: 0 };
 /** Time on the heat after the card first says Golden, aiming for doneness 0.7. */
@@ -54,6 +60,11 @@ async function runCli(args, timeoutMs) {
       await sleep(400);
     }
   }
+}
+
+/** `browser logs` answers with a plain list of entries. */
+function logEntries(result) {
+  return Array.isArray(result) ? result : (result?.logs ?? []);
 }
 
 function callCli(args, timeoutMs = 60000) {
@@ -478,6 +489,11 @@ async function prepareStage() {
     120000,
   );
   await runCli(['runtime', 'wait'], 90000);
+  if (IS_DEBUG) {
+    await runCli(['browser', 'run', 'scripts/demo-debug-view.mjs']);
+    await sleep(2000);
+    await runCli(['runtime', 'wait'], 90000);
+  }
   await runCli(['browser', 'run', 'scripts/demo-clean-view.mjs']);
   const status = await xr('status', {});
   if (!status.sessionActive) {
@@ -537,6 +553,16 @@ async function cook() {
   await sleep(4000);
 }
 
+/** Again must clear the table, so a second cook starts from the beginning. */
+async function cookAgain() {
+  await lookAt({ x: 0, y: 1.0, z: -0.6 }, 0.6);
+  await pressCardButton();
+  await expectTitle(/^Omelette$/);
+  await sleep(800);
+  await pressCardButton();
+  await expectTitle(/^Ingredients$/);
+}
+
 async function main() {
   await prepareStage();
   const cookingFrom = Date.now();
@@ -546,6 +572,8 @@ async function main() {
     await sleep(1000);
   }
   await cook();
+  const seconds = Math.round((Date.now() - cookingFrom) / 1000) - COUNTDOWN_S;
+  await cookAgain();
 
   const logs = await runCli([
     'browser',
@@ -553,17 +581,51 @@ async function main() {
     '--input-json',
     JSON.stringify({ count: 100, level: 'error', since: cookingFrom }),
   ]);
-  const errors = (logs.logs ?? []).filter(
+  const errors = logEntries(logs).filter(
     (entry) => entry.level === 'error' && !entry.message.includes('net::ERR'),
   );
   if (errors.length > 0) {
     throw new Error(`Console errors: ${errors[0].message.slice(0, 200)}`);
   }
-  const seconds = Math.round((Date.now() - cookingFrom) / 1000) - COUNTDOWN_S;
   console.log(`\nPASS: ${passed} checks, no console errors, ${seconds} s of video.`);
   if (seconds > VIDEO_LIMIT_S) {
     console.log(`Note: longer than the ${VIDEO_LIMIT_S} s video limit.`);
   }
+  if (IS_DEBUG) {
+    await reportPerformance(cookingFrom);
+  }
+}
+
+/** Worst numbers the debug overlay logged while cooking. */
+async function reportPerformance(since) {
+  const logs = await runCli([
+    'browser',
+    'logs',
+    '--input-json',
+    JSON.stringify({ count: 200, pattern: '^\\[debug\\]', since }),
+  ]);
+  const samples = logEntries(logs)
+    .map((entry) => Object.fromEntries(
+      [...entry.message.matchAll(/(\w+)=(\d+)/g)].map(([, key, value]) => [key, Number(value)]),
+    ))
+    .filter((sample) => sample.calls != null);
+  if (samples.length === 0) {
+    console.log('No debug samples were logged.');
+    return;
+  }
+  const most = (key) => Math.max(...samples.map((sample) => sample[key]));
+  const least = (key) => Math.min(...samples.map((sample) => sample[key]));
+  console.log(
+    `Performance over ${samples.length} samples (emulator GPU, not a Quest):
+` +
+      `  fps min ${least('fps')}, worst frame ${most('worstMs')} ms
+` +
+      `  draw calls max ${most('calls')} (budget < 100)
+` +
+      `  scene triangles max ${most('sceneTris')} (budget < 100000)
+` +
+      `  drawn triangles max ${most('drawnTris')}`,
+  );
 }
 
 main().catch((error) => {
