@@ -50,6 +50,10 @@ Every threshold is tuned on the emulator, whose hands do not shake
 - [ ] **Reach glow** (`src/systems/ReachHighlightSystem.ts`): objects glow when the grab
   pointer touches them. Confirm the glow appears before a real pinch would catch the
   object, and does not flicker when a hand hovers at the edge of range.
+- [ ] **Guide rings** (`src/systems/GuideSystem.ts`): while an object is held, a ring
+  pulses where it has to go and turns green once the object is over it. Confirm the
+  ring is easy to see but not distracting, and that green really means the release or
+  tilt will count.
 - [ ] **Crack**: one hand holds a 6 cm egg over the bowl and the other pinches beside
   it, so hand tracking may lose a hand when they overlap. If it does, widen
   `crackReachM`. Also confirm the right hand reaches the bowl while seated.
