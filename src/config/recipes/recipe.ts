@@ -33,6 +33,16 @@ export type StepCompletion =
 
 export type ToolId = 'bowl' | 'whisk' | 'pan' | 'stove' | 'plate';
 
+/**
+ * A glowing ring on `target` while the player holds `held`, showing where
+ * that object has to go during the step.
+ */
+export interface StepGuide {
+  /** Ingredient id or tool id of the object in the hand. */
+  held: string;
+  target: Exclude<ToolId, 'whisk'>;
+}
+
 export interface RecipeStep {
   id: string;
   title: string;
@@ -50,6 +60,8 @@ export interface RecipeStep {
   grabbableIngredients: readonly string[];
   /** Skip this step unless this optional ingredient was set out. */
   onlyIfPlaced?: string;
+  /** Where held objects have to go, shown as rings on the table. */
+  guides?: readonly StepGuide[];
 }
 
 export interface Recipe {

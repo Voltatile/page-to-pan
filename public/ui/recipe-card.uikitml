@@ -1,8 +1,9 @@
 <!--
   Authored in pixel-like units and placed at scale 0.1, so 1 unit is 1 mm:
-  this 480 x 240 card is 48 x 24 cm. Viewed from about 0.85 m, the 26-unit
+  this 480 x 252 card is 48 x 25.2 cm. Viewed from about 0.85 m, the 26-unit
   body text and the 24-unit tip text meet the 24-32 px readability rule.
-  The buttons are about 13 x 6 cm, sized for shaky hand rays.
+  The buttons are 13 x 7.2 cm, sized for shaky hand rays: the card leans back
+  45 degrees, so their height is the side that looks smallest.
   The bottom strip shows why the step matters, or the score breakdown at the end.
   Note: comments inside the style block break the UIKitML parser.
 -->
@@ -10,7 +11,7 @@
   .card {
     flex-direction: column;
     width: 480px;
-    height: 240px;
+    height: 252px;
     padding-top: 14px;
     padding-bottom: 14px;
     padding-left: 20px;
@@ -42,12 +43,12 @@
 
   .card-button {
     width: 130px;
-    height: 60px;
+    height: 72px;
     justify-content: center;
   }
 
   .card-button-label {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .instruction {

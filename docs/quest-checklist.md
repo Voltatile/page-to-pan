@@ -30,8 +30,8 @@ play session from start to finish, so it can be worked through in order.
 - [ ] **Table layout**: the bowl and stove sit about 58 cm from a seated chest, at the
   edge of the 60 cm rule. Confirm they are reachable without leaning, and that the pan
   handle is easy to catch.
-- [ ] **Hand ray on the card button**: the button is about 13 x 4 cm, 80 cm away,
-  pressed by pointing and pinching. The emulator's aim is exact, so confirm a real
+- [ ] **Hand ray on the card button**: the button is 13 x 7.2 cm on a card leaning back
+  45 degrees, 80 cm away, pressed by pointing and pinching. The emulator's aim is exact, so confirm a real
   shaky hand can hit it without several tries. If not, make the whole card the button.
 - [ ] **Label readability**: the 24-unit sheet labels and 26-unit card text must stay
   sharp at 0.8 m on the Quest 2 display.

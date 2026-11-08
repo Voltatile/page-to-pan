@@ -7,6 +7,7 @@ import {
 } from './systems/DebugOverlaySystem.js';
 import { EffectsSystem } from './systems/EffectsSystem.js';
 import { GestureSystem } from './systems/GestureSystem.js';
+import { GuideSystem } from './systems/GuideSystem.js';
 import { KitchenSystem } from './systems/KitchenSystem.js';
 import { PauseSystem } from './systems/PauseSystem.js';
 import { ReachHighlightSystem } from './systems/ReachHighlightSystem.js';
@@ -32,6 +33,7 @@ World.create(
   world.registerSystem(EffectsSystem);
   world.registerSystem(GestureSystem);
   world.registerSystem(PauseSystem);
+  world.registerSystem(GuideSystem);
   world.registerSystem(UISystem);
   world.registerSystem(ResultStarsSystem);
   world.registerSystem(ReachHighlightSystem);
