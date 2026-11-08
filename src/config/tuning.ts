@@ -67,9 +67,9 @@ export const TUNING = {
   /** Lifting the pan this far off the stove counts as taking it off the heat. */
   panLiftM: 0.05,
   /** How long the tossed omelette stays in the air. */
-  tossDurationS: 1.4,
+  tossDurationS: 1.5,
   /** How high the tossed omelette rises above the pan. */
-  tossHeightM: 0.26,
+  tossHeightM: 0.32,
   /** Smoothed pan turn speed that counts as a flick. */
   flickMinRadPerS: 4.5,
   /** The pan serves the omelette inside this radius of the plate. */
