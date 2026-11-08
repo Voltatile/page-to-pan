@@ -10,8 +10,11 @@ import {
   VisibilityState,
 } from '@iwsdk/core';
 import { COOKWARE, WHISK_TIP_IN_BOWL_Y } from '../config/cookware.js';
-import { OMELETTE_INGREDIENTS } from '../config/recipes/omelette.js';
-import type { StepCompletion } from '../config/recipes/recipe.js';
+import type {
+  RecipeStep,
+  StepCompletion,
+  ToolId,
+} from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import { COOK_ZONE, FLIP_READY_PROGRESS } from '../game/cooking.js';
 import {
@@ -33,13 +36,18 @@ import { StepSystem } from './StepSystem.js';
 
 const DEG_TO_RAD = Math.PI / 180;
 
-/** Falling bits disappear at the egg surface, this far above the bowl base. */
-const BOWL_FOOD_Y_M = 0.02;
 /** Dropped garnish bits start this far above the bowl base. */
 const BOWL_DROP_Y_M = 0.1;
 
-/** From the shaker center to its cap, along the model's up axis. */
-const SHAKER_CAP_OFFSET_M = OMELETTE_INGREDIENTS.salt.lengthM / 2;
+type Zone = NonNullable<RecipeStep['zone']>;
+
+/** Where a stirring tool's tip rests, above the zone's origin. */
+const STIR_TIP_Y: Readonly<Record<Zone, number>> = {
+  bowl: WHISK_TIP_IN_BOWL_Y,
+  pan: -COOKWARE.pan.height / 2 + 0.006,
+};
+/** Falling bits disappear at the food surface, this far above the zone origin. */
+const FOOD_Y: Readonly<Record<Zone, number>> = { bowl: 0.02, pan: 0.004 };
 
 /** The whisk model lies along X with its head at -X. */
 const WHISK_AXIS = new Vector3(1, 0, 0);
@@ -84,14 +92,13 @@ export class GestureSystem extends createSystem({}) {
   private guide: GuideSystem | undefined;
   private shells: EggShellSystem | undefined;
   private grabSystem: GrabSystem | undefined;
-  private egg!: Entity;
-  private saltShaker!: Entity;
+  private readonly ingredients = new Map<string, Entity>();
   private butter!: Entity;
-  private greenOnion!: Entity;
   private activeStep: StepCompletion | null = null;
+  private activeRecipeStep: RecipeStep | null = null;
   private whiskTurnsShown = 0;
   private isButterOverPan = false;
-  private isOnionOverBowl = false;
+  private isItemOverZone = false;
   private isPanInHand = false;
   private hasTossed = false;
   /** A lift only counts once the pan has sat on the stove in this step. */
@@ -99,10 +106,6 @@ export class GestureSystem extends createSystem({}) {
   private isWhiskInHand = false;
   private isShakerInHand = false;
 
-  /** How many dashes of salt went in. The score will read this. */
-  get saltDashCount(): number {
-    return this.salt.count;
-  }
 
   init(): void {
     const steps = this.world.getSystem(StepSystem);
@@ -130,10 +133,25 @@ export class GestureSystem extends createSystem({}) {
     this.cooking = cooking;
     this.score = score;
     this.grabSystem = this.world.getSystem(GrabSystem);
-    this.egg = this.world.requireSceneEntity('ingredient-egg');
-    this.saltShaker = this.world.requireSceneEntity('ingredient-salt');
-    this.butter = this.world.requireSceneEntity('ingredient-butter');
-    this.greenOnion = this.world.requireSceneEntity('ingredient-green-onion');
+    this.butter = this.ingredient('butter');
+  }
+
+  private ingredient(id: string): Entity {
+    let entity = this.ingredients.get(id);
+    if (entity == null) {
+      entity = this.world.requireSceneEntity(`ingredient-${id}`);
+      this.ingredients.set(id, entity);
+    }
+    return entity;
+  }
+
+  /** The center of the bowl or pan where a step happens, written into `out`. */
+  private zoneCenter(zone: Zone, out: Vector3): Vector3 | null {
+    return this.kitchen.requireTool(zone).object3D?.getWorldPosition(out) ?? null;
+  }
+
+  private zoneRadius(zone: Zone, bowlRadius: number): number {
+    return zone === 'pan' ? TUNING.panZoneRadiusM : bowlRadius;
   }
 
   update(delta: number): void {
@@ -144,23 +162,35 @@ export class GestureSystem extends createSystem({}) {
       return;
     }
     this.updatePanHold(delta);
-    const step = this.steps.step?.completion ?? null;
-    if (step !== this.activeStep) {
+    const current = this.steps.step;
+    const step = current?.completion ?? null;
+    if (current !== this.activeRecipeStep) {
+      this.activeRecipeStep = current;
       this.activeStep = step;
-      this.beginStep(step);
+      this.beginStep(current);
+    }
+    if (current == null) {
+      return;
     }
     switch (step) {
       case 'crack':
-        this.updateCrack();
+        this.updateCrack(current);
         break;
       case 'whisk':
-        this.updateWhisk(delta);
+      case 'stir':
+        this.updateStir(current, delta);
         break;
       case 'season':
-        this.updateSeason(delta);
+        this.updateSeason(current, delta);
         break;
       case 'garnish':
-        this.updateGarnish();
+      case 'drop':
+        this.updateDrop(current);
+        break;
+      case 'seat-pan':
+        if (this.kitchen.panOnStove) {
+          this.steps.completeStep();
+        }
         break;
       case 'heat':
         this.updateHeat();
@@ -185,20 +215,21 @@ export class GestureSystem extends createSystem({}) {
     }
   }
 
-  private beginStep(step: StepCompletion | null): void {
+  private beginStep(recipeStep: RecipeStep | null): void {
+    const step = recipeStep?.completion ?? null;
     if (step === 'crack') {
       this.crack.reset();
-    } else if (step === 'whisk') {
+    } else if (step === 'whisk' || step === 'stir') {
       this.whisk.reset();
       this.isWhiskInHand = false;
       this.whiskTurnsShown = 0;
-      this.steps.setProgress(`0/${TUNING.whiskTargetTurns}`);
+      this.steps.setProgress(`0/${this.turnsFor(recipeStep)}`);
     } else if (step === 'season') {
       this.salt.reset();
       this.isShakerInHand = false;
       this.steps.setProgress('0');
-    } else if (step === 'garnish') {
-      this.isOnionOverBowl = false;
+    } else if (step === 'garnish' || step === 'drop') {
+      this.isItemOverZone = false;
     } else if (step === 'heat') {
       this.isButterOverPan = false;
     } else if (step === 'pour') {
@@ -212,20 +243,24 @@ export class GestureSystem extends createSystem({}) {
     }
   }
 
-  private updateCrack(): void {
+  private turnsFor(step: RecipeStep | null): number {
+    return step?.turns ?? TUNING.whiskTargetTurns;
+  }
+
+  private updateCrack(step: RecipeStep): void {
+    const zone = step.zone ?? 'bowl';
+    const eggEntity = this.ingredient(step.item ?? 'egg');
     this.player.gripSpaces.left.getWorldPosition(this.leftHand);
     this.player.gripSpaces.right.getWorldPosition(this.rightHand);
     const xr = this.input.xr;
     const isPinching =
       xr.getSelectState('left').active && xr.getSelectState('right').active;
-    const egg = this.egg.object3D?.getWorldPosition(this.positionA);
-    const bowl = this.kitchen
-      .requireTool('bowl')
-      .object3D?.getWorldPosition(this.positionB);
+    const egg = eggEntity.object3D?.getWorldPosition(this.positionA);
+    const bowl = this.zoneCenter(zone, this.positionB);
     const isNearEgg =
       egg != null &&
       bowl != null &&
-      this.egg.hasComponent(Grabbed) &&
+      eggEntity.hasComponent(Grabbed) &&
       isWithinSnapZone(
         egg.x - bowl.x,
         egg.y - bowl.y,
@@ -246,20 +281,20 @@ export class GestureSystem extends createSystem({}) {
           ),
         );
         this.sound.playSound('crack', egg);
-        this.effects.burst('yolk', egg, bowl.y + BOWL_FOOD_Y_M);
+        this.effects.burst('yolk', egg, bowl.y + FOOD_Y[zone]);
         this.shells?.crack(egg);
       }
-      this.cooking.showEggInBowl();
+      this.cooking.onCrack(zone);
       this.steps.completeStep();
     }
   }
 
-  private updateWhisk(delta: number): void {
-    const whisk = this.kitchen.requireTool('whisk');
+  private updateStir(step: RecipeStep, delta: number): void {
+    const zone = step.zone ?? 'bowl';
+    const toolId: ToolId = step.tool ?? 'whisk';
+    const whisk = this.kitchen.requireTool(toolId);
     const object = whisk.object3D;
-    const bowlAt = this.kitchen
-      .requireTool('bowl')
-      .object3D?.getWorldPosition(this.positionB);
+    const bowlAt = this.zoneCenter(zone, this.positionB);
     const holder = this.grabSystem?.getHolderHand(whisk) ?? null;
     if (object == null || bowlAt == null || holder == null) {
       this.isWhiskInHand = false;
@@ -274,10 +309,10 @@ export class GestureSystem extends createSystem({}) {
       offsetX,
       hand.y - bowlAt.y,
       offsetZ,
-      TUNING.bowlZoneRadiusM,
+      this.zoneRadius(zone, TUNING.bowlZoneRadiusM),
       TUNING.bowlZoneHeightM,
     );
-    this.poseWhisk(object, holder, hand, bowlAt, isInBowl, delta);
+    this.poseWhisk(object, holder, hand, bowlAt, isInBowl, delta, zone, toolId);
     const turns = this.whisk.update(
       offsetX,
       offsetZ,
@@ -285,8 +320,8 @@ export class GestureSystem extends createSystem({}) {
       TUNING.whiskMinRadiusM,
       TUNING.gestureSmoothing,
     );
-    const target = TUNING.whiskTargetTurns;
-    this.cooking.setWhiskProgress(Math.min(turns / target, 1));
+    const target = this.turnsFor(step);
+    this.cooking.setStirProgress(zone, Math.min(turns / target, 1));
     this.guide?.showProgress(turns / target);
     const fullTurns = Math.floor(turns);
     if (fullTurns !== this.whiskTurnsShown) {
@@ -297,7 +332,7 @@ export class GestureSystem extends createSystem({}) {
       this.steps.setProgress(`${Math.min(fullTurns, target)}/${target}`);
     }
     if (turns >= target) {
-      this.score.noteWhisk(turns);
+      this.score.noteWhisk((turns / target) * TUNING.whiskTargetTurns);
       this.steps.completeStep();
     }
   }
@@ -315,6 +350,8 @@ export class GestureSystem extends createSystem({}) {
     bowlAt: Vector3,
     isInBowl: boolean,
     delta: number,
+    zone: Zone,
+    toolId: ToolId,
   ): void {
     if (!this.isWhiskInHand) {
       this.isWhiskInHand = true;
@@ -325,18 +362,19 @@ export class GestureSystem extends createSystem({}) {
       const offsetX = hand.x - bowlAt.x;
       const offsetZ = hand.z - bowlAt.z;
       const radius = Math.hypot(offsetX, offsetZ);
-      const scale = Math.min(TUNING.whiskHeadRadiusM / (radius || 1), 1);
+      const headRadius =
+        zone === 'pan' ? TUNING.panStirHeadRadiusM : TUNING.whiskHeadRadiusM;
+      const scale = Math.min(headRadius / (radius || 1), 1);
       this.whiskTarget.set(
         bowlAt.x + offsetX * scale,
-        bowlAt.y + WHISK_TIP_IN_BOWL_Y,
+        bowlAt.y + STIR_TIP_Y[zone],
         bowlAt.z + offsetZ * scale,
       );
       this.setWhiskLean(holder, hand);
       this.whiskTargetTurn.setFromUnitVectors(WHISK_AXIS, this.whiskLean);
-      this.whiskTarget.addScaledVector(
-        this.whiskLean,
-        COOKWARE.whisk.length / 2,
-      );
+      const length =
+        toolId === 'spatula' ? COOKWARE.spatula.length : COOKWARE.whisk.length;
+      this.whiskTarget.addScaledVector(this.whiskLean, length / 2);
     } else {
       this.whiskTarget.set(hand.x, hand.y - TUNING.whiskUnderHandM, hand.z);
       this.whiskTargetTurn.copy(WHISK_UPRIGHT);
@@ -393,15 +431,16 @@ export class GestureSystem extends createSystem({}) {
     this.up.set(0, 1, 0).applyQuaternion(this.shakerShownTurn);
   }
 
-  private updateSeason(delta: number): void {
-    const object = this.saltShaker.object3D;
-    const bowlAt = this.kitchen
-      .requireTool('bowl')
-      .object3D?.getWorldPosition(this.positionB);
+  private updateSeason(step: RecipeStep, delta: number): void {
+    const zone = step.zone ?? 'bowl';
+    const itemId = step.item ?? 'salt';
+    const shaker = this.ingredient(itemId);
+    const object = shaker.object3D;
+    const bowlAt = this.zoneCenter(zone, this.positionB);
     if (object == null || bowlAt == null) {
       return;
     }
-    const holder = this.grabSystem?.getHolderHand(this.saltShaker) ?? null;
+    const holder = this.grabSystem?.getHolderHand(shaker) ?? null;
     if (holder == null) {
       this.isShakerInHand = false;
       return;
@@ -409,12 +448,16 @@ export class GestureSystem extends createSystem({}) {
     this.poseShaker(object, holder, delta);
     // The cap has to be over the bowl, so tipping it away spills no salt.
     const capAt = object.getWorldPosition(this.positionA);
-    capAt.addScaledVector(this.up, SHAKER_CAP_OFFSET_M);
+    const length =
+      this.steps.activeRecipe.ingredients.find(
+        (ingredient) => ingredient.id === itemId,
+      )?.lengthM ?? 0.1;
+    capAt.addScaledVector(this.up, length / 2);
     const isOverBowl = isWithinSnapZone(
       capAt.x - bowlAt.x,
       capAt.y - bowlAt.y,
       capAt.z - bowlAt.z,
-      TUNING.seasonZoneRadiusM,
+      this.zoneRadius(zone, TUNING.seasonZoneRadiusM),
       TUNING.bowlZoneHeightM,
     );
     const hasTipped = this.salt.update(
@@ -424,8 +467,10 @@ export class GestureSystem extends createSystem({}) {
       TUNING.saltRearmDeg * DEG_TO_RAD,
     );
     if (hasTipped) {
-      this.sound.playSound('shake', capAt);
-      this.effects.burst('salt', capAt, bowlAt.y + BOWL_FOOD_Y_M);
+      const isSalt = itemId === 'salt';
+      this.sound.playSound('shake', capAt, 1, isSalt ? 1 : 0.55);
+      this.effects.burst(isSalt ? 'salt' : 'soy', capAt, bowlAt.y + FOOD_Y[zone]);
+      this.cooking.onSeason(itemId, this.salt.count);
       this.score.noteSalt(this.salt.count);
       this.steps.setProgress(String(this.salt.count));
       this.steps.setActionReady(true);
@@ -455,37 +500,36 @@ export class GestureSystem extends createSystem({}) {
     object.quaternion.copy(this.panShownTurn);
   }
 
-  /** The green onion counts once it is let go over the bowl. */
-  private updateGarnish(): void {
-    if (this.greenOnion.hasComponent(Grabbed)) {
-      const bowlAt = this.kitchen
-        .requireTool('bowl')
-        .object3D?.getWorldPosition(this.positionB);
-      const onionAt = this.greenOnion.object3D?.getWorldPosition(
-        this.positionA,
-      );
-      this.isOnionOverBowl =
+  /** An ingredient counts once it is let go over the bowl or pan. */
+  private updateDrop(step: RecipeStep): void {
+    const zone = step.zone ?? 'bowl';
+    const itemId = step.item ?? 'green-onion';
+    const item = this.ingredient(itemId);
+    if (item.hasComponent(Grabbed)) {
+      const bowlAt = this.zoneCenter(zone, this.positionB);
+      const itemAt = item.object3D?.getWorldPosition(this.positionA);
+      this.isItemOverZone =
         bowlAt != null &&
-        onionAt != null &&
+        itemAt != null &&
         isWithinSnapZone(
-          onionAt.x - bowlAt.x,
-          onionAt.y - bowlAt.y,
-          onionAt.z - bowlAt.z,
-          TUNING.bowlZoneRadiusM,
+          itemAt.x - bowlAt.x,
+          itemAt.y - bowlAt.y,
+          itemAt.z - bowlAt.z,
+          this.zoneRadius(zone, TUNING.bowlZoneRadiusM),
           TUNING.bowlZoneHeightM,
         );
-    } else if (this.isOnionOverBowl) {
-      this.isOnionOverBowl = false;
-      const bowlAt = this.kitchen
-        .requireTool('bowl')
-        .object3D?.getWorldPosition(this.positionB);
+    } else if (this.isItemOverZone) {
+      this.isItemOverZone = false;
+      const bowlAt = this.zoneCenter(zone, this.positionB);
       if (bowlAt != null) {
         this.sound.playSound('plop', bowlAt);
-        this.positionA.copy(bowlAt);
-        this.positionA.y += BOWL_DROP_Y_M;
-        this.effects.burst('onion', this.positionA, bowlAt.y + BOWL_FOOD_Y_M);
+        if (itemId === 'green-onion') {
+          this.positionA.copy(bowlAt);
+          this.positionA.y += BOWL_DROP_Y_M;
+          this.effects.burst('onion', this.positionA, bowlAt.y + FOOD_Y[zone]);
+        }
       }
-      this.cooking.addOnion();
+      this.cooking.onDrop(itemId, zone);
       this.steps.completeStep();
     }
   }

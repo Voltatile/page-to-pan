@@ -38,6 +38,10 @@ export const TUNING = {
   whiskUnderHandM: 0.08,
   /** The whisk counts anywhere inside this horizontal radius of the bowl. */
   bowlZoneRadiusM: 0.13,
+  /** Over the pan, stirring, tipping and dropping count inside this radius. */
+  panZoneRadiusM: 0.13,
+  /** In the pan the stirring tip may wander this far from the center. */
+  panStirHeadRadiusM: 0.05,
   /** The whisk and a salting hand count up to this far above the bowl. */
   bowlZoneHeightM: 0.3,
   /** Circles tighter than this are treated as hand jitter. */

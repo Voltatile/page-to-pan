@@ -62,6 +62,8 @@ export class CookingSystem extends createSystem({}) {
   private panOnion!: Object3D;
   private plateOnion!: Object3D;
   private hasOnion = false;
+  /** Dashes of a dark sauce in the pan; they tint the food. */
+  private sauceDashes = 0;
   private butterMeltS = 0;
   private progress = 0;
   private hasEggInPan = false;
@@ -143,6 +145,44 @@ export class CookingSystem extends createSystem({}) {
     this.paintDoneness();
     if (cookLabel(this.progress, this.isFolded) !== this.label) {
       this.showDoneness();
+    }
+  }
+
+  /** The egg is cracked into the bowl, or straight into the hot pan. */
+  onCrack(zone: 'bowl' | 'pan'): void {
+    if (zone === 'bowl') {
+      this.showEggInBowl();
+    } else {
+      this.startCooking();
+    }
+  }
+
+  /** Stirring progress, 0 to 1, for the bowl or the pan. */
+  setStirProgress(zone: 'bowl' | 'pan', amount: number): void {
+    if (zone === 'bowl') {
+      this.setWhiskProgress(amount);
+    }
+  }
+
+  /** An ingredient was let go over the bowl or pan. */
+  onDrop(itemId: string, zone: 'bowl' | 'pan'): void {
+    if (itemId === 'green-onion') {
+      if (zone === 'bowl') {
+        this.addOnion();
+      } else {
+        this.hasOnion = true;
+        this.panOnion.visible = true;
+      }
+    }
+  }
+
+  /**
+   * A dash of seasoning went in; `dashes` counts them so far. Salt vanishes
+   * into the egg, while a dark sauce such as sweet soy darkens the food.
+   */
+  onSeason(itemId: string, dashes: number): void {
+    if (itemId !== 'salt') {
+      this.sauceDashes = dashes;
     }
   }
 
@@ -299,6 +339,7 @@ export class CookingSystem extends createSystem({}) {
     this.tossT = 1;
     this.butterMeltS = 0;
     this.hasOnion = false;
+    this.sauceDashes = 0;
     this.bowlOnion.visible = false;
     this.panOnion.visible = false;
     this.plateOnion.visible = false;

@@ -115,7 +115,7 @@ export class PraiseSystem extends createSystem({}) {
       this.score.cookRecord,
       this.cooking.cookProgress,
     );
-    const toolId = ANCHOR[finished.completion];
+    const toolId = finished.zone ?? ANCHOR[finished.completion];
     const tool = toolId == null ? null : this.kitchen.requireTool(toolId);
     if (text == null || tool?.object3D == null) {
       return;
