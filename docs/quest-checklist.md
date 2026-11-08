@@ -1,80 +1,125 @@
 # Quest checklist
 
 Things that cannot be confirmed without a physical headset. Each item matches a
-`// QUEST-CHECK:` comment in the code, when one applies.
+`// QUEST-CHECK:` comment in the code, when one applies. The list follows one
+play session from start to finish, so it can be worked through in order.
 
+## Before the session
+
+- Open **https://voltatile.github.io/page-to-pan/?debug=1** in Quest Browser. The
+  `?debug=1` board shows the frame rate beside the table. Play once more without it
+  at the end, the way judges will see the game.
+- Sit on a normal chair at a desk. Hand tracking on, controllers put down.
+- For each item write pass or fail and what happened. Almost every number lives in
+  `src/config/tuning.ts`, so most fixes are a one-line change there.
+
+## 1. Start and comfort
+
+- [ ] **Enter VR**: the card button must start an immersive session from Quest Browser.
+- [ ] **Under 10 seconds**: from the page loading to holding the first ingredient
+  should take less than 10 s (a contest rule).
 - [ ] **Seated calibration** (`src/systems/SeatedCalibrationSystem.ts`): the player rig
   is lifted once per session so the head sits `tableBelowHeadM` above the table. The
-  emulator confirms this at a 1.2 m head height. Check it on a real seated player, and
+  emulator confirms this at a 1.3 m head height. Check it on a real seated player, and
   check that the first tracked pose is already stable.
-- [ ] **Hand ray on the card button**: the button is about 13 x 6 cm at 75 cm, pressed
-  by pointing and pinching. The emulator's aim is exact, so confirm a real shaky hand
-  can hit it without several tries. If not, make the whole card the button.
+- [ ] **Neck comfort**: the table sits 42 cm under the head, like a real desk for a
+  seated player (the first plan said 70 to 75 cm; the developer chose 42 cm after
+  playtesting because 72 cm felt like looking down from a standing height). The
+  recipe sheet is about 50 degrees below eye level. Check that this is comfortable
+  for a full session and that the head is not too close to the stove.
+- [ ] **Table layout**: the bowl and stove sit about 58 cm from a seated chest, at the
+  edge of the 60 cm rule. Confirm they are reachable without leaning, and that the pan
+  handle is easy to catch.
+- [ ] **Hand ray on the card button**: the button is about 13 x 4 cm, 80 cm away,
+  pressed by pointing and pinching. The emulator's aim is exact, so confirm a real
+  shaky hand can hit it without several tries. If not, make the whole card the button.
+- [ ] **Label readability**: the 24-unit sheet labels and 26-unit card text must stay
+  sharp at 0.8 m on the Quest 2 display.
+- [ ] **Card tips**: the 24-unit tip line under each step must stay readable at 0.8 m,
+  and the longest tips (about 66 characters) must fit in two lines.
+- [ ] **Depth precision**: outlines and labels sit a few millimeters above the paper.
+  Confirm there is no flicker at the near plane of 0.02 m.
+
+## 2. Hands and gestures, in recipe order
+
+Every threshold is tuned on the emulator, whose hands do not shake
+(`src/systems/GestureSystem.ts`, values in `src/config/tuning.ts`).
+
 - [ ] **Pinch grab**: confirm the thin green onion and small egg are easy to grab, and
   that the 7 cm snap radius feels forgiving.
 - [ ] **Reach glow** (`src/systems/ReachHighlightSystem.ts`): objects glow when the grab
   pointer touches them. Confirm the glow appears before a real pinch would catch the
   object, and does not flicker when a hand hovers at the edge of range.
-- [ ] **Gesture thresholds** (`src/systems/GestureSystem.ts`, values in
-  `src/config/tuning.ts`): every threshold below is tuned on the emulator, whose hands
-  do not shake. Each one needs a real hand:
-  - **Crack:** one hand holds a 6 cm egg over the bowl and the other pinches beside
-    it, so hand tracking may lose a hand when they overlap. If it does, widen
-    `crackReachM`. Also confirm the right hand reaches the bowl while seated.
-  - **Whisk:** 3 turns. Near the bowl the whisk tilts about 25 degrees toward the hand
-    and its tip stays inside the bowl, even if the hand circles wider. Confirm this assist feels like
-    stirring rather than like the whisk moving on its own.
-  - **Season:** the shaker stands up in the hand, then counts one dash each time its
-    cap tips past 95 degrees over the bowl and lifts back under 60. Confirm the wrist
-    can turn that far, and that shaky tracking near the angle adds no extra dashes.
-  - **Green onion:** it must be let go over the bowl. It is a thin object, so confirm
-    the pinch holds it steadily on the way there.
-  - **Butter:** it must be let go over the pan on the stove. Confirm the player
-    finds this without help, and that the drop feels forgiving.
-  - **Pour:** the bowl must tilt 55 degrees for 1.2 s. Confirm the wrist can do this
-    while seated, without losing the pinch.
-  - **Held pan:** it eases toward the hand to soften jolts. Confirm the lag does not
-    feel like the pan is disconnected from the hand.
-  - **Flip:** the pan must turn at 4.5 rad/s, then the omelette stays in the air for
-    1.4 s. Confirm a real flick reaches that speed, that lifting the pan does not
-    trigger it by accident, and that the toss is easy to follow in a headset.
-- [ ] **Table layout**: the bowl and stove sit about 58 cm from a seated chest, at the
-  edge of the 60 cm rule. Confirm they are reachable without leaning, and that the pan
-  handle is easy to catch.
-- [ ] **Cook time**: 25 s from raw (0) to the start of burnt (1) was
-  picked on paper. Confirm the wait feels right in a headset.
-- [ ] **Neck comfort**: the table sits 42 cm under the head, like a real desk for a
-  seated player (the brief asks for 70 to 75 cm; the developer chose 42 cm after
-  playtesting because 72 cm felt like looking down from a standing height). The
-  recipe sheet is about 50 degrees below eye level. Check that this is comfortable
-  for a full session and that the head is not too close to the stove.
-- [ ] **Label readability**: the 24-unit sheet labels and 26-unit card text must stay
-  sharp at 0.8 m on the Quest 2 display.
-- [ ] **Depth precision**: outlines and labels sit a few millimeters above the paper.
-  Confirm there is no flicker at the near plane of 0.02 m.
-- [ ] **Frame rate**: minimum 60 fps on Quest 2. The emulator only proves draw call
-  and triangle counts, not real GPU time. Open the game with `?debug=1`: a board left
-  of the table shows FPS, the worst frame, draw calls and triangles, turning red past
-  the budget. The same numbers go to the console every 5 s with a list of the scenery
-  holding the most meshes. In the emulator the busiest moment was 76 draw calls (both
-  eyes counted together) and about 11k scene triangles. Check what the board says on
-  a Quest 2 during the cook step, when the pan steams.
-- [ ] **Enter VR**: the card button must start an immersive session from Quest Browser.
-- [ ] **Palm-up pause** (`src/systems/PauseSystem.ts`): the palm direction in grip space
-  (+X for the left hand, -X for the right) was read from the emulator hands. Confirm a
-  real palm turned up fills the ring, that the 1 s hold and the 0.75 / 0.6 thresholds
-  in `src/config/tuning.ts` do not fire while cooking normally, and flip the signs if
-  the ring shows with the palm down.
-- [ ] **Auto pause**: open the Quest system menu or take the headset off mid-recipe. The
-  card must say Paused with Resume when you come back. The emulator could not blur
+- [ ] **Crack**: one hand holds a 6 cm egg over the bowl and the other pinches beside
+  it, so hand tracking may lose a hand when they overlap. If it does, widen
+  `crackReachM`. Also confirm the right hand reaches the bowl while seated.
+- [ ] **Whisk**: 3 turns. Near the bowl the whisk tilts about 25 degrees toward the
+  hand and its tip stays inside the bowl, even if the hand circles wider. Confirm this
+  assist feels like stirring rather than like the whisk moving on its own.
+- [ ] **Season**: the shaker stands up in the hand, then counts one dash each time its
+  cap tips past 95 degrees over the bowl and lifts back under 60. Confirm the wrist
+  can turn that far, and that shaky tracking near the angle adds no extra dashes.
+- [ ] **Green onion**: it must be let go over the bowl. It is a thin object, so
+  confirm the pinch holds it steadily on the way there.
+- [ ] **Heat the pan**: the pan seats when let go within 12 cm of the stove, then the
+  butter must be let go over the pan. Confirm the player finds both without help, and
+  that the drops feel forgiving.
+- [ ] **Pour**: the bowl must tilt 55 degrees for 1.2 s. Confirm the wrist can do this
+  while seated, without losing the pinch.
+- [ ] **Cook time**: 25 s from raw (0) to the start of burnt (1) was picked on paper.
+  Confirm the wait for Ready feels right in a headset.
+- [ ] **Held pan**: it eases toward the hand to soften jolts. Confirm the lag does not
+  feel like the pan is disconnected from the hand.
+- [ ] **Flip**: the hand must turn at 4.5 rad/s, then the omelette rises 32 cm and
+  stays in the air for 1.5 s. Confirm a real flick reaches that speed, that lifting
+  the pan does not trigger it by accident, and that the toss is easy to follow.
+- [ ] **Finish and serve**: the pan goes back on the stove until Golden, is lifted
+  5 cm, then served by bringing it over the plate. Confirm the plate zone is easy to
+  hit without the pan bumping the table.
+
+## 3. Pause
+
+- [ ] **Palm-up pause** (`src/systems/PauseSystem.ts`): the palm direction in grip
+  space (+X for the left hand, -X for the right) was read from the emulator hands.
+  Confirm a real palm turned up fills the ring, that the 1 s hold and the 0.75 / 0.6
+  thresholds in `src/config/tuning.ts` do not fire while cooking normally, and flip
+  the signs if the ring shows with the palm down.
+- [ ] **Auto pause**: open the Quest system menu or take the headset off mid-recipe.
+  The card must say Paused with Resume when you come back. The emulator could not blur
   the session, so this path is untested.
-- [ ] **Card tips**: the 24-unit tip line under each step must stay readable at 0.8 m,
-  and the longest tips (about 66 characters) must fit in two lines.
+- [ ] **Resume and Restart**: Resume continues where the recipe stopped, with the pan
+  still at the same doneness. Restart sends every ingredient home and shows the title.
+
+## 4. Sound and effects
+
 - [ ] **Sound** (`src/systems/SoundSystem.ts`): every sound is synthesized at load and
-  tuned on desktop speakers. On a Quest, check that the audio starts after Enter VR,
-  that the sizzle follows the pan in space and rises as the egg browns, that it goes
-  quiet on pause and when the system menu opens, and that no sound is too loud.
+  tuned on desktop speakers. Check that the audio starts after Enter VR, that the
+  sizzle follows the pan in space and rises as the egg browns, that it goes quiet on
+  pause and when the system menu opens, and that no sound is too loud
+  (`masterVolume`, `sizzleVolume`).
 - [ ] **Particles** (`src/systems/EffectsSystem.ts`): salt grains, yolk and onion bits,
   steam, smoke and star sparkles are camera-facing quads. Check that they face both
-  eyes without looking flat, that the 4 to 5 mm salt grains are visible, and that two
-  extra draw calls while they show keep the frame rate.
+  eyes without looking flat, that the 4 to 5 mm salt grains are visible, and that the
+  steam reads as steam rather than as grey dots.
+
+## 5. Performance
+
+- [ ] **Frame rate**: minimum 60 fps on Quest 2. The emulator only proves draw call
+  and triangle counts, not real GPU time. The `?debug=1` board shows FPS, the worst
+  frame, draw calls and triangles, turning red past the budget. The same numbers go to
+  the console every 5 s with a list of the scenery holding the most meshes. In the
+  emulator the busiest moment was 76 draw calls and about 11k scene triangles. Read
+  the board during the cook step, when the pan steams and the particles show.
+- [ ] **Draw call count** (`src/systems/DebugOverlaySystem.ts`): in the emulator
+  `renderer.info` counts both eyes of one XR frame together. If Quest Browser renders
+  with multiview, the board may show about half as many. Note which it is, so the
+  budget is read the same way.
+
+## 6. After the cook
+
+- [ ] **Results**: the score, the chef note and the three stars must be readable from
+  the seat, and the stars must pop in one by one with their chime.
+- [ ] **Again**: the button returns to the title with every ingredient home, and a
+  second cook starts from the ingredients step (the emulator demo proves the logic).
+- [ ] **Best stars**: close the tab and open the game again. The title card must still
+  say "Your best: N of 3 stars", which proves Quest Browser keeps localStorage.
