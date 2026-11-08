@@ -9,7 +9,7 @@ export const COOKWARE = {
   bowl: { rimRadius: 0.085, baseRadius: 0.05, height: 0.085 },
   pan: { rimRadius: 0.1, baseRadius: 0.09, height: 0.024, handleLength: 0.15 },
   stove: { width: 0.3, height: 0.03, grateHeight: 0.01 },
-  plate: { radius: 0.1, height: 0.012 },
+  plate: { radius: 0.1, height: 0.02, wellRadius: 0.05, wellDepth: 0.004 },
   omelette: { thickness: 0.014 },
   whisk: { length: 0.26 },
 } as const;

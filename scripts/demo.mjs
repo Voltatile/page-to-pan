@@ -21,7 +21,8 @@ const CLI = join(ROOT, 'node_modules/@iwsdk/cli/bin/iwsdk.js');
 const SYSTEM_CHROME = 'C:\\Program Files\\Google\\Chrome\\Application';
 const COUNTDOWN_S = 5;
 const VIDEO_LIMIT_S = 180;
-const HEAD = { x: 0, y: 1.6, z: 0 };
+/** Seated eye height: the game keeps the table 42 cm under the head. */
+const HEAD = { x: 0, y: 1.3, z: 0 };
 /** Time on the heat after the card first says Golden, aiming for doneness 0.7. */
 const GOLDEN_EXTRA_MS = 1500;
 const STOVE = { x: 0.35, z: -0.35 };
@@ -457,6 +458,12 @@ async function prepareStage() {
   if (!status.sessionActive) {
     await xr('enter', {});
   }
+  // The game calibrates from the head height on entry, so the hand positions
+  // below are true room positions only when the head starts at HEAD. The
+  // emulator keeps the head pose across sessions, so set it and enter again.
+  await xr('animate-to', { device: 'headset', position: HEAD, duration: 0.1 });
+  await xr('exit', {});
+  await xr('enter', {});
   await xr('set-input-mode', { mode: 'hand' });
   const found = await runCli([
     'ecs',

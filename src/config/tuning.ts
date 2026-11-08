@@ -69,7 +69,7 @@ export const TUNING = {
   /** How long the tossed omelette stays in the air. */
   tossDurationS: 1.4,
   /** How high the tossed omelette rises above the pan. */
-  tossHeightM: 0.2,
+  tossHeightM: 0.26,
   /** Smoothed pan turn speed that counts as a flick. */
   flickMinRadPerS: 4.5,
   /** The pan serves the omelette inside this radius of the plate. */
@@ -78,7 +78,7 @@ export const TUNING = {
   /** Table surface height above the virtual floor. */
   tableTopHeightM: 0.88,
   /** Seated calibration keeps the table this far under the player's head. */
-  tableBelowHeadM: 0.72,
+  tableBelowHeadM: 0.42,
   /** Head poses under this height are treated as not tracked yet. */
   minTrackedHeadHeightM: 0.3,
 } as const;

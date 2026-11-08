@@ -32,6 +32,13 @@ const FOLDED_SCALE_Z = 0.6;
 const BUTTER_START_SCALE = 0.7;
 
 const SPIN_AXIS = new Vector3(1, 0, 0);
+/** Parts of the toss, from 0 to 1, when the omelette starts and stops turning. */
+const SPIN_START = 0.15;
+const SPIN_END = 0.75;
+
+function smoothstep(t: number): number {
+  return t * t * (3 - 2 * t);
+}
 
 const GOLDEN_MOMENT = 0.7;
 const BURNT_MOMENT = 1.2;
@@ -191,8 +198,13 @@ export class CookingSystem extends createSystem({}) {
     }
     this.tossT = Math.min(this.tossT + delta / TUNING.tossDurationS, 1);
     const t = this.tossT;
-    // Eases in and out, so the omelette neither jerks away nor slams down.
-    const eased = t * t * (3 - 2 * t);
+    // Sliding and folding ease in and out, so nothing jerks.
+    const eased = smoothstep(t);
+    // The spin waits until the omelette is clear of the pan and ends before
+    // it comes back down, so it never cuts through the pan.
+    const spin = smoothstep(
+      Math.min(Math.max((t - SPIN_START) / (SPIN_END - SPIN_START), 0), 1),
+    );
     const egg = this.panEgg;
     egg.scale.set(
       1 + (FOLDED_SCALE_X - 1) * eased,
@@ -203,9 +215,10 @@ export class CookingSystem extends createSystem({}) {
     this.tossLanding.set(0, this.panEggRestY, 0);
     this.pan.localToWorld(this.tossLanding);
     egg.position.lerpVectors(this.tossStart, this.tossLanding, eased);
-    egg.position.y += 4 * TUNING.tossHeightM * eased * (1 - eased);
+    // The height follows a plain arc, so the omelette leaves the pan at once.
+    egg.position.y += 4 * TUNING.tossHeightM * t * (1 - t);
     this.pan.getWorldQuaternion(this.panTurn);
-    this.tossSpin.setFromAxisAngle(SPIN_AXIS, Math.PI * 2 * eased);
+    this.tossSpin.setFromAxisAngle(SPIN_AXIS, Math.PI * 2 * spin);
     egg.quaternion.copy(this.panTurn).multiply(this.tossSpin);
     if (t >= 1) {
       this.returnEggToPan();

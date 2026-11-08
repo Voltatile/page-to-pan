@@ -43,9 +43,11 @@ Things that cannot be confirmed without a physical headset. Each item matches a
   handle is easy to catch.
 - [ ] **Cook time**: 25 s from raw (0) to the start of burnt (1) was
   picked on paper. Confirm the wait feels right in a headset.
-- [ ] **Neck comfort**: with the table 72 cm under the head, the recipe sheet is about
-  65 degrees below eye level and only the card's top edge shows at a level gaze.
-  Check that this is comfortable for a full session.
+- [ ] **Neck comfort**: the table sits 42 cm under the head, like a real desk for a
+  seated player (the brief asks for 70 to 75 cm; the developer chose 42 cm after
+  playtesting because 72 cm felt like looking down from a standing height). The
+  recipe sheet is about 50 degrees below eye level. Check that this is comfortable
+  for a full session and that the head is not too close to the stove.
 - [ ] **Label readability**: the 24-unit sheet labels and 26-unit card text must stay
   sharp at 0.8 m on the Quest 2 display.
 - [ ] **Depth precision**: outlines and labels sit a few millimeters above the paper.

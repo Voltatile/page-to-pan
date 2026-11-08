@@ -57,8 +57,8 @@ const flameMaterial = new MeshBasicMaterial({
   side: DoubleSide,
 });
 const plateMaterial = new MeshStandardMaterial({
-  color: '#F4F1EA',
-  roughness: 0.4,
+  color: '#FFFFFF',
+  roughness: 0.35,
   side: DoubleSide,
 });
 const bowlEggMaterial = new MeshStandardMaterial({
@@ -304,13 +304,26 @@ export function createStove(): Group {
 
 /** Origin at table contact. */
 export function createPlate(): Group {
-  const { radius, height } = COOKWARE.plate;
+  const { radius, height, wellRadius, wellDepth } = COOKWARE.plate;
+  // One closed profile: foot ring, underside, rolled rim, sloped shoulder,
+  // and a sunken well in the middle where the food sits.
   const dish = new Mesh(
-    lathe([
-      [0, 0],
-      [radius * 0.65, 0],
-      [radius, height],
-    ]),
+    lathe(
+      [
+        [0, 0.002],
+        [wellRadius * 0.9, 0.002],
+        [wellRadius * 0.95, 0],
+        [wellRadius * 1.15, 0],
+        [radius * 0.96, height * 0.75],
+        [radius, height * 0.88],
+        [radius * 0.99, height],
+        [radius * 0.92, height * 0.98],
+        [wellRadius * 1.25, wellDepth + 0.004],
+        [wellRadius, wellDepth],
+        [0, wellDepth],
+      ],
+      32,
+    ),
     plateMaterial,
   );
   dish.name = 'PlateDish';
@@ -319,7 +332,7 @@ export function createPlate(): Group {
     radius * 0.6,
     plateOmeletteMaterial,
   );
-  omelette.position.y = 0.004 + COOKWARE.omelette.thickness * 0.8;
+  omelette.position.y = wellDepth + COOKWARE.omelette.thickness * 0.8;
   omelette.scale.set(1, 1.6, 0.55);
   const onion = onionSpecks('PlateOnion', radius * 0.45);
   onion.position.y = COOKWARE.omelette.thickness / 2 + 0.0006;
