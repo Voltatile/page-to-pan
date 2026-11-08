@@ -81,4 +81,12 @@ export const TUNING = {
   tableBelowHeadM: 0.42,
   /** Head poses under this height are treated as not tracked yet. */
   minTrackedHeadHeightM: 0.3,
+  /** How long a palm held up fills the pause ring. */
+  palmPauseHoldS: 1,
+  /** The palm counts as up when its direction is this close to straight up. */
+  palmUpMinDot: 0.75,
+  /** The hand counts as in view within about 53 degrees of the gaze. */
+  palmInViewMinDot: 0.6,
+  /** The pause ring floats this far above the palm. */
+  palmRingHeightM: 0.08,
 } as const;

@@ -162,15 +162,15 @@ export function createRecipeStand(): Group {
 
   const board = boxMesh(
     'Board',
-    [0.46, 0.21, 0.012],
-    [0, 0.0743, -0.0743],
+    [0.5, 0.27, 0.012],
+    [0, 0.0955, -0.0955],
     woodMaterial,
   );
   board.rotation.x = -Math.PI / 4;
 
   stand.add(
     board,
-    boxMesh('FrontLip', [0.46, 0.014, 0.03], [0, 0.007, 0.01], woodMaterial),
+    boxMesh('FrontLip', [0.5, 0.014, 0.03], [0, 0.007, 0.01], woodMaterial),
     boxMesh(
       'RearStrut',
       [0.4, 0.11, 0.012],

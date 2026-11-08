@@ -55,3 +55,13 @@ Things that cannot be confirmed without a physical headset. Each item matches a
 - [ ] **Frame rate**: minimum 60 fps on Quest 2. The emulator only proves draw call
   and triangle counts, not real GPU time.
 - [ ] **Enter VR**: the card button must start an immersive session from Quest Browser.
+- [ ] **Palm-up pause** (`src/systems/PauseSystem.ts`): the palm direction in grip space
+  (+X for the left hand, -X for the right) was read from the emulator hands. Confirm a
+  real palm turned up fills the ring, that the 1 s hold and the 0.75 / 0.6 thresholds
+  in `src/config/tuning.ts` do not fire while cooking normally, and flip the signs if
+  the ring shows with the palm down.
+- [ ] **Auto pause**: open the Quest system menu or take the headset off mid-recipe. The
+  card must say Paused with Resume when you come back. The emulator could not blur
+  the session, so this path is untested.
+- [ ] **Card tips**: the 24-unit tip line under each step must stay readable at 0.8 m,
+  and the longest tips (about 66 characters) must fit in two lines.

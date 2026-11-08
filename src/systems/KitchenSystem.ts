@@ -69,6 +69,7 @@ export class KitchenSystem extends createSystem({
   }
 
   update(delta: number): void {
+    // Released things still glide home while paused, so the table stays tidy.
     this.glide.update(delta);
   }
 
@@ -99,12 +100,23 @@ export class KitchenSystem extends createSystem({
       this.isPanOnStove = false;
       this.setToolFlame(false);
     }
-    const key =
-      state.phase === 'cooking' ? `step-${state.stepIndex}` : state.phase;
+    const key = this.steps.isGamePaused
+      ? 'paused'
+      : state.phase === 'cooking'
+        ? `step-${state.stepIndex}`
+        : state.phase;
     if (key === this.stageKey) {
       return;
     }
     this.stageKey = key;
+    if (key === 'paused') {
+      // Nothing moves while paused: held things go back and hands pass through.
+      this.lockEverything();
+      for (const entity of this.queries.ingredients.entities) {
+        this.setGrabbable(entity, false);
+      }
+      return;
+    }
     if (state.phase === 'done') {
       this.lockEverything();
       return;

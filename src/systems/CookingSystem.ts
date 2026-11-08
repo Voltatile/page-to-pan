@@ -105,7 +105,10 @@ export class CookingSystem extends createSystem({}) {
   }
 
   update(delta: number): void {
-    if (this.world.visibilityState.peek() !== VisibilityState.Visible) {
+    if (
+      this.world.visibilityState.peek() !== VisibilityState.Visible ||
+      this.steps.isGamePaused
+    ) {
       return;
     }
     this.updateButter(delta);

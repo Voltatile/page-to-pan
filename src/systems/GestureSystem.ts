@@ -24,6 +24,7 @@ import {
 import { isWithinSnapZone } from '../util/snap.js';
 import { CookingSystem } from './CookingSystem.js';
 import { KitchenSystem } from './KitchenSystem.js';
+import { ScoreSystem } from './ScoreSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const DEG_TO_RAD = Math.PI / 180;
@@ -68,6 +69,7 @@ export class GestureSystem extends createSystem({}) {
   private steps!: StepSystem;
   private kitchen!: KitchenSystem;
   private cooking!: CookingSystem;
+  private score!: ScoreSystem;
   private grabSystem: GrabSystem | undefined;
   private egg!: Entity;
   private saltShaker!: Entity;
@@ -79,6 +81,8 @@ export class GestureSystem extends createSystem({}) {
   private isOnionOverBowl = false;
   private isPanInHand = false;
   private hasTossed = false;
+  /** A lift only counts once the pan has sat on the stove in this step. */
+  private hasPanCooked = false;
   private isWhiskInHand = false;
   private isShakerInHand = false;
 
@@ -91,12 +95,14 @@ export class GestureSystem extends createSystem({}) {
     const steps = this.world.getSystem(StepSystem);
     const kitchen = this.world.getSystem(KitchenSystem);
     const cooking = this.world.getSystem(CookingSystem);
-    if (steps == null || kitchen == null || cooking == null) {
+    const score = this.world.getSystem(ScoreSystem);
+    if (steps == null || kitchen == null || cooking == null || score == null) {
       throw new Error('GestureSystem needs its systems registered first');
     }
     this.steps = steps;
     this.kitchen = kitchen;
     this.cooking = cooking;
+    this.score = score;
     this.grabSystem = this.world.getSystem(GrabSystem);
     this.egg = this.world.requireSceneEntity('ingredient-egg');
     this.saltShaker = this.world.requireSceneEntity('ingredient-salt');
@@ -105,7 +111,10 @@ export class GestureSystem extends createSystem({}) {
   }
 
   update(delta: number): void {
-    if (this.world.visibilityState.peek() !== VisibilityState.Visible) {
+    if (
+      this.world.visibilityState.peek() !== VisibilityState.Visible ||
+      this.steps.isGamePaused
+    ) {
       return;
     }
     this.updatePanHold(delta);
@@ -169,6 +178,7 @@ export class GestureSystem extends createSystem({}) {
     } else if (step === 'pour') {
       this.pour.reset();
     } else if (step === 'cook' || step === 'finish') {
+      this.hasPanCooked = false;
       this.cooking.showDoneness();
     } else if (step === 'flip') {
       this.flick.reset();
@@ -201,6 +211,15 @@ export class GestureSystem extends createSystem({}) {
       this.rightHand.distanceTo(egg) <= TUNING.crackReachM;
     const spread = this.leftHand.distanceTo(this.rightHand);
     if (this.crack.update(isPinching, isNearEgg, spread, TUNING.crackPullM)) {
+      if (egg != null && bowl != null) {
+        this.score.noteCrack(
+          Math.min(
+            Math.hypot(egg.x - bowl.x, egg.z - bowl.z) /
+              TUNING.crackZoneRadiusM,
+            1,
+          ),
+        );
+      }
       this.cooking.showEggInBowl();
       this.steps.completeStep();
     }
@@ -245,6 +264,7 @@ export class GestureSystem extends createSystem({}) {
       this.steps.setProgress(`${Math.min(fullTurns, target)}/${target}`);
     }
     if (turns >= target) {
+      this.score.noteWhisk(turns);
       this.steps.completeStep();
     }
   }
@@ -371,6 +391,7 @@ export class GestureSystem extends createSystem({}) {
       TUNING.saltRearmDeg * DEG_TO_RAD,
     );
     if (hasTipped) {
+      this.score.noteSalt(this.salt.count);
       this.steps.setProgress(String(this.salt.count));
       this.steps.setActionReady(true);
     }
@@ -488,6 +509,11 @@ export class GestureSystem extends createSystem({}) {
   /** The player decides when to take the pan off the heat, once it is ready. */
   private updatePanLift(minProgress: number): void {
     const pan = this.kitchen.requireTool('pan');
+    // After a flip the pan may still be in the air: set it down first.
+    this.hasPanCooked ||= this.kitchen.panOnStove;
+    if (!this.hasPanCooked) {
+      return;
+    }
     if (
       !pan.hasComponent(Grabbed) ||
       this.cooking.cookProgress < minProgress
@@ -528,6 +554,7 @@ export class GestureSystem extends createSystem({}) {
     );
     if (speed >= TUNING.flickMinRadPerS) {
       this.hasTossed = true;
+      this.score.noteFlip(this.cooking.cookProgress);
       this.cooking.toss();
     }
   }

@@ -362,6 +362,31 @@ async function grabPanOffStove() {
   ]);
 }
 
+/** Turns the free left hand palm up until the ring fills, then resumes. */
+async function pauseAndResume(resumedTitle) {
+  await lookAt({ x: -0.05, y: 1.0, z: -0.5 });
+  await hand('hand-left', [
+    {
+      anchor: 'grip',
+      position: { x: -0.12, y: 1.12, z: -0.3 },
+      orientation: { pitch: 0, yaw: 0, roll: 180 },
+      duration: 0.6,
+    },
+  ]);
+  await expectTitle(/^Paused$/);
+  await sleep(1500);
+  await hand('hand-left', [
+    {
+      anchor: 'grip',
+      orientation: { pitch: 0, yaw: 0, roll: 0 },
+      position: { x: -0.3, y: 1.1, z: -0.2 },
+      duration: 0.6,
+    },
+  ]);
+  await pressCardButton();
+  await expectTitle(resumedTitle);
+}
+
 async function cookFirstSide() {
   await lookAt({ x: STOVE.x, y: 0.92, z: STOVE.z });
   if (!(await waitForTitle(/Cook: Ready/, 20000))) {
@@ -419,7 +444,7 @@ async function finishOmelette() {
   await hand('hand-right', [
     { anchor: 'grip', position: { x: PLATE.x + 0.02, y: 1.05, z: PLATE.z + 0.175 } },
   ]);
-  await expectTitle(/^Omelette$/);
+  await expectTitle(/^Score: \d+$/);
   await hand('hand-right', [{ pinch: 0, duration: 0.25 }]);
 }
 
@@ -501,6 +526,7 @@ async function cook() {
   await sleep(800);
   await addGreenOnion();
   await sleep(800);
+  await pauseAndResume(/^Heat the pan$/);
   await heatPan();
   await pourEggs();
   await cookFirstSide();
