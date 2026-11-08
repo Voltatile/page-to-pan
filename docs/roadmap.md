@@ -35,12 +35,43 @@ dan kesan pertama.
   "main dalam 10 detik" tetap terpenuhi.
 - [x] **Musik latar santai**, disintesis di kode (tanpa file, aman lisensi).
 
-## Prioritas 3: konten (target 13–14 Nov, pilih SATU)
+## Prioritas 3: nasi goreng, lalu buku resep (keputusan 8 Nov)
 
-- [ ] **Buku resep sebagai menu**: lembar resep menjadi buku, tiap halaman satu resep dengan bintang
-  terbaiknya. Cocok dengan nama "Page to Pan" dan bisa menambah nilai Innovation.
-- [ ] **Nasi goreng** sebagai resep kedua: sistemnya data-driven, tapi butuh aset dan gestur baru
-  (menumis, mengaduk). Perkiraan 2–3 hari.
+Developer memilih **nasi goreng dulu, lalu buku resep**. Dengan dua resep, buku resep menjadi cara
+memilih resep.
+
+### Desain nasi goreng (versi pemula)
+Bahan (grid 2x2 yang sama dengan omelette): **nasi** (mangkuk kecil), **telur**, **kecap manis**
+(botol, tanpa merek), dan **daun bawang** (opsional). Alat: wajan, kompor, piring, dan **sudip** baru
+untuk mengaduk.
+
+| Langkah | Interaksi | Mekanik yang dipakai ulang |
+|---|---|---|
+| Siapkan bahan | Taruh 4 bahan di siluetnya | snap |
+| Panaskan wajan | Taruh wajan di kompor | dudukan wajan |
+| Pecahkan telur | Pecahkan telur di atas wajan | pecah telur, zonanya wajan |
+| Orak-arik | Aduk telur di wajan dengan sudip, 2 putaran | putaran kocok, zonanya wajan |
+| Masukkan nasi | Lepas mangkuk nasi di atas wajan | jatuhkan di zona |
+| Bumbui | Miringkan botol kecap di atas wajan, ideal 2 kali | hitung tabur |
+| Tumis | Aduk 3 putaran sambil memasak | putaran kocok |
+| Selesaikan | Angkat wajan saat Golden | angkat wajan |
+| Daun bawang (opsional) | Lepas di atas wajan | jatuhkan di zona |
+| Sajikan | Bawa wajan ke atas piring | sajikan |
+
+Skor tetap 40/40/20: takaran kecap, timing saat disajikan, teknik (pecah telur dan putaran aduk;
+tidak ada flip).
+
+### Fase pengerjaan
+- [ ] **A. Fondasi multi-resep**: daftar resep, StepSystem/SnapSystem/Kitchen membaca resep aktif,
+  bahan di luar resep disembunyikan, tombol ganti resep sementara di kartu judul. Omelette tetap
+  lolos demo.
+- [ ] **B. Gestur berbasis data**: detektor (pecah, aduk, tabur, jatuhkan, angkat, sajikan) membaca
+  bahan, alat, dan zona dari data langkah, bukan nama omelette.
+- [ ] **C. Aset nasi goreng**: nasi, botol kecap, sudip, lembar resep dan label, isi wajan (orak-arik,
+  nasi yang menguning), nasi di piring.
+- [ ] **D. Masak dan skor nasi goreng**: kematangan, warna, catatan chef, pujian, petunjuk.
+- [ ] **E. Demo dan dokumen**: skrip demo nasi goreng, checklist Quest, CREDITS, CLAUDE.md.
+- [ ] **F. Buku resep**: lembar resep menjadi buku untuk memilih resep, menggantikan tombol sementara.
 
 Opsional kalau masih ada waktu: model 3D CC0 untuk menggantikan bentuk primitif, serta mode Learn
 dan Challenge (lihat CLAUDE.md bagian 5).
@@ -51,7 +82,7 @@ dan Challenge (lihat CLAUDE.md bagian 5).
 |---|---|
 | 8–10 Nov | Prioritas 1 |
 | 11–12 Nov | Prioritas 2 |
-| 13–14 Nov | Prioritas 3 (satu pilihan) |
+| 9–14 Nov | Prioritas 3: nasi goreng (fase A–E), lalu buku resep (fase F) |
 | 15–16 Nov | Rekam video demo kurang dari 3 menit (`npm run demo`), tulis deskripsi submission |
 | 17–18 Nov | Cadangan, cek `docs/quest-checklist.md` kalau ada akses Quest, lalu submit |
 
