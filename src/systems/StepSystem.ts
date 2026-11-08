@@ -1,5 +1,12 @@
 import { createSystem, eq, VisibilityState } from '@iwsdk/core';
-import { BACK_LABEL, TITLE_PAGES, type TitlePage } from '../config/menu.js';
+import {
+  BACK_LABEL,
+  PALM_PRACTICE_STAGE,
+  PRACTICE_STAGES,
+  TITLE_PAGES,
+  type TitlePage,
+  type TitlePageText,
+} from '../config/menu.js';
 import { OMELETTE } from '../config/recipes/omelette.js';
 import type { RecipeStep } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
@@ -52,6 +59,7 @@ export class StepSystem extends createSystem({
   private isActionReady = false;
   private isPausedNow = false;
   private titlePage: TitlePage = 'main';
+  private practiceStageNow = 0;
   /** Seconds of play since the step started or last showed progress. */
   private idleS = 0;
   private isHintingNow = false;
@@ -126,7 +134,10 @@ export class StepSystem extends createSystem({
     const { gameState: state, recipe } = this;
     if (state.phase === 'title') {
       if (this.titlePage !== 'main') {
-        const page = TITLE_PAGES[this.titlePage];
+        const page: TitlePageText =
+          this.titlePage === 'how-to-play'
+            ? (PRACTICE_STAGES[this.practiceStageNow] ?? PRACTICE_STAGES[0])
+            : TITLE_PAGES[this.titlePage];
         return {
           state,
           title: page.title,
@@ -212,10 +223,37 @@ export class StepSystem extends createSystem({
     }
   }
 
-  /** Shows How to Play, Credits, or the recipe itself on the title card. */
+  /** Shows How to Play, Settings, Credits, or the recipe on the title card. */
   openTitlePage(page: TitlePage): void {
     if (this.gameState.phase === 'title' && page !== this.titlePage) {
       this.titlePage = page;
+      this.practiceStageNow = 0;
+      this.notify();
+    }
+  }
+
+  /** True while the How to Play practice waits for the player's hands. */
+  get isPracticing(): boolean {
+    return (
+      this.gameState.phase === 'title' &&
+      this.titlePage === 'how-to-play' &&
+      this.practiceStageNow < PRACTICE_STAGES.length - 1
+    );
+  }
+
+  get practiceStage(): number {
+    return this.practiceStageNow;
+  }
+
+  /** True while the practice asks for a palm held up. */
+  get wantsPalmPractice(): boolean {
+    return this.isPracticing && this.practiceStageNow === PALM_PRACTICE_STAGE;
+  }
+
+  /** The player did what the practice asked, so show the next stage. */
+  advancePractice(): void {
+    if (this.isPracticing) {
+      this.practiceStageNow += 1;
       this.notify();
     }
   }

@@ -30,8 +30,9 @@ dan kesan pertama.
 
 - [x] **Pujian singkat yang melayang** setelah tiap langkah ("Clean crack!", "Perfect flip!",
   "Golden!"), diambil dari nilai skor yang sudah ada.
-- [ ] **Latihan tangan singkat** untuk pemain baru (sekitar 15 detik: ambil, lepas, telapak ke atas),
-  dan **harus bisa dilewati** supaya tetap memenuhi aturan "main dalam 10 detik".
+- [x] **Latihan tangan singkat**: halaman How to Play sekarang latihan tiga tahap (pinch telur, lepas,
+  telapak ke atas) yang maju sendiri. Tidak wajib dan bisa ditinggal dengan Back, jadi aturan
+  "main dalam 10 detik" tetap terpenuhi.
 - [x] **Musik latar santai**, disintesis di kode (tanpa file, aman lisensi).
 
 ## Prioritas 3: konten (target 13–14 Nov, pilih SATU)

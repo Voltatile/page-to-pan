@@ -64,6 +64,7 @@ export class PauseSystem extends createSystem({}) {
   );
   private steps!: StepSystem;
   private heldS = 0;
+  private palmHoldCount = 0;
   /** After a pause the palm must turn away before it can pause again. */
   private isArmed = true;
 
@@ -88,11 +89,16 @@ export class PauseSystem extends createSystem({}) {
     );
   }
 
+  /** How many times a palm has filled the ring, also outside a recipe. */
+  get palmHolds(): number {
+    return this.palmHoldCount;
+  }
+
   update(delta: number): void {
     const canPause =
       this.world.visibilityState.peek() === VisibilityState.Visible &&
-      this.steps.state.phase === 'cooking' &&
-      !this.steps.isGamePaused;
+      ((this.steps.state.phase === 'cooking' && !this.steps.isGamePaused) ||
+        this.steps.wantsPalmPractice);
     const hand = canPause ? this.palmUpHand() : null;
     if (hand == null) {
       this.heldS = 0;
@@ -109,6 +115,7 @@ export class PauseSystem extends createSystem({}) {
     if (progress >= 1) {
       this.isArmed = false;
       this.ring.visible = false;
+      this.palmHoldCount += 1;
       this.steps.pauseGame();
     }
   }

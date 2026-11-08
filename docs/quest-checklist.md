@@ -140,8 +140,11 @@ Every threshold is tuned on the emulator, whose hands do not shake
 ## 6. After the cook
 
 - [ ] **Title sign and menu**: the "Page to Pan" sign floats at eye height over the card,
-  and the How to Play and Credits buttons (56 units tall, smaller than the main button)
-  must be easy to hit with a hand ray. Each page returns with Back.
+  and the How to Play, Settings and Credits buttons (56 units tall, smaller than the
+  main button) must be easy to hit with a hand ray. Each page returns with Back.
+- [ ] **Practice** (`src/systems/PracticeSystem.ts`): How to Play moves on by itself after
+  a pinch on the egg, a release, and a palm held up. On a Quest, confirm each stage
+  notices a real hand at once, and that the palm ring also shows on the title screen.
 - [ ] **Settings** (`src/systems/SettingsSystem.ts`): the - and + buttons are 56 units
   square, the smallest on the card. Confirm a hand ray hits them, that the volume
   change is heard at once and kept after a reload, and that Recenter fits the table to
