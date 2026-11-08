@@ -1,16 +1,209 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
+    <meta
+      name="description"
+      content="Page to Pan: a seated, hands-first VR cooking game for beginners."
+    />
     <link rel="icon" href="data:," />
     <title>Page to Pan</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      #landing {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(40, 28, 18, 0.55),
+          rgba(20, 14, 9, 0.85)
+        );
+        transition: opacity 0.3s ease;
+      }
+
+      #landing[hidden] {
+        display: none;
+      }
+
+      .landing-card {
+        width: min(560px, 100%);
+        margin: auto;
+        padding: 40px 44px 32px;
+        box-sizing: border-box;
+        border-radius: 28px;
+        background: #f6f0e2;
+        color: #1c1d20;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+        text-align: center;
+      }
+
+      .landing-kicker {
+        margin: 0 0 8px;
+        color: #a2631b;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .landing-title {
+        margin: 0;
+        font-size: clamp(44px, 9vw, 64px);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+
+      .landing-title span {
+        color: #c9893a;
+      }
+
+      .landing-lead {
+        margin: 18px auto 28px;
+        max-width: 440px;
+        color: #3a3b40;
+        font-size: 19px;
+        line-height: 1.45;
+      }
+
+      #enter-vr {
+        width: 100%;
+        min-height: 72px;
+        border: 0;
+        border-radius: 999px;
+        background: #c9893a;
+        color: #fff;
+        font: inherit;
+        font-size: 26px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 6px 0 #8a5a14;
+        transition:
+          transform 0.1s ease,
+          box-shadow 0.1s ease,
+          background 0.2s ease;
+      }
+
+      #enter-vr:hover:not(:disabled) {
+        background: #d9973f;
+      }
+
+      #enter-vr:active:not(:disabled) {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #8a5a14;
+      }
+
+      #enter-vr:disabled {
+        background: #b9ab98;
+        box-shadow: 0 6px 0 #8f8372;
+        cursor: default;
+      }
+
+      #landing-note {
+        min-height: 22px;
+        margin: 14px 0 0;
+        color: #8a5a14;
+        font-size: 16px;
+      }
+
+      .landing-hints {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 26px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .landing-hints li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 8px;
+        border-radius: 16px;
+        background: #ece3d0;
+        color: #3a3b40;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+
+      .landing-hints svg {
+        width: 34px;
+        height: 34px;
+        fill: none;
+        stroke: #8a5a14;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .landing-footer {
+        margin: 22px 0 0;
+        color: #7b6f60;
+        font-size: 14px;
+      }
+    </style>
   </head>
-  <body style="margin: 0">
+  <body>
     <div id="scene-container"></div>
+    <div id="landing">
+      <main class="landing-card">
+        <p class="landing-kicker">A VR cooking game for beginners</p>
+        <h1 class="landing-title">Page <span>to</span> Pan</h1>
+        <p class="landing-lead">
+          Follow a picture recipe and cook a real-size omelette with your own
+          hands: crack, whisk, season, flip and serve.
+        </p>
+        <button id="enter-vr" type="button" disabled>Loading...</button>
+        <p id="landing-note" aria-live="polite"></p>
+        <ul class="landing-hints">
+          <li>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M9 4v14h15" />
+              <path d="M9 18v10" />
+              <path d="M24 18v10" />
+              <path d="M9 11h6" />
+            </svg>
+            Stay seated
+          </li>
+          <li>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path
+                d="M10 16V7a2 2 0 0 1 4 0v8V5a2 2 0 0 1 4 0v10V7a2 2 0 0 1 4 0v12a8 8 0 0 1-8 8h-1a8 8 0 0 1-6-3l-4-5a2 2 0 0 1 3-3l4 3"
+              />
+            </svg>
+            Put controllers down, use your hands
+          </li>
+          <li>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M5 12h5l7-6v20l-7-6H5z" />
+              <path d="M22 11a7 7 0 0 1 0 10" />
+              <path d="M25 7a12 12 0 0 1 0 18" />
+            </svg>
+            Sound on
+          </li>
+        </ul>
+        <p class="landing-footer">About 3 minutes per recipe</p>
+      </main>
+    </div>
     <script type="module" src="/src/index.ts"></script>
   </body>
 </html>

@@ -15,7 +15,10 @@ play session from start to finish, so it can be worked through in order.
 
 ## 1. Start and comfort
 
-- [ ] **Enter VR**: the card button must start an immersive session from Quest Browser.
+- [ ] **Landing page and Enter VR** (`index.html`, `src/landing.ts`): the 2D page must be
+  readable in the browser window, its big Enter VR button must start an immersive
+  session, and the page must come back after leaving VR. The card button inside the
+  scene stays as a second way in.
 - [ ] **Under 10 seconds**: from the page loading to holding the first ingredient
   should take less than 10 s (a contest rule).
 - [ ] **Seated calibration** (`src/systems/SeatedCalibrationSystem.ts`): the player rig

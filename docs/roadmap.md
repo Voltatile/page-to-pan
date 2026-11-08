@@ -14,7 +14,7 @@ dan kesan pertama.
 
 ## Prioritas 1: kesan pertama (target 8–10 Nov)
 
-- [ ] **Halaman pembuka 2D** sebelum masuk VR, yaitu yang pertama dilihat juri di Quest Browser:
+- [x] **Halaman pembuka 2D** sebelum masuk VR, yaitu yang pertama dilihat juri di Quest Browser:
   judul **Page to Pan**, satu kalimat penjelasan, tombol besar **Enter VR**, dan petunjuk singkat
   (duduk, pakai tangan, nyalakan suara).
 - [ ] **Layar judul 3D**: teks besar "Page to Pan" di atas meja, kartu menu berisi **Play**,
