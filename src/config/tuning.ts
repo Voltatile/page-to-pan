@@ -93,6 +93,8 @@ export const TUNING = {
   hintAfterS: 20,
   /** Loudness of everything the game plays, 0 to 1. */
   masterVolume: 0.9,
+  /** Loudness of the background music, under the kitchen sounds, 0 to 1. */
+  musicVolume: 0.22,
   /** Loudness of the pan sizzle at its loudest, 0 to 1. */
   sizzleVolume: 0.55,
   /** Steam puffs per second from a pan sizzling at full level. */

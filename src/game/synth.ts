@@ -257,3 +257,105 @@ export function glide(
   }
   return normalize(data, 0.6);
 }
+
+/** Frequency of a MIDI note number. */
+function midiHz(note: number): number {
+  return 440 * Math.pow(2, (note - 69) / 12);
+}
+
+/**
+ * Adds a soft electric-piano note: a sine with a little second harmonic, a
+ * quick attack and an exponential fade. It stops once inaudible, and turns a
+ * phasor instead of calling sin and exp per sample, which keeps building the
+ * music loop cheap enough to run at load on a headset.
+ */
+function addNote(
+  data: Float32Array,
+  sampleRate: number,
+  atS: number,
+  frequencyHz: number,
+  amplitude: number,
+  decayS: number,
+  attackS = 0.005,
+): void {
+  const start = Math.max(Math.round(atS * sampleRate), 0);
+  const end = Math.min(data.length, start + Math.round(decayS * 5 * sampleRate));
+  const step = (2 * Math.PI * frequencyHz) / sampleRate;
+  const cosStep = Math.cos(step);
+  const sinStep = Math.sin(step);
+  const fadeStep = Math.exp(-1 / (decayS * sampleRate));
+  const attackSamples = Math.max(attackS * sampleRate, 1);
+  let sine = 0;
+  let cosine = 1;
+  let fade = amplitude;
+  for (let index = start; index < end; index += 1) {
+    const rise = Math.min((index - start) / attackSamples, 1);
+    const wave = sine + 0.5 * sine * cosine;
+    data[index] = (data[index] ?? 0) + wave * fade * rise;
+    const nextSine = sine * cosStep + cosine * sinStep;
+    cosine = cosine * cosStep - sine * sinStep;
+    sine = nextSine;
+    fade *= fadeStep;
+  }
+}
+
+/** One bar per chord: bass note, then the chord tones from low to high. */
+const MUSIC_CHORDS: readonly (readonly number[])[] = [
+  [36, 60, 64, 67, 71],
+  [33, 57, 60, 64, 67],
+  [29, 57, 60, 65, 69],
+  [31, 55, 59, 62, 67],
+];
+/** Which chord tone each eighth note of a bar plays: up, then back down. */
+const ARPEGGIO = [1, 2, 3, 4, 3, 2, 3, 2] as const;
+
+/**
+ * A calm kitchen tune that loops without a seam: four bars of C, Am, F and G
+ * with a soft bass, an arpeggio and a quiet pad. Notes still ringing at the
+ * end are folded back onto the start.
+ */
+export function musicLoop(sampleRate: number, bpm = 84): Float32Array {
+  const beatS = 60 / bpm;
+  const barS = beatS * 4;
+  const loopS = barS * MUSIC_CHORDS.length;
+  const tailS = 2;
+  const raw = samples(sampleRate, loopS + tailS);
+  MUSIC_CHORDS.forEach((chord, bar) => {
+    const barStart = bar * barS;
+    const bass = chord[0] ?? 36;
+    addNote(raw, sampleRate, barStart, midiHz(bass), 0.5, 0.9);
+    addNote(raw, sampleRate, barStart + 2 * beatS, midiHz(bass), 0.35, 0.7);
+    ARPEGGIO.forEach((tone, eighth) => {
+      const note = chord[tone] ?? 60;
+      addNote(
+        raw,
+        sampleRate,
+        barStart + (eighth * beatS) / 2,
+        midiHz(note + 12),
+        eighth % 2 === 0 ? 0.2 : 0.14,
+        0.45,
+      );
+    });
+    for (const note of chord.slice(1)) {
+      addNote(raw, sampleRate, barStart, midiHz(note), 0.05, 1.1, 0.4);
+    }
+  });
+  const length = Math.round(loopS * sampleRate);
+  const loop = new Float32Array(length);
+  for (let index = 0; index < raw.length; index += 1) {
+    const target = index % length;
+    loop[target] = (loop[target] ?? 0) + (raw[index] ?? 0);
+  }
+  // A gentle low-pass keeps the tune soft behind the kitchen sounds.
+  let low = 0;
+  const alpha = 1 - Math.exp((-2 * Math.PI * 2800) / sampleRate);
+  for (let pass = 0; pass < 2; pass += 1) {
+    for (let index = 0; index < length; index += 1) {
+      low += alpha * ((loop[index] ?? 0) - low);
+      if (pass === 1) {
+        loop[index] = low;
+      }
+    }
+  }
+  return normalize(loop, 0.6);
+}

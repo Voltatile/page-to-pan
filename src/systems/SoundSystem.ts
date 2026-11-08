@@ -17,6 +17,7 @@ import {
   clink,
   crackSound,
   glide,
+  musicLoop,
   plop,
   shake,
   sizzleLoop,
@@ -111,6 +112,7 @@ export class SoundSystem extends createSystem({
   private readonly buffers = new Map<SoundName, AudioBuffer>();
   private readonly voices: PositionalAudio[] = [];
   private readonly flatVoices: SoundVoice[] = [];
+  private music!: SoundVoice;
   private nextVoice = 0;
   private nextFlatVoice = 0;
   private sizzle!: PositionalAudio;
@@ -161,6 +163,12 @@ export class SoundSystem extends createSystem({
       this.flatVoices.push(new SoundVoice(this.listener));
     }
 
+    this.music = new SoundVoice(this.listener);
+    this.music.name = 'Music';
+    this.music.setBuffer(this.toBuffer(context, musicLoop(SAMPLE_RATE)));
+    this.music.setLoop(true);
+    this.music.setVolume(TUNING.musicVolume);
+
     this.sizzle = new PositionalAudio(this.listener);
     this.sizzle.name = 'PanSizzle';
     this.sizzle.setRefDistance(REF_DISTANCE_M);
@@ -191,6 +199,9 @@ export class SoundSystem extends createSystem({
     const isRunning = context.state === 'running';
     if (isRunning && !this.sizzle.isPlaying) {
       this.sizzle.play();
+    }
+    if (isRunning && !this.music.isPlaying) {
+      this.music.play();
     }
     const isVisible =
       this.world.visibilityState.peek() === VisibilityState.Visible;

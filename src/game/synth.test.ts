@@ -6,6 +6,7 @@ import {
   crackSound,
   glide,
   makeRandom,
+  musicLoop,
   plop,
   shake,
   sizzleLoop,
@@ -28,6 +29,7 @@ const SOUNDS: Record<string, () => Float32Array> = {
   splash: () => splash(RATE),
   chime: () => chime(RATE, [784, 1175]),
   glide: () => glide(RATE, 660, 440),
+  music: () => musicLoop(RATE),
 };
 
 function peak(data: Float32Array): number {
@@ -56,6 +58,11 @@ describe('synth', () => {
 
   it('keeps the sizzle loop exactly as long as asked', () => {
     expect(sizzleLoop(RATE, 2).length).toBe(RATE * 2);
+  });
+
+  it('loops the music in whole bars', () => {
+    const barS = (60 / 84) * 4;
+    expect(musicLoop(RATE).length).toBe(Math.round(barS * 4 * RATE));
   });
 
   it('draws seeded numbers in 0..1', () => {

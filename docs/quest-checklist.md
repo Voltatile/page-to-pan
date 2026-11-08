@@ -116,6 +116,9 @@ Every threshold is tuned on the emulator, whose hands do not shake
   sizzle follows the pan in space and rises as the egg browns, that it goes quiet on
   pause and when the system menu opens, and that no sound is too loud
   (`masterVolume`, `sizzleVolume`).
+- [ ] **Music**: an 11 s loop of C, Am, F and G, synthesized at load (about 50 ms on a
+  desktop). Confirm the load does not stutter on a Quest 2, the loop has no audible
+  seam, and the music sits under the kitchen sounds (`musicVolume`).
 - [ ] **Particles** (`src/systems/EffectsSystem.ts`): salt grains, yolk and onion bits,
   steam, smoke and star sparkles are camera-facing quads. Check that they face both
   eyes without looking flat, that the 4 to 5 mm salt grains are visible, and that the
