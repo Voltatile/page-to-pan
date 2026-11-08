@@ -49,6 +49,8 @@ export interface RecipeStep {
   instruction: string;
   /** Short note on why the step matters, shown on the tips card. */
   tip: string;
+  /** How to do the step, shown instead of the tip when the player is stuck. */
+  hint: string;
   completion: StepCompletion;
   /** Tools on the table during this step. */
   tools: readonly ToolId[];

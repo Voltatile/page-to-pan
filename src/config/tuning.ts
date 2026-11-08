@@ -89,6 +89,8 @@ export const TUNING = {
   palmInViewMinDot: 0.6,
   /** The pause ring floats this far above the palm. */
   palmRingHeightM: 0.08,
+  /** Seconds without progress before the card swaps its tip for a hint. */
+  hintAfterS: 20,
   /** Loudness of everything the game plays, 0 to 1. */
   masterVolume: 0.9,
   /** Loudness of the pan sizzle at its loudest, 0 to 1. */

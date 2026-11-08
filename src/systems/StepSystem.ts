@@ -1,6 +1,7 @@
-import { createSystem, eq } from '@iwsdk/core';
+import { createSystem, eq, VisibilityState } from '@iwsdk/core';
 import { OMELETTE } from '../config/recipes/omelette.js';
 import type { RecipeStep } from '../config/recipes/recipe.js';
+import { TUNING } from '../config/tuning.js';
 import { Ingredient } from '../game-components.js';
 import {
   completeStep,
@@ -44,6 +45,9 @@ export class StepSystem extends createSystem({
   private progress = '';
   private isActionReady = false;
   private isPausedNow = false;
+  /** Seconds of play since the step started or last showed progress. */
+  private idleS = 0;
+  private isHintingNow = false;
 
   init(): void {
     const onPlacedChange = () => this.onPlacedChange();
@@ -51,6 +55,27 @@ export class StepSystem extends createSystem({
       this.queries.placed.subscribe('qualify', onPlacedChange),
       this.queries.placed.subscribe('disqualify', onPlacedChange),
     );
+  }
+
+  update(delta: number): void {
+    if (
+      this.gameState.phase !== 'cooking' ||
+      this.isPausedNow ||
+      this.isHintingNow ||
+      this.world.visibilityState.peek() !== VisibilityState.Visible
+    ) {
+      return;
+    }
+    this.idleS += delta;
+    if (this.idleS >= TUNING.hintAfterS) {
+      this.isHintingNow = true;
+      this.notify();
+    }
+  }
+
+  /** True once the player has spent a while on a step without progress. */
+  get isHinting(): boolean {
+    return this.isHintingNow;
   }
 
   subscribe(listener: () => void): () => void {
@@ -134,7 +159,7 @@ export class StepSystem extends createSystem({
       instruction: step?.instruction ?? '',
       action: isReady ? 'Next' : null,
       secondaryAction: null,
-      tip: step?.tip ?? '',
+      tip: (this.isHintingNow ? step?.hint : step?.tip) ?? '',
     };
   }
 
@@ -178,6 +203,7 @@ export class StepSystem extends createSystem({
   setProgress(progress: string): void {
     if (progress !== this.progress) {
       this.progress = progress;
+      this.clearIdle();
       this.notify();
     }
   }
@@ -216,7 +242,14 @@ export class StepSystem extends createSystem({
     }
     this.progress = '';
     this.isActionReady = false;
+    this.clearIdle();
     this.notify();
+  }
+
+  /** Progress shows the player is on track, so the hint can wait again. */
+  private clearIdle(): void {
+    this.idleS = 0;
+    this.isHintingNow = false;
   }
 
   private notify(): void {

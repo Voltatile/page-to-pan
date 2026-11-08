@@ -2,6 +2,7 @@ import {
   createSystem,
   UIKit,
   UIKitMLAsset,
+  type Object3D,
   VisibilityState,
 } from '@iwsdk/core';
 import { ScoreSystem } from './ScoreSystem.js';
@@ -9,6 +10,10 @@ import { StepSystem } from './StepSystem.js';
 
 const ENTER_VR_LABEL = 'Enter VR';
 const PAUSE_HINT = 'Turn a hand palm up and hold it to pause.';
+
+/** A short swell of the card that draws the eye to new text. */
+const NUDGE_S = 0.4;
+const NUDGE_GROWTH = 0.05;
 
 const percent = (part: number) => String(Math.round(part * 100));
 
@@ -24,6 +29,11 @@ function bestLine(stars: number): string {
  * Outside XR its button can only enter VR.
  */
 export class UISystem extends createSystem({}) {
+  private cardObject: Object3D | undefined;
+  private cardScale = 1;
+  private nudgeS = -1;
+  private nudgeKey = '';
+
   init(): void {
     const card = this.world.requireSceneObject<UIKitMLAsset>('recipe-card');
     const button = card.requireElementById('card-button');
@@ -42,6 +52,8 @@ export class UISystem extends createSystem({}) {
     const timing = card.requireElementById<UIKit.Text>('stat-timing');
     const technique = card.requireElementById<UIKit.Text>('stat-technique');
     secondary.name = 'card-button-secondary';
+    this.cardObject = this.world.requireSceneEntity('recipe-card').object3D;
+    this.cardScale = this.cardObject?.scale.x ?? 1;
     const steps = this.world.getSystem(StepSystem);
     const score = this.world.getSystem(ScoreSystem);
     if (steps == null || score == null) {
@@ -50,6 +62,16 @@ export class UISystem extends createSystem({}) {
 
     const render = () => {
       const view = steps.view;
+      const state = view.state;
+      const key = [
+        state.phase === 'cooking' ? state.stepIndex : state.phase,
+        steps.isGamePaused,
+        steps.isHinting,
+      ].join(':');
+      if (key !== this.nudgeKey) {
+        this.nudgeKey = key;
+        this.nudgeS = 0;
+      }
       const isFlat =
         this.world.visibilityState.peek() === VisibilityState.NonImmersive;
       const action = isFlat ? ENTER_VR_LABEL : view.action;
@@ -101,5 +123,17 @@ export class UISystem extends createSystem({}) {
       this.world.visibilityState.subscribe(render),
     );
     render();
+  }
+
+  update(delta: number): void {
+    if (this.nudgeS < 0 || this.cardObject == null) {
+      return;
+    }
+    this.nudgeS = Math.min(this.nudgeS + delta, NUDGE_S);
+    const swell = Math.sin((Math.PI * this.nudgeS) / NUDGE_S);
+    this.cardObject.scale.setScalar(this.cardScale * (1 + NUDGE_GROWTH * swell));
+    if (this.nudgeS >= NUDGE_S) {
+      this.nudgeS = -1;
+    }
   }
 }

@@ -37,6 +37,10 @@ play session from start to finish, so it can be worked through in order.
   sharp at 0.8 m on the Quest 2 display.
 - [ ] **Card tips**: the 24-unit tip line under each step must stay readable at 0.8 m,
   and the longest tips (about 66 characters) must fit in two lines.
+- [ ] **Stuck hints**: after 20 s on a step without progress (`hintAfterS`), the tip
+  line turns into a how-to hint and the card swells briefly, as it does on every new
+  step. Confirm 20 s is neither nagging nor too late, and that the swell is noticed
+  without being distracting.
 - [ ] **Depth precision**: outlines and labels sit a few millimeters above the paper.
   Confirm there is no flicker at the near plane of 0.02 m.
 

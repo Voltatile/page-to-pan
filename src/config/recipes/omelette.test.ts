@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { TUNING } from '../tuning.js';
 import { OMELETTE } from './omelette.js';
 
+/** About two lines of 24-unit text on the 440-unit wide card. */
+const CARD_LINE_LIMIT = 70;
+
 describe('omelette recipe sheet', () => {
   const { ingredients, sheetSizeM } = OMELETTE;
 
@@ -36,6 +39,13 @@ describe('omelette recipe sheet', () => {
       for (const id of step.grabbableIngredients) {
         expect(step.ingredients).toContain(id);
       }
+    }
+  });
+
+  it('keeps tips and hints short enough for two card lines', () => {
+    for (const { tip, hint } of OMELETTE.steps) {
+      expect(tip.length).toBeLessThanOrEqual(CARD_LINE_LIMIT);
+      expect(hint.length).toBeLessThanOrEqual(CARD_LINE_LIMIT);
     }
   });
 
