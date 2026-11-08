@@ -4,7 +4,7 @@ Every asset used in the game is listed here. Only CC0 or self-made assets are al
 
 | Asset | Source | License |
 |---|---|---|
-| Kitchen room, table, recipe stand | Procedural geometry in `src/scene-assets/kitchen.scene-asset.ts` | Self-made |
+| Kitchen room, table, recipe stand, recipe book cover | Procedural geometry in `src/scene-assets/kitchen.scene-asset.ts` | Self-made |
 | Recipe sheet and ingredient outlines | Procedural geometry in `src/scene-assets/recipe-sheet.scene-asset.ts` | Self-made |
 | Placeholder ingredients (egg, salt, butter, green onion, rice bowl, sweet soy bottle) | Procedural geometry in `src/scene-assets/ingredients.scene-asset.ts` | Self-made |
 | Placeholder bowl, whisk, spatula, pan, stove, plate, and the food in them | Procedural geometry in `src/scene-assets/cookware.scene-asset.ts` | Self-made |

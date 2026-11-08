@@ -124,6 +124,43 @@ export function createKitchenRoom(): Group {
   return room;
 }
 
+const LEATHER = '#7A3B2E';
+const SPINE = '#5C2A20';
+const PAGE_EDGES = '#EFE6D2';
+
+/** Thickness of the cover board plus the page block on it. */
+export const BOOK_THICKNESS_M = 0.007;
+
+/**
+ * The recipe book lying open on the table: a leather cover, a spine on the
+ * left and a block of pages. The recipe sheets lie on top as its pages.
+ * Origin at table contact under the page center; it matches a 40 x 32 cm sheet.
+ */
+export function createRecipeBook(): Group {
+  const coverThickness = 0.003;
+  const pagesThickness = BOOK_THICKNESS_M - coverThickness;
+  const book = new Group();
+  book.name = 'RecipeBook';
+  book.add(
+    mergeColored(
+      'Book',
+      [
+        [boxMesh([0.43, coverThickness, 0.35], [-0.0125, coverThickness / 2, 0]), LEATHER],
+        [boxMesh([0.022, 0.009, 0.35], [-0.217, 0.0045, 0]), SPINE],
+        [
+          boxMesh(
+            [0.398, pagesThickness, 0.318],
+            [0, coverThickness + pagesThickness / 2, 0],
+          ),
+          PAGE_EDGES,
+        ],
+      ],
+      sceneryMaterial,
+    ),
+  );
+  return book;
+}
+
 /**
  * Wooden stand that props the recipe card at 45 degrees toward the seated
  * player. Origin is at table contact under the front lip.

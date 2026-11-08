@@ -60,8 +60,8 @@ untuk mengaduk.
 
 Skor tetap 40/40/20: takaran kecap, timing saat disajikan, teknik (pecah telur dan putaran aduk;
 tidak ada flip). Nasi baru menguning sejak langkah Tumis, dengan durasi masak 40 detik, supaya pemain
-yang lambat mengambil kecap tidak keburu gosong. Selama fase F belum selesai, resep ini hanya terbuka
-lewat `?recipe=nasi-goreng`; demonya `DEMO_RECIPE=nasi-goreng npm run demo`.
+yang lambat mengambil kecap tidak keburu gosong. Pemain memilihnya lewat buku resep; demonya
+`DEMO_RECIPE=nasi-goreng npm run demo` (memilih lewat buku juga).
 
 ### Fase pengerjaan
 - [x] **A. Fondasi multi-resep**: daftar resep, StepSystem/SnapSystem/Kitchen membaca resep aktif,
@@ -73,7 +73,8 @@ lewat `?recipe=nasi-goreng`; demonya `DEMO_RECIPE=nasi-goreng npm run demo`.
   nasi yang menguning), nasi di piring.
 - [x] **D. Masak dan skor nasi goreng**: kematangan, warna, catatan chef, pujian, petunjuk.
 - [x] **E. Demo dan dokumen**: skrip demo nasi goreng, checklist Quest, CREDITS, CLAUDE.md.
-- [ ] **F. Buku resep**: lembar resep menjadi buku untuk memilih resep, menggantikan tombol sementara.
+- [x] **F. Buku resep**: lembar resep menjadi halaman buku bersampul kulit. Strip "< Recipe 1 of 2 >"
+  di depan kartu membalik halaman dengan animasi; judul, bahan, lembar, dan preview ikut berganti.
 
 Opsional kalau masih ada waktu: model 3D CC0 untuk menggantikan bentuk primitif, serta mode Learn
 dan Challenge (lihat CLAUDE.md bagian 5).

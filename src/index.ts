@@ -1,6 +1,7 @@
 import { World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
 import { setupLanding } from './landing.js';
+import { BookSystem } from './systems/BookSystem.js';
 import { CookingSystem } from './systems/CookingSystem.js';
 import {
   DebugOverlaySystem,
@@ -38,6 +39,7 @@ World.create(
   world.registerSystem(ScoreSystem);
   world.registerSystem(SoundSystem);
   world.registerSystem(EffectsSystem);
+  world.registerSystem(BookSystem);
   world.registerSystem(GuideSystem);
   world.registerSystem(EggShellSystem);
   world.registerSystem(GestureSystem);

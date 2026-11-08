@@ -8,8 +8,6 @@ import {
   Visibility,
 } from '@iwsdk/core';
 import { PAN_ON_STOVE_Y } from '../config/cookware.js';
-import { ALL_RECIPES, sheetNodeId } from '../config/recipes/index.js';
-import type { Recipe } from '../config/recipes/recipe.js';
 import type { ToolId } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import { Ingredient, KitchenTool } from '../game-components.js';
@@ -120,7 +118,6 @@ export class KitchenSystem extends createSystem({
       return;
     }
     this.stageKey = key;
-    this.showRecipeSheet(recipe);
     if (phaseKey === 'paused') {
       // Nothing moves while paused: held things go back and hands pass through.
       this.lockEverything();
@@ -158,15 +155,6 @@ export class KitchenSystem extends createSystem({
         'isVisible',
         isInRecipe && (step == null || step.ingredients.includes(id)),
       );
-    }
-  }
-
-  /** Only the active recipe's sheet lies on the table. */
-  private showRecipeSheet(active: Recipe): void {
-    for (const recipe of ALL_RECIPES) {
-      this.world
-        .requireSceneEntity(sheetNodeId(recipe))
-        .setValue(Visibility, 'isVisible', recipe === active);
     }
   }
 

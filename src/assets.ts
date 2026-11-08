@@ -26,6 +26,7 @@ import {
 import {
   createKitchenRoom,
   createKitchenTable,
+  createRecipeBook,
   createRecipeStand,
 } from './scene-assets/kitchen.scene-asset.js';
 import { createRecipeSheet } from './scene-assets/recipe-sheet.scene-asset.js';
@@ -43,6 +44,8 @@ export default defineAssets({
   'kitchen-room': createKitchenRoom(),
   'kitchen-table': createKitchenTable(),
   'recipe-stand': createRecipeStand(),
+  'recipe-book': createRecipeBook(),
+  'book-nav': uikitml('book-nav.uikitml', 'Book Nav'),
   'recipe-sheet-omelette': createRecipeSheet(OMELETTE),
   'recipe-sheet-nasi-goreng': createRecipeSheet(NASI_GORENG),
   'ingredient-egg': createEgg(OMELETTE_INGREDIENTS.egg),

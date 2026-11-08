@@ -135,6 +135,45 @@ const lookAt = (target, duration = 0.9) =>
     duration,
   });
 
+/** Turns the recipe book one page forward with the right hand ray. */
+async function turnBookPage() {
+  const found = await runCli([
+    'ecs',
+    'find',
+    '--input-json',
+    JSON.stringify({ namePattern: '^Book Nav$' }),
+  ]);
+  const navEntity = found.entities[0].entityIndex;
+  const { targets } = await xr('list-targets', {});
+  const button = targets.find((target) => target.name === 'book-next');
+  const from = { x: 0.2, y: 1.2, z: -0.25 };
+  for (const nudge of [0, 0.01, -0.01, 0.02]) {
+    const target = { ...button.position, x: button.position.x + nudge };
+    await xr('animate-to', {
+      device: 'hand-right',
+      position: from,
+      orientation: aim(from, target),
+      duration: 0.7,
+    });
+    await sleep(350);
+    const state = JSON.stringify(
+      await runCli([
+        'ui',
+        'inspect',
+        '--input-json',
+        JSON.stringify({ entityIndex: navEntity, selector: '#book-next' }),
+      ]),
+    );
+    if (state.includes('"hovered":true')) {
+      await sleep(300);
+      await xr('select', { device: 'hand-right', duration: 0.3 });
+      await sleep(1200);
+      return;
+    }
+  }
+  throw new Error('The hand ray never reached the book page button');
+}
+
 async function uiElement(selector) {
   return runCli([
     'ui',
@@ -495,7 +534,10 @@ async function dropIntoPan(device, target, next) {
 
 async function cookNasiGoreng() {
   log('Title');
-  await sleep(2000);
+  await sleep(1500);
+  await turnBookPage();
+  await expectTitle(/^Nasi Goreng$/);
+  await sleep(800);
   await pressCardButton();
   await expectTitle(/^Ingredients$/);
 
@@ -636,11 +678,6 @@ async function prepareStage() {
   await runCli(['browser', 'run', 'scripts/demo-fresh-start.mjs']);
   await sleep(2000);
   await runCli(['runtime', 'wait'], 90000);
-  if (IS_NASI_GORENG) {
-    await runCli(['browser', 'run', 'scripts/demo-nasi-view.mjs']);
-    await sleep(2000);
-    await runCli(['runtime', 'wait'], 90000);
-  }
   if (IS_DEBUG) {
     await runCli(['browser', 'run', 'scripts/demo-debug-view.mjs']);
     await sleep(2000);

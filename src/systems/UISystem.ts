@@ -66,6 +66,13 @@ export class UISystem extends createSystem({}) {
     const volumeUp = card.requireElementById('settings-volume-up');
     const recenter = card.requireElementById('settings-recenter');
     const settings = this.world.getSystem(SettingsSystem);
+    const bookNav = this.world.requireSceneEntity('book-nav');
+    const bookPanel = this.world.requireSceneObject<UIKitMLAsset>('book-nav');
+    const bookPrev = bookPanel.requireElementById('book-prev');
+    const bookNext = bookPanel.requireElementById('book-next');
+    const bookPage = bookPanel.requireElementById<UIKit.Text>('book-page');
+    bookPrev.name = 'book-prev';
+    bookNext.name = 'book-next';
     const logo = this.world.requireSceneEntity('title-logo');
     secondary.name = 'card-button-secondary';
     howToPlay.name = 'menu-how-to-play';
@@ -108,6 +115,9 @@ export class UISystem extends createSystem({}) {
         : view.instruction;
 
       logo.setValue(Visibility, 'isVisible', state.phase === 'title');
+      const { index, count } = steps.recipePage;
+      bookNav.setValue(Visibility, 'isVisible', showMenu && count > 1);
+      bookPage.setProperties({ text: `Recipe ${index + 1} of ${count}` });
       title.setProperties({
         text: result == null ? view.title : `Score: ${result.total}`,
         fontSize:
@@ -156,6 +166,8 @@ export class UISystem extends createSystem({}) {
     const onHowToPlay = () => steps.openTitlePage('how-to-play');
     const onCredits = () => steps.openTitlePage('credits');
     const onSettings = () => steps.openTitlePage('settings');
+    const onBookPrev = () => steps.turnRecipePage(-1);
+    const onBookNext = () => steps.turnRecipePage(1);
     const onVolumeDown = () => {
       settings?.changeVolume(-1);
       render();
@@ -171,6 +183,8 @@ export class UISystem extends createSystem({}) {
     howToPlay.addEventListener('click', onHowToPlay);
     credits.addEventListener('click', onCredits);
     settingsButton.addEventListener('click', onSettings);
+    bookPrev.addEventListener('click', onBookPrev);
+    bookNext.addEventListener('click', onBookNext);
     volumeDown.addEventListener('click', onVolumeDown);
     volumeUp.addEventListener('click', onVolumeUp);
     recenter.addEventListener('click', onRecenter);
@@ -180,6 +194,8 @@ export class UISystem extends createSystem({}) {
       () => howToPlay.removeEventListener('click', onHowToPlay),
       () => credits.removeEventListener('click', onCredits),
       () => settingsButton.removeEventListener('click', onSettings),
+      () => bookPrev.removeEventListener('click', onBookPrev),
+      () => bookNext.removeEventListener('click', onBookNext),
       () => volumeDown.removeEventListener('click', onVolumeDown),
       () => volumeUp.removeEventListener('click', onVolumeUp),
       () => recenter.removeEventListener('click', onRecenter),

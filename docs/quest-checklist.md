@@ -96,7 +96,11 @@ Every threshold is tuned on the emulator, whose hands do not shake
   floats up over the bowl, pan or plate for 2.5 s, turned toward the head. Confirm it
   is readable while the hands are busy and never hides the food being worked on.
 
-### Nasi goreng (`?recipe=nasi-goreng` until the recipe book opens it)
+### Recipe book and nasi goreng
+
+- [ ] **Recipe book** (`src/systems/BookSystem.ts`): the "< Recipe 1 of 2 >" strip lies at
+  70 degrees in front of the card. Confirm its 6 cm arrows are easy to hit with a hand
+  ray from the seat, and that the page turn reads as a book page turning.
 
 - [ ] **Reach to the pan**: every nasi goreng step happens over the pan on the right.
   Confirm the right hand reaches it for cracking, stirring, tipping the bottle and

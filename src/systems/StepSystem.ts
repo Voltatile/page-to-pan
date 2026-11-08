@@ -7,7 +7,7 @@ import {
   type TitlePage,
   type TitlePageText,
 } from '../config/menu.js';
-import { initialRecipe } from '../config/recipes/index.js';
+import { initialRecipe, RECIPES } from '../config/recipes/index.js';
 import type { Recipe, RecipeStep } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
 import { Ingredient } from '../game-components.js';
@@ -59,6 +59,7 @@ export class StepSystem extends createSystem({
   private isActionReady = false;
   private isPausedNow = false;
   private titlePage: TitlePage = 'main';
+  private pageTurn: 1 | -1 = 1;
   private practiceStageNow = 0;
   /** Seconds of play since the step started or last showed progress. */
   private idleS = 0;
@@ -115,6 +116,26 @@ export class StepSystem extends createSystem({
   /** The recipe being cooked, or shown on the title card. */
   get activeRecipe(): Recipe {
     return this.recipe;
+  }
+
+  /** Where the active recipe sits in the book, and how many there are. */
+  get recipePage(): { index: number; count: number } {
+    return { index: RECIPES.indexOf(this.recipe), count: RECIPES.length };
+  }
+
+  /** The way the recipe book last turned: forward (+1) or back (-1). */
+  get lastPageTurn(): 1 | -1 {
+    return this.pageTurn;
+  }
+
+  /** Turns the recipe book one page forward (+1) or back (-1), wrapping. */
+  turnRecipePage(direction: 1 | -1): void {
+    this.pageTurn = direction;
+    const index = RECIPES.indexOf(this.recipe);
+    const next = RECIPES[(index + direction + RECIPES.length) % RECIPES.length];
+    if (next != null) {
+      this.selectRecipe(next);
+    }
   }
 
   /** Switches the recipe while the title card is up. */

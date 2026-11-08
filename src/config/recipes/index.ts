@@ -2,11 +2,11 @@ import { NASI_GORENG } from './nasi-goreng.js';
 import { OMELETTE } from './omelette.js';
 import type { Recipe } from './recipe.js';
 
-/** Every recipe the player can browse, in order. */
-export const RECIPES: readonly Recipe[] = [OMELETTE];
+/** Every recipe the player can browse in the recipe book, in order. */
+export const RECIPES: readonly Recipe[] = [OMELETTE, NASI_GORENG];
 
 /** Recipes still being built: in the scene, but only opened by address. */
-const IN_PROGRESS: readonly Recipe[] = [NASI_GORENG];
+const IN_PROGRESS: readonly Recipe[] = [];
 
 /** Every recipe in the scene, finished or not. */
 export const ALL_RECIPES: readonly Recipe[] = [...RECIPES, ...IN_PROGRESS];

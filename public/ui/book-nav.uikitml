@@ -1,0 +1,46 @@
+<!--
+  Turns the recipe book on the title screen. Authored at 1 unit = 1 mm
+  (placed at scale 0.1): a 36 x 7 cm strip lying between the book and the
+  card, with 6 cm arrow buttons for the hand ray.
+  Note: comments inside the style block break the UIKitML parser.
+-->
+<style>
+  .nav {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 360px;
+    height: 72px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .arrow {
+    width: 60px;
+    height: 60px;
+    justify-content: center;
+  }
+
+  .arrow-label {
+    font-size: 32px;
+  }
+
+  .page {
+    color: #1c1d20;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .page:dark {
+    color: #fafaf7;
+  }
+</style>
+<Panel class="nav">
+  <Button id="book-prev" class="arrow">
+    <ButtonLabel class="arrow-label">&lt;</ButtonLabel>
+  </Button>
+  <div id="book-page" class="page">Recipe 1 of 2</div>
+  <Button id="book-next" class="arrow">
+    <ButtonLabel class="arrow-label">&gt;</ButtonLabel>
+  </Button>
+</Panel>
