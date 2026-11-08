@@ -24,6 +24,7 @@ import {
 import { isWithinSnapZone } from '../util/snap.js';
 import { CookingSystem } from './CookingSystem.js';
 import { EffectsSystem } from './EffectsSystem.js';
+import { EggShellSystem } from './EggShellSystem.js';
 import { GuideSystem } from './GuideSystem.js';
 import { KitchenSystem } from './KitchenSystem.js';
 import { ScoreSystem } from './ScoreSystem.js';
@@ -81,6 +82,7 @@ export class GestureSystem extends createSystem({}) {
   private sound!: SoundSystem;
   private effects!: EffectsSystem;
   private guide: GuideSystem | undefined;
+  private shells: EggShellSystem | undefined;
   private grabSystem: GrabSystem | undefined;
   private egg!: Entity;
   private saltShaker!: Entity;
@@ -122,6 +124,7 @@ export class GestureSystem extends createSystem({}) {
     this.sound = sound;
     this.effects = effects;
     this.guide = this.world.getSystem(GuideSystem);
+    this.shells = this.world.getSystem(EggShellSystem);
     this.steps = steps;
     this.kitchen = kitchen;
     this.cooking = cooking;
@@ -244,6 +247,7 @@ export class GestureSystem extends createSystem({}) {
         );
         this.sound.playSound('crack', egg);
         this.effects.burst('yolk', egg, bowl.y + BOWL_FOOD_Y_M);
+        this.shells?.crack(egg);
       }
       this.cooking.showEggInBowl();
       this.steps.completeStep();

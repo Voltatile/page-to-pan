@@ -41,6 +41,12 @@ function smoothstep(t: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/**
+ * A frame can stall, for example while the browser loads something. Doneness
+ * counts at most this much time per frame, so one stall cannot burn the food.
+ */
+const MAX_COOK_STEP_S = 0.1;
+
 const GOLDEN_MOMENT = 0.7;
 const BURNT_MOMENT = 1.2;
 
@@ -128,7 +134,11 @@ export class CookingSystem extends createSystem({}) {
       return;
     }
     if (this.kitchen.panOnStove) {
-      this.progress = advanceCook(this.progress, delta, TUNING.cookDurationS);
+      this.progress = advanceCook(
+        this.progress,
+        Math.min(delta, MAX_COOK_STEP_S),
+        TUNING.cookDurationS,
+      );
     }
     this.paintDoneness();
     if (cookLabel(this.progress, this.isFolded) !== this.label) {

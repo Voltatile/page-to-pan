@@ -62,6 +62,9 @@ Every threshold is tuned on the emulator, whose hands do not shake
 - [ ] **Crack**: one hand holds a 6 cm egg over the bowl and the other pinches beside
   it, so hand tracking may lose a hand when they overlap. If it does, widen
   `crackReachM`. Also confirm the right hand reaches the bowl while seated.
+- [ ] **Egg shells** (`src/systems/EggShellSystem.ts`): after the crack two shell halves
+  tumble out in front of the bowl, rest for 6 s and shrink away. Confirm they never
+  land on the whisk or the edge of the table, and that they are noticed.
 - [ ] **Whisk**: 3 turns. Near the bowl the whisk tilts about 25 degrees toward the
   hand and its tip stays inside the bowl, even if the hand circles wider. Confirm this
   assist feels like stirring rather than like the whisk moving on its own.
@@ -126,6 +129,9 @@ Every threshold is tuned on the emulator, whose hands do not shake
 
 ## 6. After the cook
 
+- [ ] **Title preview** (`src/systems/TitlePreviewSystem.ts`): a finished omelette turns
+  above the card on the title screen. Confirm it reads as an omelette and does not
+  hide the card text.
 - [ ] **Results**: the score, the chef note and the three stars must be readable from
   the seat, and the stars must pop in one by one with their chime.
 - [ ] **Again**: the button returns to the title with every ingredient home, and a
