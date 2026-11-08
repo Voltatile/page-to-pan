@@ -13,13 +13,17 @@
  *
  * also opens the page with ?debug=1 and ends with the performance numbers the
  * debug overlay logged while cooking.
+ *
+ *   DEMO_RECIPE=nasi-goreng npm run demo
+ *
+ * cooks nasi goreng instead of the omelette.
  */
 import { execFile, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BOWL } from './demo-layout.mjs';
+import { BOWL, STOVE } from './demo-layout.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLI = join(ROOT, 'node_modules/@iwsdk/cli/bin/iwsdk.js');
@@ -27,11 +31,11 @@ const SYSTEM_CHROME = 'C:\\Program Files\\Google\\Chrome\\Application';
 const COUNTDOWN_S = 5;
 const VIDEO_LIMIT_S = 180;
 const IS_DEBUG = process.env.DEMO_DEBUG === '1';
+const IS_NASI_GORENG = process.env.DEMO_RECIPE === 'nasi-goreng';
 /** Seated eye height: the game keeps the table 42 cm under the head. */
 const HEAD = { x: 0, y: 1.3, z: 0 };
 /** Time on the heat after the card first says Golden, aiming for doneness 0.7. */
 const GOLDEN_EXTRA_MS = 1500;
-const STOVE = { x: 0.35, z: -0.35 };
 const PLATE = { x: 0, z: -0.31 };
 const LEVEL = { pitch: 0, yaw: 0, roll: 0 };
 const PAN_LIFTED = { x: 0.3, y: 1.04, z: -0.2 };
@@ -459,6 +463,146 @@ async function finishOmelette() {
   await hand('hand-right', [{ pinch: 0, duration: 0.25 }]);
 }
 
+/** Stirs the pan with the spatula until the card moves on to `next`. */
+async function stirPan(next) {
+  // The pan sits on the right, so the right hand stirs, as a seated cook would.
+  await hand('hand-right', [
+    { target: 'Spatula', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
+    { anchor: 'grasp', position: { x: STOVE.x - 0.07, y: 1.1, z: STOVE.z } },
+  ]);
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    await runCli(['browser', 'run', 'scripts/demo-stir-pan.mjs']);
+    if (await waitForTitle(next, 400)) {
+      break;
+    }
+  }
+  await expectTitle(next);
+  await hand('hand-right', [
+    { pinch: 0, duration: 0.2 },
+    { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
+  ]);
+}
+
+/** Lets go of `target` over the pan, then expects the card to show `next`. */
+async function dropIntoPan(device, target, next) {
+  await hand(device, [
+    { target, approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
+    { position: { x: STOVE.x + 0.03, y: 1.05, z: STOVE.z }, depart: { distance: 0.06 } },
+    { pinch: 0, duration: 0.25 },
+  ]);
+  await expectTitle(next);
+}
+
+async function cookNasiGoreng() {
+  log('Title');
+  await sleep(2000);
+  await pressCardButton();
+  await expectTitle(/^Ingredients$/);
+
+  await placeIngredient('hand-right', 'Sweet Soy', 0.1, -0.415);
+  await placeIngredient('hand-left', 'Egg', -0.1, -0.415);
+  await placeIngredient('hand-left', 'Rice', -0.1, -0.245);
+  await placeIngredient('hand-right', 'Green Onion', 0.1, -0.245);
+  await expectTitle(/^Heat the pan$/);
+  await sleep(800);
+
+  await hand('hand-right', [
+    { target: 'Pan', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
+    { position: { x: STOVE.x, y: 0.97, z: STOVE.z }, depart: { distance: 0.06 } },
+    { pinch: 0, duration: 0.25 },
+    { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
+  ]);
+  await expectTitle(/^Crack the egg$/);
+  await lookAt({ x: STOVE.x - 0.1, y: 0.95, z: STOVE.z });
+
+  const y = 1.03;
+  await hand('hand-left', [
+    { target: 'Egg', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
+    { position: { x: STOVE.x, y, z: STOVE.z }, depart: { distance: 0.06 } },
+  ]);
+  await hand('hand-right', [
+    { anchor: 'grasp', position: { x: STOVE.x + 0.06, y: y + 0.02, z: STOVE.z } },
+    { pinch: 1, duration: 0.25 },
+  ]);
+  await sleep(500);
+  const leftAt = await xr('get-transform', { device: 'hand-left' });
+  const rightAt = await xr('get-transform', { device: 'hand-right' });
+  await Promise.all([
+    xr('animate-to', {
+      device: 'hand-left',
+      position: { ...leftAt.position, x: leftAt.position.x - 0.06 },
+      duration: 0.7,
+    }),
+    xr('animate-to', {
+      device: 'hand-right',
+      position: { ...rightAt.position, x: rightAt.position.x + 0.06 },
+      duration: 0.7,
+    }),
+  ]);
+  await expectTitle(/^Scramble/);
+  await Promise.all([
+    hand('hand-left', [{ pinch: 0, duration: 0.2 }]),
+    hand('hand-right', [
+      { pinch: 0, duration: 0.2 },
+      { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
+    ]),
+  ]);
+  await sleep(600);
+
+  await stirPan(/^Add the rice$/);
+  await sleep(600);
+  await dropIntoPan('hand-right', 'Rice', /^Season/);
+  await sleep(600);
+
+  const position = { x: STOVE.x + 0.11, y: 1.1, z: STOVE.z };
+  const tipped = { pitch: 0, yaw: 0, roll: 105 };
+  const move = (orientation) => ({ anchor: 'grip', position, orientation, duration: 0.4 });
+  await hand('hand-right', [
+    { target: 'Sweet Soy', approach: { distance: 0.06 }, orientation: LEVEL, pinch: { value: 1, at: 'arrival' } },
+    { anchor: 'grip', position, orientation: LEVEL },
+    move(tipped),
+    move(LEVEL),
+    move(tipped),
+    move(LEVEL),
+  ]);
+  await expectTitle(/^Season: 2$/);
+  await hand('hand-right', [
+    { pinch: 0, duration: 0.2 },
+    { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
+  ]);
+  await sleep(600);
+  await pressCardButton();
+  await expectTitle(/^Stir-fry/);
+  await lookAt({ x: STOVE.x - 0.1, y: 0.95, z: STOVE.z });
+
+  await stirPan(/^Green onion/);
+  await sleep(600);
+  await dropIntoPan('hand-right', 'Green Onion', /^Finish/);
+
+  await hand('hand-right', [
+    {
+      anchor: 'grasp',
+      position: { x: STOVE.x, y: 0.97, z: STOVE.z + 0.175 },
+      orientation: LEVEL,
+    },
+  ]);
+  if (!(await waitForTitle(/Golden/, 30000))) {
+    throw new Error('The rice never turned golden');
+  }
+  // The rice is often golden already while the onion goes in, so lift at once.
+  await expectTitle(/^Finish: Golden/);
+  await grabPanOffStove();
+  await expectTitle(/^Serve/);
+  await sleep(500);
+  await hand('hand-right', [
+    { anchor: 'grip', position: { x: PLATE.x + 0.02, y: 1.05, z: PLATE.z + 0.175 } },
+  ]);
+  await expectTitle(/^Score: \d+$/);
+  await hand('hand-right', [{ pinch: 0, duration: 0.25 }]);
+  await lookAt({ x: PLATE.x, y: 0.9, z: PLATE.z }, 1.2);
+  await sleep(4000);
+}
+
 /**
  * The bundled browser downloads very slowly on some connections, so an
  * installed Chrome stands in for it when the bundled one is missing.
@@ -492,6 +636,11 @@ async function prepareStage() {
   await runCli(['browser', 'run', 'scripts/demo-fresh-start.mjs']);
   await sleep(2000);
   await runCli(['runtime', 'wait'], 90000);
+  if (IS_NASI_GORENG) {
+    await runCli(['browser', 'run', 'scripts/demo-nasi-view.mjs']);
+    await sleep(2000);
+    await runCli(['runtime', 'wait'], 90000);
+  }
   if (IS_DEBUG) {
     await runCli(['browser', 'run', 'scripts/demo-debug-view.mjs']);
     await sleep(2000);
@@ -571,7 +720,7 @@ async function main() {
     console.log(`  ${seconds}...`);
     await sleep(1000);
   }
-  await cook();
+  await (IS_NASI_GORENG ? cookNasiGoreng() : cook());
   const seconds = Math.round((Date.now() - cookingFrom) / 1000) - COUNTDOWN_S;
   await cookAgain();
 

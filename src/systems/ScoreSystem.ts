@@ -89,7 +89,11 @@ export class ScoreSystem extends createSystem({}) {
       this.record.whiskTurns = 0;
     } else if (phase === 'done' && this.lastScore == null) {
       this.record.servedProgress = this.cooking.cookProgress;
-      this.lastScore = scoreCook(this.record, TUNING.whiskTargetTurns);
+      this.lastScore = scoreCook(
+        this.record,
+        TUNING.whiskTargetTurns,
+        this.steps.activeRecipe.chefNotes,
+      );
       this.beatBest = this.lastScore.stars > this.best;
       this.best = saveBestStars(
         this.storage,

@@ -5,26 +5,34 @@ import {
   type MeshStandardMaterial,
   type Object3D,
 } from '@iwsdk/core';
+import type { Recipe } from '../config/recipes/recipe.js';
 import { KitchenSystem } from './KitchenSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 /** Above the recipe card, in the stand's space: where the stars show later. */
 const PREVIEW_POSITION = [0, 0.26, -0.2] as const;
-/** Tipped toward the seat, so the folded top faces the player. */
+/** Tipped toward the seat, so the top of the dish faces the player. */
 const PREVIEW_TILT_RAD = 0.55;
 const PREVIEW_SCALE = 1.3;
 const SPIN_RAD_PER_S = 0.6;
 const BOB_M = 0.006;
 const BOB_RAD_PER_S = 1.8;
-const GOLDEN = '#E0A93B';
+
+/** Finished colors for each part of each dish. */
+const FINISHED_COLORS: Readonly<Record<string, string>> = {
+  PlateOmelette: '#E0A93B',
+  PlateRice: '#B07A45',
+  PlateScramble: '#E0A93B',
+};
 
 /**
- * On the title card a finished omelette turns slowly above the recipe, so the
- * player sees the goal before pressing Start.
+ * On the title card the finished dish of the chosen recipe turns slowly above
+ * the recipe, so the player sees the goal before pressing Start.
  */
 export class TitlePreviewSystem extends createSystem({}) {
   private readonly pivot = new Group();
   private readonly turntable = new Group();
+  private readonly dishes = new Map<Recipe['dish'], Object3D>();
   private steps!: StepSystem;
   private timeS = 0;
 
@@ -35,24 +43,19 @@ export class TitlePreviewSystem extends createSystem({}) {
       throw new Error('TitlePreviewSystem needs StepSystem and KitchenSystem');
     }
     this.steps = steps;
-    const source = kitchen
-      .requireTool('plate')
-      .object3D?.getObjectByName('PlateOmelette');
-    if (!(source instanceof Mesh)) {
-      throw new Error('The plate has no PlateOmelette mesh');
+    const plate = kitchen.requireTool('plate').object3D;
+    if (plate == null) {
+      throw new Error('The plate has no object');
     }
-    const omelette = source.clone(true);
-    // The cooking system recolors the plate omelette, so this one gets its own.
-    const material = (source.material as MeshStandardMaterial).clone();
-    material.color.set(GOLDEN);
-    omelette.material = material;
-    omelette.position.set(0, 0, 0);
-    omelette.traverse((part: Object3D) => {
-      part.visible = true;
-    });
-    omelette.name = 'TitleOmelette';
+    this.dishes.set('omelette', this.copyParts(plate, ['PlateOmelette']));
+    this.dishes.set(
+      'fried-rice',
+      this.copyParts(plate, ['PlateRice', 'PlateScramble', 'PlateRiceOnion']),
+    );
+    for (const dish of this.dishes.values()) {
+      this.turntable.add(dish);
+    }
 
-    this.turntable.add(omelette);
     this.turntable.scale.setScalar(PREVIEW_SCALE);
     this.pivot.name = 'TitlePreview';
     this.pivot.position.set(...PREVIEW_POSITION);
@@ -62,6 +65,10 @@ export class TitlePreviewSystem extends createSystem({}) {
 
     const show = () => {
       this.pivot.visible = steps.state.phase === 'title';
+      const active = steps.activeRecipe.dish;
+      for (const [dish, object] of this.dishes) {
+        object.visible = dish === active;
+      }
     };
     this.cleanupFuncs.push(steps.subscribe(show), () =>
       this.pivot.removeFromParent(),
@@ -76,5 +83,34 @@ export class TitlePreviewSystem extends createSystem({}) {
     this.timeS += delta;
     this.turntable.rotation.y = this.timeS * SPIN_RAD_PER_S;
     this.turntable.position.y = BOB_M * Math.sin(this.timeS * BOB_RAD_PER_S);
+  }
+
+  /**
+   * Copies plate food meshes, centered on the turntable. The cooking system
+   * recolors the plate's own meshes, so each copy gets its own material.
+   */
+  private copyParts(plate: Object3D, names: readonly string[]): Group {
+    const dish = new Group();
+    let baseY: number | null = null;
+    for (const name of names) {
+      const source = plate.getObjectByName(name);
+      if (!(source instanceof Mesh)) {
+        throw new Error(`The plate has no ${name} mesh`);
+      }
+      const copy = source.clone(true);
+      const color = FINISHED_COLORS[name];
+      if (color != null) {
+        const material = (source.material as MeshStandardMaterial).clone();
+        material.color.set(color);
+        copy.material = material;
+      }
+      baseY ??= source.position.y;
+      copy.position.set(0, source.position.y - baseY, 0);
+      copy.traverse((part: Object3D) => {
+        part.visible = true;
+      });
+      dish.add(copy);
+    }
+    return dish;
   }
 }

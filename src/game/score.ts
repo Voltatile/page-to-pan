@@ -61,6 +61,9 @@ export const CHEF_NOTES = {
   whisk: 'Whisk a few more turns for a fluffy omelette.',
 } as const;
 
+/** Notes a recipe can replace, for example to name its own seasoning. */
+export type ChefNotes = Partial<Record<keyof typeof CHEF_NOTES, string>>;
+
 const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1);
 
 export function accuracyScore(saltDashes: number): number {
@@ -100,7 +103,11 @@ export function starsFor(total: number): Stars {
   return total >= SCORE_RULES.twoStarsFrom ? 2 : 1;
 }
 
-export function scoreCook(record: CookRecord, whiskTarget: number): CookScore {
+export function scoreCook(
+  record: CookRecord,
+  whiskTarget: number,
+  notes: ChefNotes = {},
+): CookScore {
   const accuracy = accuracyScore(record.saltDashes);
   const timing = timingScore(record.servedProgress);
   const crack = crackScore(record.crackOffset);
@@ -120,7 +127,12 @@ export function scoreCook(record: CookRecord, whiskTarget: number): CookScore {
     technique,
     total,
     stars: starsFor(total),
-    note: chefNote(record, { accuracy, timing, crack, flip, whisk }, total),
+    note: chefNote(
+      record,
+      { accuracy, timing, crack, flip, whisk },
+      total,
+      { ...CHEF_NOTES, ...notes },
+    ),
   };
 }
 
@@ -129,24 +141,25 @@ function chefNote(
   record: CookRecord,
   parts: Record<'accuracy' | 'timing' | 'crack' | 'flip' | 'whisk', number>,
   total: number,
+  notes: Readonly<Record<keyof typeof CHEF_NOTES, string>>,
 ): string {
   if (total >= SCORE_RULES.praiseFrom) {
-    return CHEF_NOTES.praise;
+    return notes.praise;
   }
   const technique = Math.min(parts.crack, parts.flip, parts.whisk);
   const weakest = Math.min(parts.accuracy, parts.timing, technique);
   if (parts.accuracy === weakest) {
     return record.saltDashes < SCORE_RULES.idealSaltDashes
-      ? CHEF_NOTES.moreSalt
-      : CHEF_NOTES.lessSalt;
+      ? notes.moreSalt
+      : notes.lessSalt;
   }
   if (parts.timing === weakest) {
     return record.servedProgress < SCORE_RULES.idealProgress
-      ? CHEF_NOTES.cookLonger
-      : CHEF_NOTES.cookShorter;
+      ? notes.cookLonger
+      : notes.cookShorter;
   }
   if (parts.flip === technique) {
-    return CHEF_NOTES.flip;
+    return notes.flip;
   }
-  return parts.crack === technique ? CHEF_NOTES.crack : CHEF_NOTES.whisk;
+  return parts.crack === technique ? notes.crack : notes.whisk;
 }

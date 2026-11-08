@@ -37,6 +37,20 @@ const AFTER_RICE = ['soy-sauce', 'green-onion'];
 export const NASI_GORENG: Recipe = {
   id: 'nasi-goreng',
   title: 'Nasi Goreng',
+  dish: 'fried-rice',
+  // The rice only toasts once it is all in the pan, so a slow hand with the
+  // bottle never burns it.
+  heatSteps: ['stir-fry', 'garnish', 'finish', 'plate'],
+  // Stirring and the green onion both happen on the heat, so the rice gets
+  // more time than the omelette before it browns.
+  cookDurationS: 40,
+  chefNotes: {
+    praise: 'Perfect! Toasty, sweet, and seasoned just right.',
+    moreSalt: 'Add a little more sweet soy: two dashes is just right.',
+    lessSalt: 'Go easy on the sweet soy: two dashes is plenty.',
+    crack: 'Crack the egg right over the middle of the pan.',
+    whisk: 'Stir a few more turns to mix it all.',
+  },
   intro: 'Point at Start and pinch to begin.',
   outro: 'Delicious! Press Again to cook once more.',
   sheetSizeM: [0.4, 0.32],

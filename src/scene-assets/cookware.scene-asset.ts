@@ -11,9 +11,11 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  SphereGeometry,
   Vector2,
 } from '@iwsdk/core';
 import { COOKWARE } from '../config/cookware.js';
+import { type ColoredPart, mergeColored } from './lib/merge-colored.js';
 
 /**
  * Real-size placeholder cookware, to be replaced by CC0 models. Origins sit at
@@ -153,6 +155,56 @@ function onionSpecks(name: string, radius: number): Mesh {
   return mesh;
 }
 
+const riceMaterial = new MeshStandardMaterial({
+  color: '#F5F2EA',
+  roughness: 0.95,
+});
+/** White vertices, so the cooking system can tint the egg by material color. */
+const scrambleMaterial = new MeshStandardMaterial({
+  color: '#F6E27A',
+  roughness: 0.7,
+  vertexColors: true,
+});
+
+/** A low dome of rice with its base at the origin. */
+function riceMound(name: string, radius: number, height: number): Mesh {
+  const geometry = new SphereGeometry(
+    radius,
+    18,
+    6,
+    0,
+    Math.PI * 2,
+    0,
+    Math.PI / 2,
+  );
+  geometry.scale(1, height / radius, 1);
+  const mesh = new Mesh(geometry, riceMaterial);
+  mesh.name = name;
+  mesh.visible = false;
+  return mesh;
+}
+
+/**
+ * Scrambled egg: small irregular chunks baked into one mesh, one draw call.
+ * A spiral spreads them evenly and keeps the asset deterministic.
+ */
+function scrambleBits(name: string, radius: number): Mesh {
+  const parts: ColoredPart[] = [];
+  const count = 11;
+  for (let index = 0; index < count; index += 1) {
+    const spread = radius * Math.sqrt((index + 0.5) / count);
+    const angle = index * 2.4;
+    const size = 0.011 + 0.004 * Math.sin(index * 1.7);
+    const chunk = new Mesh(new BoxGeometry(size, size * 0.5, size * 0.8));
+    chunk.position.set(Math.cos(angle) * spread, size * 0.25, Math.sin(angle) * spread);
+    chunk.rotation.set(0.3 * Math.sin(index), angle, 0.25 * Math.cos(index));
+    parts.push([chunk, '#FFFFFF']);
+  }
+  const mesh = mergeColored(name, parts, scrambleMaterial);
+  mesh.visible = false;
+  return mesh;
+}
+
 /** A flat food disc facing up. */
 function foodDisc(name: string, radius: number, material: MeshStandardMaterial) {
   const geometry = new CircleGeometry(radius, 24);
@@ -284,9 +336,17 @@ export function createPan(): Group {
   const butter = foodDisc('PanButter', 0.04, panButterMaterial);
   butter.position.y = -half + 0.002;
 
+  const floor = -half + 0.002;
+  const rice = riceMound('PanRice', baseRadius * 0.95, 0.02);
+  rice.position.y = floor;
+  const scramble = scrambleBits('PanScramble', baseRadius * 0.6);
+  scramble.position.y = floor;
+  const riceOnion = onionSpecks('PanRiceOnion', baseRadius * 0.65);
+  riceOnion.position.y = floor + 0.021;
+
   const pan = new Group();
   pan.name = 'Pan';
-  pan.add(body, handle, egg, butter);
+  pan.add(body, handle, egg, butter, rice, scramble, riceOnion);
   return pan;
 }
 
@@ -371,8 +431,15 @@ export function createPlate(): Group {
   onion.position.y = COOKWARE.omelette.thickness / 2 + 0.0006;
   omelette.add(onion);
 
+  const rice = riceMound('PlateRice', radius * 0.68, 0.035);
+  rice.position.y = wellDepth;
+  const scramble = scrambleBits('PlateScramble', radius * 0.45);
+  scramble.position.y = wellDepth + 0.03;
+  const riceOnion = onionSpecks('PlateRiceOnion', radius * 0.4);
+  riceOnion.position.y = wellDepth + 0.037;
+
   const plate = new Group();
   plate.name = 'Plate';
-  plate.add(dish, omelette);
+  plate.add(dish, omelette, rice, scramble, riceOnion);
   return plate;
 }

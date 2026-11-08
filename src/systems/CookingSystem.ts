@@ -50,6 +50,19 @@ const MAX_COOK_STEP_S = 0.1;
 const GOLDEN_MOMENT = 0.7;
 const BURNT_MOMENT = 1.2;
 
+/** Rice darkens with each dash of sweet soy: none, one, two, three or more. */
+const SAUCE_COLORS = ['#F5F2EA', '#D9B98A', '#B9874F', '#8E5A2C'].map(
+  (hex) => new Color(hex),
+);
+const TOASTED_COLOR = new Color('#A8692E');
+/** How far a golden moment pulls the rice toward the toasted color. */
+const TOAST_SHARE = 0.3;
+const SET_EGG_COLOR = new Color('#F2C94C');
+/** The raw egg starts as one big blob and breaks up as it is stirred. */
+const SCRAMBLE_START_SCALE = 1.35;
+/** Scrambled egg sits on top of the rice, this far above the pan floor. */
+const SCRAMBLE_ON_RICE_Y = 0.016;
+
 /** Tracks doneness and every change it makes to the food on the table. */
 export class CookingSystem extends createSystem({}) {
   private steps!: StepSystem;
@@ -61,6 +74,18 @@ export class CookingSystem extends createSystem({}) {
   private bowlOnion!: Object3D;
   private panOnion!: Object3D;
   private plateOnion!: Object3D;
+  private panRice!: Mesh;
+  private panScramble!: Mesh;
+  private panRiceOnion!: Mesh;
+  private plateRice!: Mesh;
+  private plateScramble!: Mesh;
+  private plateRiceOnion!: Mesh;
+  /** The rice heaped in the rice bowl ingredient; it empties into the pan. */
+  private riceInBowl: Object3D | undefined;
+  private scrambleRestY = 0;
+  private hasRiceInPan = false;
+  private readonly riceColor = new Color();
+  private readonly goldenRiceColor = new Color();
   private hasOnion = false;
   /** Dashes of a dark sauce in the pan; they tint the food. */
   private sauceDashes = 0;
@@ -113,6 +138,16 @@ export class CookingSystem extends createSystem({}) {
     this.bowlOnion = this.requirePart(this.bowlEgg, 'BowlOnion');
     this.panOnion = this.requirePart(this.panEgg, 'PanOnion');
     this.plateOnion = this.requirePart(this.plateOmelette, 'PlateOnion');
+    this.panRice = this.ownedMesh('pan', 'PanRice');
+    this.panScramble = this.ownedMesh('pan', 'PanScramble');
+    this.panRiceOnion = this.ownedMesh('pan', 'PanRiceOnion');
+    this.plateRice = this.ownedMesh('plate', 'PlateRice');
+    this.plateScramble = this.ownedMesh('plate', 'PlateScramble');
+    this.plateRiceOnion = this.ownedMesh('plate', 'PlateRiceOnion');
+    this.scrambleRestY = this.panScramble.position.y;
+    this.riceInBowl = this.world
+      .requireSceneEntity('ingredient-rice')
+      .object3D?.getObjectByName('RiceMound');
     this.cleanupFuncs.push(
       steps.subscribe(() => {
         if (steps.state.phase === 'title') {
@@ -135,43 +170,91 @@ export class CookingSystem extends createSystem({}) {
     if (!this.hasEggInPan) {
       return;
     }
-    if (this.kitchen.panOnStove) {
+    if (this.kitchen.panOnStove && this.isBrowningStep()) {
       this.progress = advanceCook(
         this.progress,
         Math.min(delta, MAX_COOK_STEP_S),
-        TUNING.cookDurationS,
+        this.steps.activeRecipe.cookDurationS ?? TUNING.cookDurationS,
       );
     }
-    this.paintDoneness();
+    if (this.isFriedRice) {
+      this.paintFriedRice();
+    } else {
+      this.paintDoneness();
+    }
     if (cookLabel(this.progress, this.isFolded) !== this.label) {
       this.showDoneness();
     }
+  }
+
+  private get isFriedRice(): boolean {
+    return this.steps.activeRecipe.dish === 'fried-rice';
+  }
+
+  /** Only some steps brown the food, when the recipe says which. */
+  private isBrowningStep(): boolean {
+    const heatSteps = this.steps.activeRecipe.heatSteps;
+    const stepId = this.steps.step?.id;
+    return heatSteps == null || (stepId != null && heatSteps.includes(stepId));
   }
 
   /** The egg is cracked into the bowl, or straight into the hot pan. */
   onCrack(zone: 'bowl' | 'pan'): void {
     if (zone === 'bowl') {
       this.showEggInBowl();
-    } else {
-      this.startCooking();
+      return;
     }
+    // Fried rice is never flipped, so the card skips the Ready label.
+    this.hasEggInPan = true;
+    this.isFolded = true;
+    this.panScramble.visible = true;
+    this.panScramble.scale.setScalar(SCRAMBLE_START_SCALE);
+    this.material(this.panScramble).color.copy(RAW_COLOR);
+    this.showDoneness();
   }
 
   /** Stirring progress, 0 to 1, for the bowl or the pan. */
   setStirProgress(zone: 'bowl' | 'pan', amount: number): void {
     if (zone === 'bowl') {
       this.setWhiskProgress(amount);
+      return;
     }
+    if (!this.hasRiceInPan) {
+      // Scrambling: the egg sets and breaks into bits.
+      this.material(this.panScramble).color.lerpColors(
+        RAW_COLOR,
+        SET_EGG_COLOR,
+        amount,
+      );
+      this.panScramble.scale.setScalar(
+        SCRAMBLE_START_SCALE + (1 - SCRAMBLE_START_SCALE) * amount,
+      );
+      return;
+    }
+    // Stir-frying: everything in the pan turns with the spatula.
+    const turn = amount * Math.PI * 2;
+    this.panRice.rotation.y = turn;
+    this.panScramble.rotation.y = -turn * 1.5;
+    this.panRiceOnion.rotation.y = turn * 0.7;
   }
 
   /** An ingredient was let go over the bowl or pan. */
   onDrop(itemId: string, zone: 'bowl' | 'pan'): void {
+    if (itemId === 'rice' && zone === 'pan') {
+      this.hasRiceInPan = true;
+      this.panRice.visible = true;
+      this.panScramble.position.y = this.scrambleRestY + SCRAMBLE_ON_RICE_Y;
+      if (this.riceInBowl != null) {
+        this.riceInBowl.visible = false;
+      }
+      return;
+    }
     if (itemId === 'green-onion') {
       if (zone === 'bowl') {
         this.addOnion();
       } else {
         this.hasOnion = true;
-        this.panOnion.visible = true;
+        (this.isFriedRice ? this.panRiceOnion : this.panOnion).visible = true;
       }
     }
   }
@@ -237,8 +320,12 @@ export class CookingSystem extends createSystem({}) {
     this.world.scene.attach(this.panEgg);
   }
 
-  /** Slides the finished omelette onto the plate. */
+  /** Slides the finished food onto the plate. */
   serve(): void {
+    if (this.isFriedRice) {
+      this.serveFriedRice();
+      return;
+    }
     this.hasEggInPan = false;
     this.panEgg.visible = false;
     this.plateOmelette.visible = true;
@@ -307,6 +394,59 @@ export class CookingSystem extends createSystem({}) {
     );
   }
 
+  private serveFriedRice(): void {
+    this.hasEggInPan = false;
+    this.panRice.visible = false;
+    this.panScramble.visible = false;
+    this.panRiceOnion.visible = false;
+    this.plateRice.visible = this.hasRiceInPan;
+    this.plateScramble.visible = true;
+    this.plateRiceOnion.visible = this.hasOnion;
+    this.material(this.plateRice).color.copy(this.material(this.panRice).color);
+    this.material(this.plateScramble).color.copy(
+      this.material(this.panScramble).color,
+    );
+  }
+
+  /**
+   * Sweet soy sets the rice's base color; then heat toasts it golden and, left
+   * too long, browns and burns it. The egg bits turn golden alongside.
+   */
+  private paintFriedRice(): void {
+    const sauce =
+      SAUCE_COLORS[Math.min(this.sauceDashes, SAUCE_COLORS.length - 1)] ??
+      RAW_COLOR;
+    this.goldenRiceColor.copy(sauce).lerp(TOASTED_COLOR, TOAST_SHARE);
+    const { progress } = this;
+    if (progress <= GOLDEN_MOMENT) {
+      this.riceColor.lerpColors(sauce, this.goldenRiceColor, progress / GOLDEN_MOMENT);
+    } else if (progress <= COOK_ZONE.burntAbove) {
+      this.riceColor.lerpColors(
+        this.goldenRiceColor,
+        BROWN_COLOR,
+        (progress - GOLDEN_MOMENT) / (COOK_ZONE.burntAbove - GOLDEN_MOMENT),
+      );
+    } else {
+      this.riceColor.lerpColors(
+        BROWN_COLOR,
+        BURNT_COLOR,
+        Math.min(
+          (progress - COOK_ZONE.burntAbove) /
+            (BURNT_MOMENT - COOK_ZONE.burntAbove),
+          1,
+        ),
+      );
+    }
+    this.material(this.panRice).color.copy(this.riceColor);
+    if (this.hasRiceInPan) {
+      this.material(this.panScramble).color.lerpColors(
+        SET_EGG_COLOR,
+        GOLDEN_COLOR,
+        Math.min(progress / GOLDEN_MOMENT, 1),
+      );
+    }
+  }
+
   private paintDoneness(): void {
     const { color } = this.material(this.panEgg);
     const { progress } = this;
@@ -340,6 +480,24 @@ export class CookingSystem extends createSystem({}) {
     this.butterMeltS = 0;
     this.hasOnion = false;
     this.sauceDashes = 0;
+    this.hasRiceInPan = false;
+    for (const mesh of [
+      this.panRice,
+      this.panScramble,
+      this.panRiceOnion,
+      this.plateRice,
+      this.plateScramble,
+      this.plateRiceOnion,
+    ]) {
+      mesh.visible = false;
+      mesh.rotation.set(0, 0, 0);
+    }
+    this.panScramble.position.y = this.scrambleRestY;
+    this.panScramble.scale.setScalar(1);
+    this.material(this.panRice).color.copy(SAUCE_COLORS[0] ?? RAW_COLOR);
+    if (this.riceInBowl != null) {
+      this.riceInBowl.visible = true;
+    }
     this.bowlOnion.visible = false;
     this.panOnion.visible = false;
     this.plateOnion.visible = false;

@@ -1,3 +1,5 @@
+import type { ChefNotes } from '../../game/score.js';
+
 /** Outline family used to draw an ingredient on the recipe sheet. */
 export type SilhouetteKind = 'egg' | 'shaker' | 'block' | 'stalks' | 'bowl';
 
@@ -80,6 +82,17 @@ export interface RecipeStep {
 export interface Recipe {
   id: string;
   title: string;
+  /** Which food the pan and plate show while this recipe cooks. */
+  dish: 'omelette' | 'fried-rice';
+  /**
+   * Step ids during which the food in the pan browns. Left out, it browns
+   * whenever the pan is on the stove with food in it.
+   */
+  heatSteps?: readonly string[];
+  /** Seconds from raw to burnt on the heat. Left out, the tuning default. */
+  cookDurationS?: number;
+  /** Chef notes that differ from the omelette's, such as the seasoning name. */
+  chefNotes?: ChefNotes;
   /** Shown on the title card before the recipe starts. */
   intro: string;
   /** Shown on the card when every step is finished. */

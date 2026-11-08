@@ -52,6 +52,7 @@ const AFTER_CRACK = ['salt', 'butter', 'green-onion'];
 export const OMELETTE: Recipe = {
   id: 'omelette',
   title: 'Omelette',
+  dish: 'omelette',
   intro: 'Point at Start and pinch to begin.',
   outro: 'Nicely done! Press Again to cook once more.',
   sheetSizeM: [0.4, 0.32],

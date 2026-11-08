@@ -53,6 +53,16 @@ describe('score parts', () => {
 });
 
 describe('scoreCook', () => {
+  it('uses a recipe note in place of the default', () => {
+    const notes = { lessSalt: 'Go easy on the sweet soy.' };
+    expect(scoreCook({ ...PERFECT, saltDashes: 5 }, 3, notes).note).toBe(
+      'Go easy on the sweet soy.',
+    );
+    expect(scoreCook({ ...PERFECT, saltDashes: 0 }, 3, notes).note).toBe(
+      CHEF_NOTES.moreSalt,
+    );
+  });
+
   it('gives a perfect cook 100 and praise', () => {
     const score = scoreCook(PERFECT, 3);
     expect(score.total).toBe(100);
