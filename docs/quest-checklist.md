@@ -96,6 +96,20 @@ Every threshold is tuned on the emulator, whose hands do not shake
   floats up over the bowl, pan or plate for 2.5 s, turned toward the head. Confirm it
   is readable while the hands are busy and never hides the food being worked on.
 
+### Nasi goreng (`?recipe=nasi-goreng` until the recipe book opens it)
+
+- [ ] **Reach to the pan**: every nasi goreng step happens over the pan on the right.
+  Confirm the right hand reaches it for cracking, stirring, tipping the bottle and
+  dropping the rice without leaning, and that the left hand is never needed there.
+- [ ] **Spatula stirring**: 2 turns to scramble and 3 to stir-fry, inside 13 cm of the
+  pan center. Confirm the spatula pose looks like stirring and the turns count.
+- [ ] **Sweet soy bottle**: it is 15 cm long, so its cap swings wider than the salt
+  shaker's when tipped. Confirm two dashes land over the pan easily.
+- [ ] **Rice bowl**: it starts 15 cm from the egg so a pinch never catches the wrong
+  one. Confirm the 10 cm bowl is easy to pinch by its rim.
+- [ ] **Cook time**: the rice only browns from the stir-fry step on, over 40 s. Confirm
+  a first-time player reaches Golden without burning it.
+
 ## 3. Pause
 
 - [ ] **Palm-up pause** (`src/systems/PauseSystem.ts`): the palm direction in grip

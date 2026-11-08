@@ -54,23 +54,25 @@ untuk mengaduk.
 | Masukkan nasi | Lepas mangkuk nasi di atas wajan | jatuhkan di zona |
 | Bumbui | Miringkan botol kecap di atas wajan, ideal 2 kali | hitung tabur |
 | Tumis | Aduk 3 putaran sambil memasak | putaran kocok |
-| Selesaikan | Angkat wajan saat Golden | angkat wajan |
 | Daun bawang (opsional) | Lepas di atas wajan | jatuhkan di zona |
+| Selesaikan | Angkat wajan saat Golden | angkat wajan |
 | Sajikan | Bawa wajan ke atas piring | sajikan |
 
 Skor tetap 40/40/20: takaran kecap, timing saat disajikan, teknik (pecah telur dan putaran aduk;
-tidak ada flip).
+tidak ada flip). Nasi baru menguning sejak langkah Tumis, dengan durasi masak 40 detik, supaya pemain
+yang lambat mengambil kecap tidak keburu gosong. Selama fase F belum selesai, resep ini hanya terbuka
+lewat `?recipe=nasi-goreng`; demonya `DEMO_RECIPE=nasi-goreng npm run demo`.
 
 ### Fase pengerjaan
-- [ ] **A. Fondasi multi-resep**: daftar resep, StepSystem/SnapSystem/Kitchen membaca resep aktif,
+- [x] **A. Fondasi multi-resep**: daftar resep, StepSystem/SnapSystem/Kitchen membaca resep aktif,
   bahan di luar resep disembunyikan, tombol ganti resep sementara di kartu judul. Omelette tetap
   lolos demo.
-- [ ] **B. Gestur berbasis data**: detektor (pecah, aduk, tabur, jatuhkan, angkat, sajikan) membaca
+- [x] **B. Gestur berbasis data**: detektor (pecah, aduk, tabur, jatuhkan, angkat, sajikan) membaca
   bahan, alat, dan zona dari data langkah, bukan nama omelette.
-- [ ] **C. Aset nasi goreng**: nasi, botol kecap, sudip, lembar resep dan label, isi wajan (orak-arik,
+- [x] **C. Aset nasi goreng**: nasi, botol kecap, sudip, lembar resep dan label, isi wajan (orak-arik,
   nasi yang menguning), nasi di piring.
-- [ ] **D. Masak dan skor nasi goreng**: kematangan, warna, catatan chef, pujian, petunjuk.
-- [ ] **E. Demo dan dokumen**: skrip demo nasi goreng, checklist Quest, CREDITS, CLAUDE.md.
+- [x] **D. Masak dan skor nasi goreng**: kematangan, warna, catatan chef, pujian, petunjuk.
+- [x] **E. Demo dan dokumen**: skrip demo nasi goreng, checklist Quest, CREDITS, CLAUDE.md.
 - [ ] **F. Buku resep**: lembar resep menjadi buku untuk memilih resep, menggantikan tombol sementara.
 
 Opsional kalau masih ada waktu: model 3D CC0 untuk menggantikan bentuk primitif, serta mode Learn
