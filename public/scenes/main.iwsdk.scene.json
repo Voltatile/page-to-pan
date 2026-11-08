@@ -534,6 +534,22 @@
           "castShadow": false
         }
       }
+    },
+    {
+      "id": "praise-popup",
+      "name": "Praise Popup",
+      "content": {
+        "type": "asset",
+        "asset": "praise-popup"
+      },
+      "transform": {
+        "position": [
+          0,
+          1.1,
+          -0.45
+        ],
+        "scale": 0.1
+      }
     }
   ]
 }

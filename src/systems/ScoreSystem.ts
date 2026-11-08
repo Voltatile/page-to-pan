@@ -33,6 +33,11 @@ export class ScoreSystem extends createSystem({}) {
     return this.lastScore;
   }
 
+  /** What the player has done so far in this cook. */
+  get cookRecord(): Readonly<CookRecord> {
+    return this.record;
+  }
+
   /** True when the cook that just ended earned more stars than ever before. */
   get isNewBest(): boolean {
     return this.beatBest;

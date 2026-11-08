@@ -1,0 +1,26 @@
+<!--
+  A short cheer that floats up from the table when a step is done.
+  Authored at 1 unit = 1 mm (placed at scale 0.1): a pill about 6 cm tall with
+  40-unit letters, sized to its text.
+  Note: comments inside the style block break the UIKitML parser.
+-->
+<style>
+  .pill {
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    padding-left: 26px;
+    padding-right: 26px;
+    border-radius: 30px;
+    background-color: #c9893a;
+  }
+
+  .pill-text {
+    color: #ffffff;
+    font-size: 40px;
+    font-weight: 700;
+  }
+</style>
+<div class="pill">
+  <div id="praise-text" class="pill-text">Nice!</div>
+</div>

@@ -12,6 +12,7 @@ import { GestureSystem } from './systems/GestureSystem.js';
 import { GuideSystem } from './systems/GuideSystem.js';
 import { KitchenSystem } from './systems/KitchenSystem.js';
 import { PauseSystem } from './systems/PauseSystem.js';
+import { PraiseSystem } from './systems/PraiseSystem.js';
 import { ReachHighlightSystem } from './systems/ReachHighlightSystem.js';
 import { ResultStarsSystem } from './systems/ResultStarsSystem.js';
 import { ScoreSystem } from './systems/ScoreSystem.js';
@@ -43,6 +44,7 @@ World.create(
   world.registerSystem(SettingsSystem);
   world.registerSystem(UISystem);
   world.registerSystem(ResultStarsSystem);
+  world.registerSystem(PraiseSystem);
   world.registerSystem(TitlePreviewSystem);
   world.registerSystem(ReachHighlightSystem);
   if (isDebugEnabled()) {

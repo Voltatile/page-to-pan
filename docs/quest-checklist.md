@@ -92,6 +92,10 @@ Every threshold is tuned on the emulator, whose hands do not shake
   5 cm, then served by bringing it over the plate. Confirm the plate zone is easy to
   hit without the pan bumping the table.
 
+- [ ] **Praise popups** (`src/systems/PraiseSystem.ts`): after each step a short cheer
+  floats up over the bowl, pan or plate for 2.5 s, turned toward the head. Confirm it
+  is readable while the hands are busy and never hides the food being worked on.
+
 ## 3. Pause
 
 - [ ] **Palm-up pause** (`src/systems/PauseSystem.ts`): the palm direction in grip

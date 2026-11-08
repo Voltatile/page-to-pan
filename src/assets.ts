@@ -50,4 +50,5 @@ export default defineAssets({
   'recipe-labels': uikitml('recipe-labels.uikitml', 'Recipe Labels'),
   'title-logo': uikitml('title-logo.uikitml', 'Title Logo'),
   'result-banner': uikitml('result-banner.uikitml', 'Result Banner'),
+  'praise-popup': uikitml('praise-popup.uikitml', 'Praise Popup'),
 });
