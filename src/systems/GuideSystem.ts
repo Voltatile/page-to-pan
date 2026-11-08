@@ -43,6 +43,9 @@ const RING_BAND = 0.1;
 const OVER_HEIGHT_M = 0.35;
 const PULSE_PER_S = 2.4;
 const READY_COLOR = new Color('#7CE38B');
+const RING_SEGMENTS = 48;
+/** While a gesture runs, the ring blends from glow to green, getting solid. */
+const PROGRESS_START_OPACITY = 0.5;
 
 /**
  * While the player holds something, a soft ring pulses where it has to go.
@@ -57,9 +60,10 @@ export class GuideSystem extends createSystem({}) {
   });
   private readonly glowColor = new Color(TUNING.reachGlowColor);
   private readonly ring = new Mesh(
-    new RingGeometry(1 - RING_BAND, 1, 48),
+    new RingGeometry(1 - RING_BAND, 1, RING_SEGMENTS),
     this.material,
   );
+  private progress = 0;
   private readonly entities = new Map<string, Entity>();
   private readonly center = new Vector3();
   private readonly heldAt = new Vector3();
@@ -80,7 +84,15 @@ export class GuideSystem extends createSystem({}) {
     this.ring.visible = false;
     this.ring.renderOrder = 1;
     this.world.scene.add(this.ring);
-    this.cleanupFuncs.push(() => this.ring.removeFromParent());
+    this.cleanupFuncs.push(
+      () => this.ring.removeFromParent(),
+      steps.subscribe(() => this.showProgress(0)),
+    );
+  }
+
+  /** How far the current gesture is, 0 to 1. The ring turns green to match. */
+  showProgress(amount: number): void {
+    this.progress = Math.min(Math.max(amount, 0), 1);
   }
 
   update(delta: number): void {
@@ -111,7 +123,15 @@ export class GuideSystem extends createSystem({}) {
       this.heldAt.y >= this.center.y - RING_LIFT_M &&
       this.heldAt.y - this.center.y <= OVER_HEIGHT_M;
     this.timeS += delta;
-    if (isOver) {
+    if (this.progress > 0) {
+      this.material.color.lerpColors(
+        this.glowColor,
+        READY_COLOR,
+        this.progress,
+      );
+      this.material.opacity =
+        PROGRESS_START_OPACITY + (1 - PROGRESS_START_OPACITY) * this.progress;
+    } else if (isOver) {
       this.material.color.copy(READY_COLOR);
       this.material.opacity = 0.95;
     } else {

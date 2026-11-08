@@ -2,6 +2,7 @@ import {
   Color,
   createSystem,
   MeshBasicMaterial,
+  type Object3D,
   Quaternion,
   Vector3,
   VisibilityState,
@@ -113,6 +114,10 @@ const STEAM_LIFT_M = 0.025;
 /** Puffs start anywhere within this radius of the food. */
 const STEAM_SPREAD_M = 0.05;
 
+/** The stove flame dances: height and width wobble by these shares. */
+const FLAME_HEIGHT_WOBBLE = 0.3;
+const FLAME_WIDTH_WOBBLE = 0.03;
+
 /**
  * Small particle touches: salt falling, yolk splashing, steam and smoke from
  * the pan, and sparkles for the stars. Two instanced meshes draw them all.
@@ -139,6 +144,8 @@ export class EffectsSystem extends createSystem({}) {
   private steamDue = 0;
   private plateSteamS = 0;
   private wasDone = false;
+  private flame: Object3D | undefined;
+  private flameS = 0;
 
   init(): void {
     const steps = this.world.getSystem(StepSystem);
@@ -167,6 +174,9 @@ export class EffectsSystem extends createSystem({}) {
       }),
     );
     this.world.scene.add(this.grains.mesh, this.puffs.mesh);
+    this.flame = kitchen
+      .requireTool('stove')
+      .object3D?.getObjectByName('StoveFlame');
     this.cleanupFuncs.push(
       steps.subscribe(() => this.onStepChange()),
       () => {
@@ -181,12 +191,26 @@ export class EffectsSystem extends createSystem({}) {
       return;
     }
     this.player.head.getWorldQuaternion(this.facing);
+    this.flickerFlame(delta);
     if (!this.steps.isGamePaused) {
       this.emitPanSteam(delta);
       this.emitPlateSteam(delta);
     }
     this.grains.update(delta, this.facing);
     this.puffs.update(delta, this.facing);
+  }
+
+  /** Uneven sines, so the flame never settles into an obvious loop. */
+  private flickerFlame(delta: number): void {
+    if (this.flame == null || !this.flame.visible) {
+      return;
+    }
+    this.flameS += delta;
+    const t = this.flameS;
+    const wobble =
+      0.5 * Math.sin(t * 13.1) + 0.3 * Math.sin(t * 23.7) + 0.2 * Math.sin(t * 5.3);
+    const width = 1 + FLAME_WIDTH_WOBBLE * Math.sin(t * 9.4);
+    this.flame.scale.set(width, 1 + FLAME_HEIGHT_WOBBLE * wobble, width);
   }
 
   /** A little burst of `kind` at `at`. Grains vanish below `floorY`. */

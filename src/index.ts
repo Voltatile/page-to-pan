@@ -31,9 +31,9 @@ World.create(
   world.registerSystem(ScoreSystem);
   world.registerSystem(SoundSystem);
   world.registerSystem(EffectsSystem);
+  world.registerSystem(GuideSystem);
   world.registerSystem(GestureSystem);
   world.registerSystem(PauseSystem);
-  world.registerSystem(GuideSystem);
   world.registerSystem(UISystem);
   world.registerSystem(ResultStarsSystem);
   world.registerSystem(ReachHighlightSystem);

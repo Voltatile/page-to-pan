@@ -24,6 +24,7 @@ import {
 import { isWithinSnapZone } from '../util/snap.js';
 import { CookingSystem } from './CookingSystem.js';
 import { EffectsSystem } from './EffectsSystem.js';
+import { GuideSystem } from './GuideSystem.js';
 import { KitchenSystem } from './KitchenSystem.js';
 import { ScoreSystem } from './ScoreSystem.js';
 import { SoundSystem } from './SoundSystem.js';
@@ -79,6 +80,7 @@ export class GestureSystem extends createSystem({}) {
   private score!: ScoreSystem;
   private sound!: SoundSystem;
   private effects!: EffectsSystem;
+  private guide: GuideSystem | undefined;
   private grabSystem: GrabSystem | undefined;
   private egg!: Entity;
   private saltShaker!: Entity;
@@ -119,6 +121,7 @@ export class GestureSystem extends createSystem({}) {
     }
     this.sound = sound;
     this.effects = effects;
+    this.guide = this.world.getSystem(GuideSystem);
     this.steps = steps;
     this.kitchen = kitchen;
     this.cooking = cooking;
@@ -280,6 +283,7 @@ export class GestureSystem extends createSystem({}) {
     );
     const target = TUNING.whiskTargetTurns;
     this.cooking.setWhiskProgress(Math.min(turns / target, 1));
+    this.guide?.showProgress(turns / target);
     const fullTurns = Math.floor(turns);
     if (fullTurns !== this.whiskTurnsShown) {
       if (fullTurns > this.whiskTurnsShown) {
@@ -537,6 +541,7 @@ export class GestureSystem extends createSystem({}) {
       delta,
     );
     this.cooking.setPourProgress(Math.min(heldS / TUNING.pourHoldS, 1));
+    this.guide?.showProgress(heldS / TUNING.pourHoldS);
     if (heldS >= TUNING.pourHoldS) {
       this.sound.playSound('splash', stove);
       this.cooking.startCooking();
