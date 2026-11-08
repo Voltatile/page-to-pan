@@ -5,8 +5,11 @@ import {
   Mesh,
   MeshStandardMaterial,
   Shape,
+  Vector3,
 } from '@iwsdk/core';
+import { EffectsSystem } from './EffectsSystem.js';
 import { ScoreSystem } from './ScoreSystem.js';
+import { SoundSystem } from './SoundSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const STAR_COUNT = 3;
@@ -70,6 +73,11 @@ export class ResultStarsSystem extends createSystem({}) {
   private steps!: StepSystem;
   private score!: ScoreSystem;
   private showS = -1;
+  private popped = 0;
+  private earnedCount = 0;
+  private readonly starAt = new Vector3();
+  private sound: SoundSystem | undefined;
+  private effects: EffectsSystem | undefined;
 
   init(): void {
     const steps = this.world.getSystem(StepSystem);
@@ -79,6 +87,8 @@ export class ResultStarsSystem extends createSystem({}) {
     }
     this.steps = steps;
     this.score = score;
+    this.sound = this.world.getSystem(SoundSystem);
+    this.effects = this.world.getSystem(EffectsSystem);
     const geometry = starGeometry();
     for (let index = 0; index < STAR_COUNT; index += 1) {
       const star = new Mesh(geometry, this.missed);
@@ -103,6 +113,13 @@ export class ResultStarsSystem extends createSystem({}) {
       return;
     }
     this.showS += delta;
+    while (
+      this.popped < STAR_COUNT &&
+      this.showS >= this.popped * POP_DELAY_S
+    ) {
+      this.onPop(this.popped);
+      this.popped += 1;
+    }
     let isSettled = true;
     for (let index = 0; index < STAR_COUNT; index += 1) {
       const t = Math.min(
@@ -134,5 +151,23 @@ export class ResultStarsSystem extends createSystem({}) {
     });
     this.row.visible = true;
     this.showS = 0;
+    this.popped = 0;
+    this.earnedCount = result.stars;
+  }
+
+  /** Each earned star rings a little higher and throws a few sparkles. */
+  private onPop(index: number): void {
+    const star = this.stars[index];
+    if (star == null) {
+      return;
+    }
+    // The star is still tiny here, so its position is where it will settle.
+    star.getWorldPosition(this.starAt);
+    if (index < this.earnedCount) {
+      this.sound?.playSound('star', this.starAt, 1, 1 + index * 0.12);
+      this.effects?.burst('sparkle', this.starAt);
+    } else {
+      this.sound?.playSound('snap', this.starAt, 0.6, 0.8);
+    }
   }
 }

@@ -23,11 +23,18 @@ import {
 } from '../game/gestures.js';
 import { isWithinSnapZone } from '../util/snap.js';
 import { CookingSystem } from './CookingSystem.js';
+import { EffectsSystem } from './EffectsSystem.js';
 import { KitchenSystem } from './KitchenSystem.js';
 import { ScoreSystem } from './ScoreSystem.js';
+import { SoundSystem } from './SoundSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const DEG_TO_RAD = Math.PI / 180;
+
+/** Falling bits disappear at the egg surface, this far above the bowl base. */
+const BOWL_FOOD_Y_M = 0.02;
+/** Dropped garnish bits start this far above the bowl base. */
+const BOWL_DROP_Y_M = 0.1;
 
 /** From the shaker center to its cap, along the model's up axis. */
 const SHAKER_CAP_OFFSET_M = OMELETTE_INGREDIENTS.salt.lengthM / 2;
@@ -70,6 +77,8 @@ export class GestureSystem extends createSystem({}) {
   private kitchen!: KitchenSystem;
   private cooking!: CookingSystem;
   private score!: ScoreSystem;
+  private sound!: SoundSystem;
+  private effects!: EffectsSystem;
   private grabSystem: GrabSystem | undefined;
   private egg!: Entity;
   private saltShaker!: Entity;
@@ -96,9 +105,20 @@ export class GestureSystem extends createSystem({}) {
     const kitchen = this.world.getSystem(KitchenSystem);
     const cooking = this.world.getSystem(CookingSystem);
     const score = this.world.getSystem(ScoreSystem);
-    if (steps == null || kitchen == null || cooking == null || score == null) {
+    const sound = this.world.getSystem(SoundSystem);
+    const effects = this.world.getSystem(EffectsSystem);
+    if (
+      steps == null ||
+      kitchen == null ||
+      cooking == null ||
+      score == null ||
+      sound == null ||
+      effects == null
+    ) {
       throw new Error('GestureSystem needs its systems registered first');
     }
+    this.sound = sound;
+    this.effects = effects;
     this.steps = steps;
     this.kitchen = kitchen;
     this.cooking = cooking;
@@ -219,6 +239,8 @@ export class GestureSystem extends createSystem({}) {
             1,
           ),
         );
+        this.sound.playSound('crack', egg);
+        this.effects.burst('yolk', egg, bowl.y + BOWL_FOOD_Y_M);
       }
       this.cooking.showEggInBowl();
       this.steps.completeStep();
@@ -260,6 +282,9 @@ export class GestureSystem extends createSystem({}) {
     this.cooking.setWhiskProgress(Math.min(turns / target, 1));
     const fullTurns = Math.floor(turns);
     if (fullTurns !== this.whiskTurnsShown) {
+      if (fullTurns > this.whiskTurnsShown) {
+        this.sound.playSound('clink', bowlAt, 1, 0.9 + Math.random() * 0.2);
+      }
       this.whiskTurnsShown = fullTurns;
       this.steps.setProgress(`${Math.min(fullTurns, target)}/${target}`);
     }
@@ -391,6 +416,8 @@ export class GestureSystem extends createSystem({}) {
       TUNING.saltRearmDeg * DEG_TO_RAD,
     );
     if (hasTipped) {
+      this.sound.playSound('shake', capAt);
+      this.effects.burst('salt', capAt, bowlAt.y + BOWL_FOOD_Y_M);
       this.score.noteSalt(this.salt.count);
       this.steps.setProgress(String(this.salt.count));
       this.steps.setActionReady(true);
@@ -441,6 +468,15 @@ export class GestureSystem extends createSystem({}) {
         );
     } else if (this.isOnionOverBowl) {
       this.isOnionOverBowl = false;
+      const bowlAt = this.kitchen
+        .requireTool('bowl')
+        .object3D?.getWorldPosition(this.positionB);
+      if (bowlAt != null) {
+        this.sound.playSound('plop', bowlAt);
+        this.positionA.copy(bowlAt);
+        this.positionA.y += BOWL_DROP_Y_M;
+        this.effects.burst('onion', this.positionA, bowlAt.y + BOWL_FOOD_Y_M);
+      }
       this.cooking.addOnion();
       this.steps.completeStep();
     }
@@ -463,6 +499,7 @@ export class GestureSystem extends createSystem({}) {
         );
     } else if (this.isButterOverPan) {
       this.isButterOverPan = false;
+      this.sound.playSound('plop', this.kitchen.copyStoveSeat(this.positionB));
       this.cooking.meltButter();
       this.steps.completeStep();
     }
@@ -501,6 +538,7 @@ export class GestureSystem extends createSystem({}) {
     );
     this.cooking.setPourProgress(Math.min(heldS / TUNING.pourHoldS, 1));
     if (heldS >= TUNING.pourHoldS) {
+      this.sound.playSound('splash', stove);
       this.cooking.startCooking();
       this.steps.completeStep();
     }
@@ -531,6 +569,7 @@ export class GestureSystem extends createSystem({}) {
   private updateFlip(delta: number): void {
     if (this.hasTossed) {
       if (!this.cooking.isTossing) {
+        this.sound.playSound('plop', this.kitchen.requireTool('pan').object3D ?? null);
         this.steps.completeStep();
       }
       return;
@@ -555,6 +594,7 @@ export class GestureSystem extends createSystem({}) {
     if (speed >= TUNING.flickMinRadPerS) {
       this.hasTossed = true;
       this.score.noteFlip(this.cooking.cookProgress);
+      this.sound.playSound('whoosh', pan.object3D ?? null);
       this.cooking.toss();
     }
   }
@@ -577,6 +617,7 @@ export class GestureSystem extends createSystem({}) {
         TUNING.plateZoneHeightM,
       )
     ) {
+      this.sound.playSound('serve', plateAt);
       this.cooking.serve();
       this.steps.completeStep();
       this.kitchen.dropPan();

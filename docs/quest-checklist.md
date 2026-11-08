@@ -65,3 +65,11 @@ Things that cannot be confirmed without a physical headset. Each item matches a
   the session, so this path is untested.
 - [ ] **Card tips**: the 24-unit tip line under each step must stay readable at 0.8 m,
   and the longest tips (about 66 characters) must fit in two lines.
+- [ ] **Sound** (`src/systems/SoundSystem.ts`): every sound is synthesized at load and
+  tuned on desktop speakers. On a Quest, check that the audio starts after Enter VR,
+  that the sizzle follows the pan in space and rises as the egg browns, that it goes
+  quiet on pause and when the system menu opens, and that no sound is too loud.
+- [ ] **Particles** (`src/systems/EffectsSystem.ts`): salt grains, yolk and onion bits,
+  steam, smoke and star sparkles are camera-facing quads. Check that they face both
+  eyes without looking flat, that the 4 to 5 mm salt grains are visible, and that two
+  extra draw calls while they show keep the frame rate.

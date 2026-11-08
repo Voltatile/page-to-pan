@@ -14,6 +14,7 @@ import {
   COOK_ZONE,
   cookLabel,
 } from '../game/cooking.js';
+import type { PanState } from '../game/sizzle.js';
 import { KitchenSystem } from './KitchenSystem.js';
 import { StepSystem } from './StepSystem.js';
 
@@ -75,6 +76,16 @@ export class CookingSystem extends createSystem({}) {
   /** True while the omelette is in the air. */
   get isTossing(): boolean {
     return this.tossT < 1;
+  }
+
+  /** Writes what the pan holds and whether it is heating into `out`. */
+  readPanState(out: PanState): PanState {
+    out.isOnHeat = this.kitchen.panOnStove && !this.steps.isGamePaused;
+    out.hasButter = this.panButter.visible;
+    out.hasEgg = this.hasEggInPan;
+    out.progress = this.progress;
+    out.isTossing = this.isTossing;
+    return out;
   }
 
   init(): void {

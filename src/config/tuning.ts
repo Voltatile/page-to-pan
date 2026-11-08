@@ -89,4 +89,12 @@ export const TUNING = {
   palmInViewMinDot: 0.6,
   /** The pause ring floats this far above the palm. */
   palmRingHeightM: 0.08,
+  /** Loudness of everything the game plays, 0 to 1. */
+  masterVolume: 0.9,
+  /** Loudness of the pan sizzle at its loudest, 0 to 1. */
+  sizzleVolume: 0.55,
+  /** Steam puffs per second from a pan sizzling at full level. */
+  steamPerS: 7,
+  /** Seconds a freshly served omelette keeps steaming on the plate. */
+  plateSteamS: 6,
 } as const;

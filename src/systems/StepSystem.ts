@@ -220,8 +220,13 @@ export class StepSystem extends createSystem({
   }
 
   private notify(): void {
+    // One broken listener must not leave the card or the table out of date.
     for (const listener of this.listeners) {
-      listener();
+      try {
+        listener();
+      } catch (error) {
+        console.error('Step listener failed', error);
+      }
     }
   }
 }
