@@ -107,6 +107,13 @@ function stalksShape(length: number, width: number): Shape {
   ]);
 }
 
+/** A bowl seen from above: a plain circle. */
+function bowlShape(diameter: number): Shape {
+  const shape = new Shape();
+  shape.absarc(0, 0, diameter / 2, 0, Math.PI * 2, false);
+  return shape;
+}
+
 function outlineShape(ingredient: RecipeIngredient): Shape {
   const { silhouette, lengthM, widthM } = ingredient;
   switch (silhouette) {
@@ -118,6 +125,8 @@ function outlineShape(ingredient: RecipeIngredient): Shape {
       return shakerShape(lengthM, widthM);
     case 'stalks':
       return stalksShape(lengthM, widthM);
+    case 'bowl':
+      return bowlShape(lengthM);
   }
 }
 

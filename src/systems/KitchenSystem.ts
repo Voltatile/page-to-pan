@@ -8,7 +8,7 @@ import {
   Visibility,
 } from '@iwsdk/core';
 import { PAN_ON_STOVE_Y } from '../config/cookware.js';
-import { RECIPES, sheetNodeId } from '../config/recipes/index.js';
+import { ALL_RECIPES, sheetNodeId } from '../config/recipes/index.js';
 import type { Recipe } from '../config/recipes/recipe.js';
 import type { ToolId } from '../config/recipes/recipe.js';
 import { TUNING } from '../config/tuning.js';
@@ -18,7 +18,14 @@ import { isWithinSnapZone } from '../util/snap.js';
 import { SnapSystem } from './SnapSystem.js';
 import { StepSystem } from './StepSystem.js';
 
-const TOOL_IDS: readonly ToolId[] = ['bowl', 'whisk', 'pan', 'stove', 'plate'];
+const TOOL_IDS: readonly ToolId[] = [
+  'bowl',
+  'whisk',
+  'spatula',
+  'pan',
+  'stove',
+  'plate',
+];
 
 /** Sets the table for each recipe step and handles released cookware. */
 export class KitchenSystem extends createSystem({
@@ -156,7 +163,7 @@ export class KitchenSystem extends createSystem({
 
   /** Only the active recipe's sheet lies on the table. */
   private showRecipeSheet(active: Recipe): void {
-    for (const recipe of RECIPES) {
+    for (const recipe of ALL_RECIPES) {
       this.world
         .requireSceneEntity(sheetNodeId(recipe))
         .setValue(Visibility, 'isVisible', recipe === active);

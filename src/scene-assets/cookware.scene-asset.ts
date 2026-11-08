@@ -224,6 +224,39 @@ export function createWhisk(): Group {
   return whisk;
 }
 
+/**
+ * A flat turner for stirring rice in the pan. Like the whisk it lies along X,
+ * handle at +X and blade at -X, so both tools pose the same way in the hand.
+ */
+export function createSpatula(): Group {
+  const { length, bladeWidth, bladeLength } = COOKWARE.spatula;
+  const handleLength = length * 0.5;
+  const handleGeometry = new CylinderGeometry(0.009, 0.011, handleLength, 8);
+  handleGeometry.rotateZ(Math.PI / 2);
+  const handle = new Mesh(handleGeometry, handleMaterial);
+  handle.name = 'SpatulaHandle';
+  handle.position.x = length / 2 - handleLength / 2;
+
+  const neckLength = length - handleLength - bladeLength;
+  const neckGeometry = new CylinderGeometry(0.004, 0.004, neckLength, 6);
+  neckGeometry.rotateZ(Math.PI / 2);
+  const neck = new Mesh(neckGeometry, steelMaterial);
+  neck.name = 'SpatulaNeck';
+  neck.position.x = length / 2 - handleLength - neckLength / 2;
+
+  const blade = new Mesh(
+    new BoxGeometry(bladeLength, 0.003, bladeWidth),
+    steelMaterial,
+  );
+  blade.name = 'SpatulaBlade';
+  blade.position.x = -length / 2 + bladeLength / 2;
+
+  const spatula = new Group();
+  spatula.name = 'Spatula';
+  spatula.add(handle, neck, blade);
+  return spatula;
+}
+
 /** Handle points +Z, toward the seated player. */
 export function createPan(): Group {
   const { rimRadius, baseRadius, height, handleLength } = COOKWARE.pan;

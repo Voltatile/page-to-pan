@@ -30,6 +30,7 @@ const RINGS: Readonly<Record<GuideTarget, { radius: number; top: number }>> = {
 const TOOL_IDS: ReadonlySet<string> = new Set<ToolId>([
   'bowl',
   'whisk',
+  'spatula',
   'pan',
   'stove',
   'plate',

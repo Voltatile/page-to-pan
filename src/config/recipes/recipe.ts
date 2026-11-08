@@ -1,5 +1,5 @@
 /** Outline family used to draw an ingredient on the recipe sheet. */
-export type SilhouetteKind = 'egg' | 'shaker' | 'block' | 'stalks';
+export type SilhouetteKind = 'egg' | 'shaker' | 'block' | 'stalks' | 'bowl';
 
 export interface RecipeIngredient {
   id: string;
@@ -29,9 +29,12 @@ export type StepCompletion =
   | 'cook'
   | 'flip'
   | 'finish'
-  | 'plate';
+  | 'plate'
+  | 'seat-pan'
+  | 'stir'
+  | 'drop';
 
-export type ToolId = 'bowl' | 'whisk' | 'pan' | 'stove' | 'plate';
+export type ToolId = 'bowl' | 'whisk' | 'spatula' | 'pan' | 'stove' | 'plate';
 
 /**
  * A glowing ring on `target` while the player holds `held`, showing where
@@ -40,7 +43,7 @@ export type ToolId = 'bowl' | 'whisk' | 'pan' | 'stove' | 'plate';
 export interface StepGuide {
   /** Ingredient id or tool id of the object in the hand. */
   held: string;
-  target: Exclude<ToolId, 'whisk'>;
+  target: Exclude<ToolId, 'whisk' | 'spatula'>;
 }
 
 export interface RecipeStep {
@@ -64,6 +67,14 @@ export interface RecipeStep {
   onlyIfPlaced?: string;
   /** Where held objects have to go, shown as rings on the table. */
   guides?: readonly StepGuide[];
+  /** Where a crack, stir, tip or drop happens. The bowl when left out. */
+  zone?: 'bowl' | 'pan';
+  /** The ingredient a tip or drop step uses. */
+  item?: string;
+  /** The tool a stir step uses. */
+  tool?: ToolId;
+  /** Full turns a stir step needs. */
+  turns?: number;
 }
 
 export interface Recipe {

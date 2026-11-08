@@ -1,0 +1,42 @@
+<!--
+  Transparent overlay printed on the recipe sheet. Authored at 1 unit = 1 mm
+  (placed at scale 0.1), so it matches the 40 x 32 cm sheet exactly. The grid
+  cells line up with the outline positions in src/config/recipes/omelette.ts and nasi-goreng.ts.
+-->
+<style>
+  .sheet {
+    flex-direction: column;
+    width: 400px;
+    height: 320px;
+  }
+
+  .row {
+    flex-direction: row;
+    height: 160px;
+  }
+
+  .cell {
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    width: 200px;
+    height: 160px;
+    padding-bottom: 5px;
+  }
+
+  .label {
+    color: #1e2228;
+    font-size: 24px;
+    font-weight: 700;
+  }
+</style>
+<div class="sheet">
+  <div class="row">
+    <div class="cell"><div id="label-egg" class="label">Egg</div></div>
+    <div class="cell"><div id="label-soy-sauce" class="label">Sweet soy</div></div>
+  </div>
+  <div class="row">
+    <div class="cell"><div id="label-rice" class="label">Rice</div></div>
+    <div class="cell"><div id="label-green-onion" class="label">Green onion</div></div>
+  </div>
+</div>

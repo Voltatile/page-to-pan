@@ -12,6 +12,7 @@ export const COOKWARE = {
   plate: { radius: 0.1, height: 0.02, wellRadius: 0.05, wellDepth: 0.004 },
   omelette: { thickness: 0.014 },
   whisk: { length: 0.26 },
+  spatula: { length: 0.28, bladeWidth: 0.065, bladeLength: 0.08 },
 } as const;
 
 /** Height of the whisk tip above the bowl center while it stirs. */

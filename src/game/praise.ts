@@ -45,7 +45,12 @@ export function praiseFor(
       return cookProgress <= COOK_ZONE.burningAbove ? 'Golden!' : 'Crispy!';
     case 'plate':
       return 'Served!';
+    case 'stir':
+      return 'Well stirred!';
+    case 'drop':
+      return 'In it goes!';
     case 'place-ingredients':
+    case 'seat-pan':
     case 'cook':
       return null;
   }

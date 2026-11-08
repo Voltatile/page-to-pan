@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { initialRecipe, RECIPES, sheetNodeId } from './index.js';
+import { ALL_RECIPES, initialRecipe, RECIPES, sheetNodeId } from './index.js';
+import { NASI_GORENG } from './nasi-goreng.js';
 import { OMELETTE } from './omelette.js';
 
 describe('recipe registry', () => {
@@ -10,11 +11,12 @@ describe('recipe registry', () => {
 
   it('opens a recipe named in the address', () => {
     expect(initialRecipe('?recipe=omelette')).toBe(OMELETTE);
+    expect(initialRecipe('?recipe=nasi-goreng')).toBe(NASI_GORENG);
   });
 
   it('names one sheet node per recipe', () => {
     expect(sheetNodeId(OMELETTE)).toBe('recipe-sheet-omelette');
-    const ids = RECIPES.map((recipe) => recipe.id);
+    const ids = ALL_RECIPES.map((recipe) => recipe.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 });

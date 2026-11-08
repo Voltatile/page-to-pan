@@ -33,6 +33,8 @@ const ANCHOR: Readonly<Partial<Record<RecipeStep['completion'], ToolId>>> = {
   flip: 'pan',
   finish: 'pan',
   plate: 'plate',
+  stir: 'pan',
+  drop: 'pan',
 };
 
 function easeOutBack(t: number): number {

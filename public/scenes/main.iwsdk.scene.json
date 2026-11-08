@@ -124,6 +124,44 @@
       ]
     },
     {
+      "id": "recipe-sheet-nasi-goreng",
+      "name": "Recipe Sheet Nasi Goreng",
+      "content": {
+        "type": "asset",
+        "asset": "recipe-sheet-nasi-goreng"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.88,
+          -0.33
+        ]
+      },
+      "children": [
+        {
+          "id": "recipe-labels-nasi-goreng",
+          "name": "Recipe Labels Nasi Goreng",
+          "content": {
+            "type": "asset",
+            "asset": "recipe-labels-nasi-goreng"
+          },
+          "transform": {
+            "position": [
+              0,
+              0.0045,
+              0
+            ],
+            "rotationDeg": [
+              -90,
+              0,
+              0
+            ],
+            "scale": 0.1
+          }
+        }
+      ]
+    },
+    {
       "id": "recipe-stand",
       "name": "Recipe Stand",
       "content": {
@@ -383,6 +421,94 @@
       }
     },
     {
+      "id": "ingredient-rice",
+      "name": "Rice",
+      "content": {
+        "type": "asset",
+        "asset": "ingredient-rice"
+      },
+      "transform": {
+        "position": [
+          -0.29,
+          0.9025,
+          -0.2
+        ]
+      },
+      "children": [
+        {
+          "id": "ingredient-rice-contact",
+          "name": "Contact Shadow",
+          "transform": {
+            "position": [
+              0,
+              -0.022,
+              0
+            ]
+          },
+          "components": {
+            "ContactShadow": {
+              "size": [
+                0.12,
+                0.12
+              ],
+              "height": 0.0005
+            }
+          }
+        }
+      ],
+      "components": {
+        "Ingredient": {
+          "ingredientId": "rice",
+          "placed": false
+        },
+        "OneHandGrabbable": {}
+      }
+    },
+    {
+      "id": "ingredient-soy-sauce",
+      "name": "Sweet Soy",
+      "content": {
+        "type": "asset",
+        "asset": "ingredient-soy-sauce"
+      },
+      "transform": {
+        "position": [
+          0.29,
+          0.955,
+          -0.36
+        ]
+      },
+      "children": [
+        {
+          "id": "ingredient-soy-sauce-contact",
+          "name": "Contact Shadow",
+          "transform": {
+            "position": [
+              0,
+              -0.0745,
+              0
+            ]
+          },
+          "components": {
+            "ContactShadow": {
+              "size": [
+                0.08,
+                0.08
+              ],
+              "height": 0.0005
+            }
+          }
+        }
+      ],
+      "components": {
+        "Ingredient": {
+          "ingredientId": "soy-sauce",
+          "placed": false
+        },
+        "OneHandGrabbable": {}
+      }
+    },
+    {
       "id": "tool-bowl",
       "name": "Bowl",
       "content": {
@@ -442,6 +568,27 @@
       "components": {
         "KitchenTool": {
           "toolId": "whisk"
+        },
+        "OneHandGrabbable": {}
+      }
+    },
+    {
+      "id": "tool-spatula",
+      "name": "Spatula",
+      "content": {
+        "type": "asset",
+        "asset": "tool-spatula"
+      },
+      "transform": {
+        "position": [
+          -0.33,
+          0.892,
+          -0.19
+        ]
+      },
+      "components": {
+        "KitchenTool": {
+          "toolId": "spatula"
         },
         "OneHandGrabbable": {}
       }
