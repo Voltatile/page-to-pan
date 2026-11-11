@@ -13,6 +13,7 @@
     padding-right: 26px;
     border-radius: 30px;
     background-color: #c9893a;
+    render-order: 9;
   }
 
   .pill-text {

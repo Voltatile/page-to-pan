@@ -4,147 +4,148 @@
   Note: comments inside the style block break the UIKitML parser.
 -->
 <style>
-  .modal {
+  .pause-modal {
     flex-direction: column;
     justify-content: space-between;
     width: 460px;
     height: 240px;
-    padding-top: 18px;
-    padding-bottom: 18px;
+    padding-top: 16px;
+    padding-bottom: 16px;
     padding-left: 24px;
     padding-right: 24px;
     background-color: #1e2026;
     border-color: #c9893a;
     border-width: 3px;
     border-radius: 20px;
+    render-order: 15;
   }
 
-  .header {
+  .pause-header {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
   }
 
-  .title {
+  .pause-title {
     color: #fafaf7;
-    font-size: 42px;
+    font-size: 38px;
     font-weight: 700;
   }
 
-  .title:dark {
+  .pause-title:dark {
     color: #fafaf7;
   }
 
-  .subtitle {
+  .pause-subtitle {
     color: #d8ceb8;
-    font-size: 24px;
-    line-height: 1.3;
+    font-size: 22px;
+    line-height: 1.25;
   }
 
-  .subtitle:dark {
+  .pause-subtitle:dark {
     color: #d8ceb8;
   }
 
-  .divider {
+  .pause-divider {
     height: 2px;
     background-color: #c9893a;
   }
 
-  .actions {
+  .pause-actions {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
   }
 
-  .modal-btn {
+  .pause-btn {
     width: 128px;
-    height: 68px;
+    height: 64px;
     justify-content: center;
   }
 
-  .modal-btn-label {
+  .pause-btn-label {
     font-size: 24px;
   }
 
-  .settings-panel {
+  .pause-settings-panel {
     flex-direction: column;
     gap: 12px;
   }
 
-  .settings-row {
+  .pause-settings-row {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
   }
 
-  .step-btn {
+  .pause-step-btn {
     width: 54px;
     height: 54px;
     justify-content: center;
   }
 
-  .step-btn-label {
+  .pause-step-btn-label {
     font-size: 28px;
   }
 
-  .vol-label {
-    width: 150px;
+  .pause-vol-label {
+    width: 140px;
     color: #fafaf7;
-    font-size: 24px;
+    font-size: 22px;
     text-align: center;
   }
 
-  .vol-label:dark {
+  .pause-vol-label:dark {
     color: #fafaf7;
   }
 
-  .sub-btn {
+  .pause-sub-btn {
     height: 54px;
-    padding-left: 14px;
-    padding-right: 14px;
+    padding-left: 12px;
+    padding-right: 12px;
     justify-content: center;
   }
 
-  .sub-btn-label {
-    font-size: 22px;
+  .pause-sub-btn-label {
+    font-size: 20px;
   }
 </style>
-<div id="pause-card" class="modal">
-  <div class="header">
-    <div id="pause-title" class="title">Game Paused</div>
+<div id="pause-card" class="pause-modal">
+  <div class="pause-header">
+    <div id="pause-title" class="pause-title">Game Paused</div>
   </div>
-  <div id="pause-subtitle" class="subtitle">Take a breath. The pan waits for you.</div>
-  <div class="divider"></div>
-  <div id="pause-main-actions" class="actions">
-    <Button id="pause-resume" class="modal-btn">
-      <ButtonLabel class="modal-btn-label">Resume</ButtonLabel>
+  <div id="pause-subtitle" class="pause-subtitle">Take a breath. The pan waits for you.</div>
+  <div class="pause-divider"></div>
+  <div id="pause-main-actions" class="pause-actions">
+    <Button id="pause-resume" class="pause-btn">
+      <ButtonLabel class="pause-btn-label">Resume</ButtonLabel>
     </Button>
-    <Button id="pause-settings" class="modal-btn">
-      <ButtonLabel class="modal-btn-label">Settings</ButtonLabel>
+    <Button id="pause-settings" class="pause-btn">
+      <ButtonLabel class="pause-btn-label">Settings</ButtonLabel>
     </Button>
-    <Button id="pause-exit" class="modal-btn">
-      <ButtonLabel class="modal-btn-label">Exit Game</ButtonLabel>
+    <Button id="pause-exit" class="pause-btn">
+      <ButtonLabel class="pause-btn-label">Exit Game</ButtonLabel>
     </Button>
   </div>
-  <div id="pause-settings-actions" class="settings-panel">
-    <div class="settings-row">
-      <Button id="pause-vol-down" class="step-btn">
-        <ButtonLabel class="step-btn-label">-</ButtonLabel>
+  <div id="pause-settings-actions" class="pause-settings-panel">
+    <div class="pause-settings-row">
+      <Button id="pause-vol-down" class="pause-step-btn">
+        <ButtonLabel class="pause-step-btn-label">-</ButtonLabel>
       </Button>
-      <div id="pause-vol-text" class="vol-label">Volume 90%</div>
-      <Button id="pause-vol-up" class="step-btn">
-        <ButtonLabel class="step-btn-label">+</ButtonLabel>
+      <div id="pause-vol-text" class="pause-vol-label">Vol 90%</div>
+      <Button id="pause-vol-up" class="pause-step-btn">
+        <ButtonLabel class="pause-step-btn-label">+</ButtonLabel>
       </Button>
-      <Button id="pause-recenter" class="sub-btn">
-        <ButtonLabel class="sub-btn-label">Recenter</ButtonLabel>
+      <Button id="pause-recenter" class="pause-sub-btn">
+        <ButtonLabel class="pause-sub-btn-label">Recenter</ButtonLabel>
       </Button>
-      <Button id="pause-voice-toggle" class="sub-btn">
-        <ButtonLabel id="pause-voice-label" class="sub-btn-label">Voice: Off</ButtonLabel>
+      <Button id="pause-voice-toggle" class="pause-sub-btn">
+        <ButtonLabel id="pause-voice-label" class="pause-sub-btn-label">Voice: Off</ButtonLabel>
       </Button>
-      <Button id="pause-settings-back" class="sub-btn">
-        <ButtonLabel class="sub-btn-label">Back</ButtonLabel>
+      <Button id="pause-settings-back" class="pause-sub-btn">
+        <ButtonLabel class="pause-sub-btn-label">Back</ButtonLabel>
       </Button>
     </div>
   </div>

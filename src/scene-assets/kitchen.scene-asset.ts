@@ -168,7 +168,8 @@ export function createKitchenRoom(): Group {
     [floor, FLOOR],
 
     // Architectural baseboards along floor-to-wall seams (non-overlapping corners)
-    [boxMesh([4.5, 0.08, 0.03], [0, 0.042, -2.58]), DARK_WOOD],
+    [boxMesh([0.55, 0.08, 0.03], [-1.98, 0.042, -2.58]), DARK_WOOD],
+    [boxMesh([0.55, 0.08, 0.03], [1.98, 0.042, -2.58]), DARK_WOOD],
     [boxMesh([0.03, 0.08, 4.32], [-2.28, 0.042, -0.4]), DARK_WOOD],
     [boxMesh([0.03, 0.08, 4.32], [2.28, 0.042, -0.4]), DARK_WOOD],
 
@@ -263,11 +264,8 @@ export function createKitchenRoom(): Group {
 
     // Canister & small cookbooks on upper shelf
     [boxMesh([0.1, 0.12, 0.1], [0.85, 1.8, -2.44]), POT],
-    [boxMesh([0.03, 0.15, 0.12], [1.05, 1.815, -2.44]), '#8C5A48'],
-    [
-      boxMesh([0.025, 0.14, 0.11], [1.1, 1.805, -2.44], [0, 0, -0.15]),
-      '#4A607A',
-    ],
+    [boxMesh([0.03, 0.15, 0.12], [1.04, 1.815, -2.44]), '#8C5A48'],
+    [boxMesh([0.025, 0.14, 0.11], [1.09, 1.81, -2.44]), '#4A607A'],
 
     // Trailing pot plant on upper shelf
     [cylinderMesh(0.05, 0.038, 0.08, 8, [1.42, 1.78, -2.44]), WARM_WHITE],
@@ -281,7 +279,7 @@ export function createKitchenRoom(): Group {
       DARK_WOOD,
     ],
     [
-      boxMesh([0.07, 0.03, 0.028], [1.52, 1.2, -2.495], [-0.12, 0.1, 0]),
+      boxMesh([0.07, 0.03, 0.022], [1.52, 1.258, -2.532], [-0.12, 0.1, 0]),
       TILE,
     ],
 
@@ -343,7 +341,10 @@ export function createRecipeBook(): Group {
     mergeColored(
       'Book',
       [
-        [boxMesh([0.43, coverThickness, 0.35], [-0.0125, coverThickness / 2, 0]), LEATHER],
+        [
+          boxMesh([0.41, coverThickness, 0.35], [0, coverThickness / 2, 0]),
+          LEATHER,
+        ],
         [boxMesh([0.022, 0.009, 0.35], [-0.217, 0.0045, 0]), SPINE],
         [
           boxMesh(

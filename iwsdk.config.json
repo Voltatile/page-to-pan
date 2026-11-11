@@ -21,8 +21,8 @@
     },
     "render": {
       "fov": 70,
-      "near": 0.02,
-      "far": 30,
+      "near": 0.08,
+      "far": 15,
       "camera": {
         "position": [
           0,

@@ -17,6 +17,7 @@
     border-color: #d8ceb8;
     border-width: 2px;
     border-radius: 36px;
+    render-order: 6;
   }
 
   .arrow {

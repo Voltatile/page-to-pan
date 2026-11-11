@@ -8,6 +8,7 @@
     flex-direction: column;
     width: 400px;
     height: 320px;
+    render-order: 2;
   }
 
   .row {

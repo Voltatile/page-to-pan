@@ -41,6 +41,7 @@ export class UISystem extends createSystem({}) {
   private isPauseSettingsOpen = false;
 
   init(): void {
+    const cardEntity = this.world.requireSceneEntity('recipe-card');
     const card = this.world.requireSceneObject<UIKitMLAsset>('recipe-card');
     const button = card.requireElementById('card-button');
     const label = card.requireElementById<UIKit.Text>('card-button-label');
@@ -161,6 +162,10 @@ export class UISystem extends createSystem({}) {
         this.world.visibilityState.peek() === VisibilityState.NonImmersive;
       const showPauseModal = isPaused && !isFlat;
       pauseModalEntity.setValue(Visibility, 'isVisible', showPauseModal);
+      if (pauseModalEntity.object3D != null) {
+        pauseModalEntity.object3D.position.z = showPauseModal ? 0.12 : -10;
+      }
+      cardEntity.setValue(Visibility, 'isVisible', !showPauseModal);
       pauseCard.setProperties({ display: showPauseModal ? 'flex' : 'none' });
       if (showPauseModal) {
         pauseTitle.setProperties({
@@ -202,7 +207,11 @@ export class UISystem extends createSystem({}) {
 
       logo.setValue(Visibility, 'isVisible', state.phase === 'title');
       const { index, count } = steps.recipePage;
-      bookNav.setValue(Visibility, 'isVisible', showMenu && count > 1);
+      bookNav.setValue(
+        Visibility,
+        'isVisible',
+        showMenu && !showPauseModal && count > 1,
+      );
       bookPage.setProperties({ text: `Recipe ${index + 1} of ${count}` });
       modeLabel.setProperties({
         text: steps.isChallengeMode ? 'Mode: Chef Exam' : 'Mode: Guided',

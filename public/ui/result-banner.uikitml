@@ -12,6 +12,7 @@
     height: 70px;
     border-radius: 35px;
     background-color: #c9893a;
+    render-order: 8;
   }
 
   .ribbon-text {

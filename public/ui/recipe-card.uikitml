@@ -22,6 +22,7 @@
     border-color: #d8ceb8;
     border-width: 2px;
     border-radius: 16px;
+    render-order: 5;
   }
 
   .header {
