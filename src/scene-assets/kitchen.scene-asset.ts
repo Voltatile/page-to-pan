@@ -153,146 +153,148 @@ export function createKitchenRoom(): Group {
   const room = new Group();
   room.name = 'KitchenRoom';
 
-  const shell = new Mesh(new BoxGeometry(4.6, 2.7, 4.4), wallMaterial);
+  const shell = new Mesh(new BoxGeometry(4.6, 2.76, 4.4), wallMaterial);
   shell.name = 'Walls';
-  shell.position.set(0, 1.35, -0.4);
+  shell.position.set(0, 1.32, -0.4);
+  shell.frustumCulled = false;
 
   const floorGeometry = new PlaneGeometry(4.6, 4.4);
   floorGeometry.rotateX(-Math.PI / 2);
   const floor = new Mesh(floorGeometry);
-  floor.position.set(0, 0.001, -0.4);
+  floor.position.set(0, 0.002, -0.4);
 
   const sceneryParts: ColoredPart[] = [
     // Floor
     [floor, FLOOR],
 
-    // Architectural baseboards along floor-to-wall seams
-    [boxMesh([4.6, 0.08, 0.02], [0, 0.04, -2.59]), DARK_WOOD],
-    [boxMesh([0.02, 0.08, 4.4], [-2.29, 0.04, -0.4]), DARK_WOOD],
-    [boxMesh([0.02, 0.08, 4.4], [2.29, 0.04, -0.4]), DARK_WOOD],
+    // Architectural baseboards along floor-to-wall seams (non-overlapping corners)
+    [boxMesh([4.5, 0.08, 0.03], [0, 0.042, -2.58]), DARK_WOOD],
+    [boxMesh([0.03, 0.08, 4.32], [-2.28, 0.042, -0.4]), DARK_WOOD],
+    [boxMesh([0.03, 0.08, 4.32], [2.28, 0.042, -0.4]), DARK_WOOD],
 
-    // Main lower counter body and recessed toe-kick
-    [boxMesh([3.4, 0.86, 0.6], [0, 0.43, -2.28]), CABINET],
-    [boxMesh([3.38, 0.08, 0.04], [0, 0.04, -1.97]), '#3A4B42'],
+    // Main lower counter body and recessed toe-kick (stacked cleanly without overlap)
+    [boxMesh([3.38, 0.1, 0.54], [0, 0.052, -2.29]), '#3A4B42'],
+    [boxMesh([3.4, 0.76, 0.58], [0, 0.48, -2.29]), CABINET],
 
-    // Cabinet door panels and brass handles
-    [boxMesh([0.78, 0.72, 0.015], [-1.23, 0.47, -1.975]), CABINET_DOOR],
-    [boxMesh([0.78, 0.72, 0.015], [-0.41, 0.47, -1.975]), CABINET_DOOR],
-    [boxMesh([0.78, 0.72, 0.015], [0.41, 0.47, -1.975]), CABINET_DOOR],
-    [boxMesh([0.78, 0.72, 0.015], [1.23, 0.47, -1.975]), CABINET_DOOR],
-    [boxMesh([0.02, 0.12, 0.025], [-0.86, 0.54, -1.96]), BRASS],
-    [boxMesh([0.02, 0.12, 0.025], [-0.78, 0.54, -1.96]), BRASS],
-    [boxMesh([0.02, 0.12, 0.025], [0.78, 0.54, -1.96]), BRASS],
-    [boxMesh([0.02, 0.12, 0.025], [0.86, 0.54, -1.96]), BRASS],
+    // Cabinet door panels and brass handles (proud of cabinet body)
+    [boxMesh([0.78, 0.7, 0.025], [-1.23, 0.48, -1.98]), CABINET_DOOR],
+    [boxMesh([0.78, 0.7, 0.025], [-0.41, 0.48, -1.98]), CABINET_DOOR],
+    [boxMesh([0.78, 0.7, 0.025], [0.41, 0.48, -1.98]), CABINET_DOOR],
+    [boxMesh([0.78, 0.7, 0.025], [1.23, 0.48, -1.98]), CABINET_DOOR],
+    [boxMesh([0.022, 0.12, 0.03], [-0.86, 0.54, -1.95]), BRASS],
+    [boxMesh([0.022, 0.12, 0.03], [-0.78, 0.54, -1.95]), BRASS],
+    [boxMesh([0.022, 0.12, 0.03], [0.78, 0.54, -1.95]), BRASS],
+    [boxMesh([0.022, 0.12, 0.03], [0.86, 0.54, -1.95]), BRASS],
 
-    // Countertop and tile backsplash
+    // Countertop and tile backsplash (cut cleanly around the left window)
     [boxMesh([3.5, 0.04, 0.66], [0, 0.88, -2.26]), COUNTER],
-    [boxMesh([3.4, 0.58, 0.02], [0, 1.17, -2.59]), TILE],
-    [boxMesh([3.42, 0.025, 0.035], [0, 1.47, -2.58]), WOOD],
+    [boxMesh([1.06, 0.15, 0.025], [-1.17, 0.975, -2.58]), TILE],
+    [boxMesh([2.34, 0.56, 0.025], [0.53, 1.18, -2.58]), TILE],
+    [boxMesh([2.36, 0.028, 0.04], [0.53, 1.47, -2.57]), WOOD],
 
     // --- Center Cooktop & Range Hood ---
-    // Sleek flush cooktop plate on the back counter
-    [boxMesh([0.68, 0.01, 0.42], [0, 0.905, -2.26]), '#222428'],
+    // Sleek cooktop plate and raised burners on the back counter
+    [boxMesh([0.68, 0.016, 0.42], [0, 0.908, -2.26]), '#222428'],
     [
-      cylinderMesh(0.08, 0.08, 0.005, 12, [-0.18, 0.912, -2.26]),
+      cylinderMesh(0.08, 0.08, 0.012, 12, [-0.18, 0.922, -2.26]),
       '#3D4148',
     ],
-    [cylinderMesh(0.08, 0.08, 0.005, 12, [0.18, 0.912, -2.26]), '#3D4148'],
+    [cylinderMesh(0.08, 0.08, 0.012, 12, [0.18, 0.922, -2.26]), '#3D4148'],
 
     // Range hood body and chimney
-    [boxMesh([0.8, 0.05, 0.44], [0, 1.54, -2.37]), SLATE],
-    [boxMesh([0.82, 0.015, 0.02], [0, 1.52, -2.14]), BRASS],
-    [boxMesh([0.65, 0.24, 0.36], [0, 1.68, -2.41]), DARK_SLATE],
-    [boxMesh([0.38, 0.74, 0.28], [0, 2.17, -2.45]), SLATE],
+    [boxMesh([0.8, 0.05, 0.44], [0, 1.54, -2.36]), SLATE],
+    [boxMesh([0.82, 0.018, 0.025], [0, 1.52, -2.13]), BRASS],
+    [boxMesh([0.65, 0.24, 0.36], [0, 1.68, -2.4]), DARK_SLATE],
+    [boxMesh([0.38, 0.72, 0.28], [0, 2.16, -2.44]), SLATE],
 
     // --- Left: Daylight Window & Potted Plant ---
-    // Distant sky, horizon, and soft green tree line
-    [boxMesh([0.94, 0.74, 0.01], [-1.15, 1.46, -2.595]), SKY],
-    [boxMesh([0.94, 0.22, 0.012], [-1.15, 1.2, -2.593]), HORIZON],
-    [boxMesh([0.94, 0.1, 0.013], [-1.15, 1.14, -2.591]), FOLIAGE],
+    // Non-overlapping vertical bands for sky, horizon, and foliage (zero Z-fighting)
+    [boxMesh([0.94, 0.54, 0.02], [-1.15, 1.56, -2.575]), SKY],
+    [boxMesh([0.94, 0.14, 0.02], [-1.15, 1.22, -2.575]), HORIZON],
+    [boxMesh([0.94, 0.08, 0.02], [-1.15, 1.11, -2.575]), FOLIAGE],
 
-    // Window frame, sill and muntin crossbars
-    [boxMesh([1.08, 0.035, 0.12], [-1.15, 1.06, -2.53]), DARK_WOOD],
-    [boxMesh([1.08, 0.04, 0.04], [-1.15, 1.86, -2.57]), DARK_WOOD],
-    [boxMesh([0.04, 0.8, 0.04], [-1.65, 1.46, -2.57]), DARK_WOOD],
-    [boxMesh([0.04, 0.8, 0.04], [-0.65, 1.46, -2.57]), DARK_WOOD],
-    [boxMesh([0.025, 0.76, 0.02], [-1.15, 1.46, -2.58]), DARK_WOOD],
-    [boxMesh([0.96, 0.025, 0.02], [-1.15, 1.46, -2.58]), DARK_WOOD],
+    // Window frame, sill and staggered muntin crossbars
+    [boxMesh([1.08, 0.038, 0.12], [-1.15, 1.06, -2.52]), DARK_WOOD],
+    [boxMesh([1.08, 0.042, 0.05], [-1.15, 1.85, -2.55]), DARK_WOOD],
+    [boxMesh([0.042, 0.76, 0.05], [-1.65, 1.455, -2.55]), DARK_WOOD],
+    [boxMesh([0.042, 0.76, 0.05], [-0.65, 1.455, -2.55]), DARK_WOOD],
+    [boxMesh([0.026, 0.75, 0.036], [-1.15, 1.455, -2.55]), DARK_WOOD],
+    [boxMesh([0.96, 0.026, 0.044], [-1.15, 1.455, -2.55]), DARK_WOOD],
 
     // Small potted succulent on the window sill
-    [cylinderMesh(0.045, 0.035, 0.07, 8, [-0.85, 1.11, -2.53]), POT],
-    [cylinderMesh(0.042, 0.042, 0.01, 8, [-0.85, 1.145, -2.53]), '#4A3525'],
-    [sphereMesh(0.035, 6, 6, [-0.85, 1.18, -2.53]), FOLIAGE],
-    [sphereMesh(0.028, 5, 5, [-0.83, 1.2, -2.52]), FOLIAGE_LIGHT],
-    [sphereMesh(0.025, 5, 5, [-0.87, 1.17, -2.54]), FOLIAGE_DARK],
+    [cylinderMesh(0.045, 0.035, 0.07, 8, [-0.85, 1.115, -2.51]), POT],
+    [cylinderMesh(0.04, 0.04, 0.012, 8, [-0.85, 1.152, -2.51]), '#4A3525'],
+    [sphereMesh(0.035, 6, 6, [-0.85, 1.185, -2.51]), FOLIAGE],
+    [sphereMesh(0.028, 5, 5, [-0.83, 1.205, -2.5]), FOLIAGE_LIGHT],
+    [sphereMesh(0.025, 5, 5, [-0.87, 1.175, -2.52]), FOLIAGE_DARK],
 
     // Upper cabinet on the far left next to the window
-    [boxMesh([0.45, 0.72, 0.34], [-1.88, 1.82, -2.42]), CABINET],
-    [boxMesh([0.41, 0.68, 0.015], [-1.88, 1.82, -2.24]), CABINET_DOOR],
-    [boxMesh([0.02, 0.12, 0.025], [-1.72, 1.68, -2.23]), BRASS],
+    [boxMesh([0.45, 0.72, 0.34], [-1.92, 1.82, -2.41]), CABINET],
+    [boxMesh([0.41, 0.68, 0.025], [-1.92, 1.82, -2.225]), CABINET_DOOR],
+    [boxMesh([0.022, 0.12, 0.03], [-1.76, 1.68, -2.2]), BRASS],
 
     // --- Right: Warm Floating Shelves with Kitchen Props ---
     // Lower floating shelf & iron brackets
-    [boxMesh([1.0, 0.035, 0.22], [1.15, 1.34, -2.47]), WOOD],
-    [boxMesh([0.03, 0.12, 0.2], [0.75, 1.28, -2.48]), IRON],
-    [boxMesh([0.03, 0.12, 0.2], [1.55, 1.28, -2.48]), IRON],
+    [boxMesh([1.0, 0.035, 0.22], [1.15, 1.34, -2.45]), WOOD],
+    [boxMesh([0.03, 0.12, 0.2], [0.75, 1.26, -2.46]), IRON],
+    [boxMesh([0.03, 0.12, 0.2], [1.55, 1.26, -2.46]), IRON],
 
     // Spice jars on lower shelf
-    [cylinderMesh(0.026, 0.026, 0.075, 8, [0.78, 1.39, -2.46]), SPICE_RED],
-    [cylinderMesh(0.028, 0.028, 0.015, 8, [0.78, 1.435, -2.46]), CORK],
-    [cylinderMesh(0.026, 0.026, 0.075, 8, [0.86, 1.39, -2.46]), FOLIAGE],
-    [cylinderMesh(0.028, 0.028, 0.015, 8, [0.86, 1.435, -2.46]), CORK],
-    [cylinderMesh(0.026, 0.026, 0.075, 8, [0.94, 1.39, -2.46]), SPICE_GOLD],
-    [cylinderMesh(0.028, 0.028, 0.015, 8, [0.94, 1.435, -2.46]), CORK],
+    [cylinderMesh(0.026, 0.026, 0.075, 8, [0.78, 1.395, -2.44]), SPICE_RED],
+    [cylinderMesh(0.028, 0.028, 0.015, 8, [0.78, 1.44, -2.44]), CORK],
+    [cylinderMesh(0.026, 0.026, 0.075, 8, [0.86, 1.395, -2.44]), FOLIAGE],
+    [cylinderMesh(0.028, 0.028, 0.015, 8, [0.86, 1.44, -2.44]), CORK],
+    [cylinderMesh(0.026, 0.026, 0.075, 8, [0.94, 1.395, -2.44]), SPICE_GOLD],
+    [cylinderMesh(0.028, 0.028, 0.015, 8, [0.94, 1.44, -2.44]), CORK],
 
     // Stack of ceramic bowls on lower shelf
-    [cylinderMesh(0.065, 0.045, 0.03, 8, [1.15, 1.375, -2.46]), TILE],
-    [cylinderMesh(0.06, 0.04, 0.03, 8, [1.15, 1.405, -2.46]), WARM_WHITE],
-    [cylinderMesh(0.055, 0.035, 0.03, 8, [1.15, 1.435, -2.46]), CABINET],
+    [cylinderMesh(0.065, 0.045, 0.03, 8, [1.15, 1.375, -2.44]), TILE],
+    [cylinderMesh(0.06, 0.04, 0.03, 8, [1.15, 1.405, -2.44]), WARM_WHITE],
+    [cylinderMesh(0.055, 0.035, 0.03, 8, [1.15, 1.435, -2.44]), CABINET],
 
     // Olive oil bottle on lower shelf
-    [cylinderMesh(0.03, 0.03, 0.12, 8, [1.38, 1.415, -2.46]), OIL_GREEN],
-    [cylinderMesh(0.014, 0.014, 0.04, 8, [1.38, 1.495, -2.46]), CORK],
+    [cylinderMesh(0.03, 0.03, 0.12, 8, [1.38, 1.42, -2.44]), OIL_GREEN],
+    [cylinderMesh(0.014, 0.014, 0.04, 8, [1.38, 1.5, -2.44]), CORK],
 
     // Upper floating shelf & iron brackets
-    [boxMesh([1.0, 0.035, 0.22], [1.15, 1.72, -2.47]), WOOD],
-    [boxMesh([0.03, 0.12, 0.2], [0.75, 1.66, -2.48]), IRON],
-    [boxMesh([0.03, 0.12, 0.2], [1.55, 1.66, -2.48]), IRON],
+    [boxMesh([1.0, 0.035, 0.22], [1.15, 1.72, -2.45]), WOOD],
+    [boxMesh([0.03, 0.12, 0.2], [0.75, 1.64, -2.46]), IRON],
+    [boxMesh([0.03, 0.12, 0.2], [1.55, 1.64, -2.46]), IRON],
 
     // Canister & small cookbooks on upper shelf
-    [boxMesh([0.1, 0.12, 0.1], [0.85, 1.795, -2.46]), POT],
-    [boxMesh([0.03, 0.15, 0.12], [1.05, 1.81, -2.46]), '#8C5A48'],
+    [boxMesh([0.1, 0.12, 0.1], [0.85, 1.8, -2.44]), POT],
+    [boxMesh([0.03, 0.15, 0.12], [1.05, 1.815, -2.44]), '#8C5A48'],
     [
-      boxMesh([0.025, 0.14, 0.11], [1.1, 1.8, -2.46], [0, 0, -0.15]),
+      boxMesh([0.025, 0.14, 0.11], [1.1, 1.805, -2.44], [0, 0, -0.15]),
       '#4A607A',
     ],
 
     // Trailing pot plant on upper shelf
-    [cylinderMesh(0.05, 0.038, 0.08, 8, [1.42, 1.775, -2.46]), WARM_WHITE],
-    [sphereMesh(0.04, 6, 6, [1.42, 1.83, -2.46]), FOLIAGE],
-    [sphereMesh(0.03, 5, 5, [1.42, 1.8, -2.38]), FOLIAGE_LIGHT],
-    [sphereMesh(0.025, 5, 5, [1.43, 1.74, -2.35]), FOLIAGE_DARK],
+    [cylinderMesh(0.05, 0.038, 0.08, 8, [1.42, 1.78, -2.44]), WARM_WHITE],
+    [sphereMesh(0.04, 6, 6, [1.42, 1.835, -2.44]), FOLIAGE],
+    [sphereMesh(0.03, 5, 5, [1.42, 1.805, -2.36]), FOLIAGE_LIGHT],
+    [sphereMesh(0.025, 5, 5, [1.43, 1.745, -2.33]), FOLIAGE_DARK],
 
     // Cutting board leaning on counter backsplash
     [
-      boxMesh([0.24, 0.34, 0.02], [1.52, 1.05, -2.53], [-0.12, 0.1, 0]),
+      boxMesh([0.24, 0.34, 0.022], [1.52, 1.07, -2.51], [-0.12, 0.1, 0]),
       DARK_WOOD,
     ],
     [
-      boxMesh([0.07, 0.03, 0.025], [1.52, 1.18, -2.525], [-0.12, 0.1, 0]),
+      boxMesh([0.07, 0.03, 0.028], [1.52, 1.2, -2.495], [-0.12, 0.1, 0]),
       TILE,
     ],
 
     // --- Ceiling Pendant Lamp above Table ---
-    [cylinderMesh(0.08, 0.08, 0.02, 8, [0, 2.69, -0.75]), '#2E3033'],
-    [cylinderMesh(0.005, 0.005, 0.45, 6, [0, 2.45, -0.75]), '#1E1F22'],
+    [cylinderMesh(0.08, 0.08, 0.025, 8, [0, 2.68, -0.75]), '#2E3033'],
+    [cylinderMesh(0.006, 0.006, 0.44, 6, [0, 2.45, -0.75]), '#1E1F22'],
     [cylinderMesh(0.03, 0.05, 0.04, 8, [0, 2.22, -0.75]), BRASS],
     [cylinderMesh(0.05, 0.16, 0.12, 12, [0, 2.14, -0.75]), '#3A4443'],
     [sphereMesh(0.04, 8, 8, [0, 2.11, -0.75]), BULB],
 
-    // --- Wall Clock on Right Wall ---
+    // --- Wall Clock on Right Wall (cleanly stepped in X) ---
     [
-      cylinderMesh(0.14, 0.14, 0.02, 16, [2.28, 1.65, -0.8], [
+      cylinderMesh(0.14, 0.14, 0.024, 16, [2.27, 1.65, -0.8], [
         0,
         0,
         Math.PI / 2,
@@ -300,20 +302,23 @@ export function createKitchenRoom(): Group {
       WOOD,
     ],
     [
-      cylinderMesh(0.12, 0.12, 0.022, 16, [2.27, 1.65, -0.8], [
+      cylinderMesh(0.12, 0.12, 0.02, 16, [2.25, 1.65, -0.8], [
         0,
         0,
         Math.PI / 2,
       ]),
       TILE,
     ],
-    [boxMesh([0.005, 0.06, 0.026], [2.26, 1.67, -0.8]), '#2A2A2A'],
+    [boxMesh([0.015, 0.06, 0.026], [2.232, 1.67, -0.8]), '#2A2A2A'],
   ];
 
-  room.add(
-    shell,
-    mergeColored('FloorAndCounter', sceneryParts, sceneryMaterial),
+  const floorAndCounter = mergeColored(
+    'FloorAndCounter',
+    sceneryParts,
+    sceneryMaterial,
   );
+  floorAndCounter.frustumCulled = false;
+  room.add(shell, floorAndCounter);
   return room;
 }
 

@@ -9,9 +9,9 @@ import {
 } from '@iwsdk/core';
 import type { Recipe, RecipeIngredient } from '../config/recipes/recipe.js';
 
-const SHEET_THICKNESS_M = 0.002;
+const SHEET_THICKNESS_M = 0.005;
 /** Lifts outlines off the paper enough to avoid depth fighting on Quest. */
-const OUTLINE_LIFT_M = 0.0015;
+const OUTLINE_LIFT_M = 0.003;
 
 const paperMaterial = createSceneMaterial({
   id: 'recipe-paper',

@@ -95,33 +95,36 @@ export class BookSystem extends createSystem({}) {
   private buildFloatingBook(): void {
     this.floatingBook.name = 'FloatingCookbook';
     // Leather cover, left binding spine with brass bands, and stacked paper edges
+    // Cleanly stepped in Z behind the UIKit card (z = 0) to prevent any Z-fighting
     const backing = mergeColored(
       'FloatingBookBacking',
       [
-        [box([0.52, 0.282, 0.008], [0, 0, -0.012]), '#6E351F'],
-        [box([0.024, 0.288, 0.024], [-0.252, 0, -0.004]), '#472011'],
-        [box([0.026, 0.014, 0.026], [-0.252, 0.09, -0.004]), '#D4A359'],
-        [box([0.026, 0.014, 0.026], [-0.252, -0.09, -0.004]), '#D4A359'],
-        [box([0.494, 0.264, 0.01], [0.004, 0, -0.006]), '#E6DCC5'],
+        [box([0.52, 0.282, 0.008], [0, 0, -0.022]), '#6E351F'],
+        [box([0.024, 0.288, 0.028], [-0.252, 0, -0.012]), '#472011'],
+        [box([0.03, 0.014, 0.034], [-0.252, 0.09, -0.012]), '#D4A359'],
+        [box([0.03, 0.014, 0.034], [-0.252, -0.09, -0.012]), '#D4A359'],
+        [box([0.494, 0.264, 0.008], [0.004, 0, -0.013]), '#E6DCC5'],
       ],
       floatingBookMaterial,
     );
+    backing.frustumCulled = false;
     this.floatingBook.add(backing);
 
     // 3D turning paper sheet hinged at the left spine (-0.24 m)
     this.floatingTurnPivot.name = 'FloatingTurnPagePivot';
-    this.floatingTurnPivot.position.set(-0.24, 0, 0.006);
+    this.floatingTurnPivot.position.set(-0.24, 0, 0.016);
     const turnSheet = mergeColored(
       'FloatingTurnSheet',
       [
         [box([0.476, 0.248, 0.002], [0.238, 0, 0]), '#F6F0E2'],
-        [box([0.42, 0.016, 0.003], [0.238, 0.075, 0]), '#D8CEB8'],
-        [box([0.42, 0.004, 0.003], [0.238, 0.03, 0]), '#C9893A'],
-        [box([0.36, 0.01, 0.003], [0.208, -0.015, 0]), '#D8CEB8'],
-        [box([0.3, 0.01, 0.003], [0.178, -0.045, 0]), '#D8CEB8'],
+        [box([0.42, 0.016, 0.006], [0.238, 0.075, 0]), '#D8CEB8'],
+        [box([0.42, 0.004, 0.006], [0.238, 0.03, 0]), '#C9893A'],
+        [box([0.36, 0.01, 0.006], [0.208, -0.015, 0]), '#D8CEB8'],
+        [box([0.3, 0.01, 0.006], [0.178, -0.045, 0]), '#D8CEB8'],
       ],
       floatingBookMaterial,
     );
+    turnSheet.frustumCulled = false;
     this.floatingTurnPivot.add(turnSheet);
     this.floatingTurnPivot.visible = false;
     this.floatingBook.add(this.floatingTurnPivot);
@@ -162,7 +165,7 @@ export class BookSystem extends createSystem({}) {
     const progress = fTurn.isForward ? eased : 1 - eased;
     const angle = -Math.PI * 0.92 * progress;
     this.floatingTurnPivot.rotation.set(0, angle, 0);
-    this.floatingTurnPivot.position.z = 0.006 + Math.sin(t * Math.PI) * 0.022;
+    this.floatingTurnPivot.position.z = 0.016 + Math.sin(t * Math.PI) * 0.028;
     if (this.cardObject != null) {
       const slideOffset = (fTurn.isForward ? 1 : -1) * (1 - eased) * 0.045;
       this.cardObject.position.x = slideOffset;
