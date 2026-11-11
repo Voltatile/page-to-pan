@@ -12,6 +12,7 @@ import { EggShellSystem } from './systems/EggShellSystem.js';
 import { GestureSystem } from './systems/GestureSystem.js';
 import { GuideSystem } from './systems/GuideSystem.js';
 import { KitchenSystem } from './systems/KitchenSystem.js';
+import { LittleChefSystem } from './systems/LittleChefSystem.js';
 import { PauseSystem } from './systems/PauseSystem.js';
 import { PraiseSystem } from './systems/PraiseSystem.js';
 import { PracticeSystem } from './systems/PracticeSystem.js';
@@ -50,6 +51,7 @@ World.create(
   world.registerSystem(ResultStarsSystem);
   world.registerSystem(PraiseSystem);
   world.registerSystem(TitlePreviewSystem);
+  world.registerSystem(LittleChefSystem);
   world.registerSystem(ReachHighlightSystem);
   if (isDebugEnabled()) {
     world.registerSystem(DebugOverlaySystem);

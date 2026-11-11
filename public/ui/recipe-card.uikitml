@@ -89,40 +89,40 @@
 
   .menu {
     flex-direction: row;
-    gap: 10px;
+    gap: 8px;
   }
 
   .menu-button {
-    height: 56px;
-    padding-left: 14px;
-    padding-right: 14px;
+    height: 54px;
+    padding-left: 10px;
+    padding-right: 10px;
     justify-content: center;
   }
 
   .menu-button-label {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .settings {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 
   .step-button {
-    width: 56px;
-    height: 56px;
+    width: 50px;
+    height: 54px;
     justify-content: center;
   }
 
   .step-button-label {
-    font-size: 30px;
+    font-size: 28px;
   }
 
   .settings-value {
-    width: 172px;
+    width: 132px;
     color: #3a3b40;
-    font-size: 24px;
+    font-size: 22px;
     text-align: center;
   }
 
@@ -180,6 +180,9 @@
       <Button id="menu-how-to-play" class="menu-button">
         <ButtonLabel class="menu-button-label">How to Play</ButtonLabel>
       </Button>
+      <Button id="menu-mode-toggle" class="menu-button">
+        <ButtonLabel id="menu-mode-label" class="menu-button-label">Mode: Guided</ButtonLabel>
+      </Button>
       <Button id="menu-settings" class="menu-button">
         <ButtonLabel class="menu-button-label">Settings</ButtonLabel>
       </Button>
@@ -197,6 +200,9 @@
       </Button>
       <Button id="settings-recenter" class="menu-button">
         <ButtonLabel class="menu-button-label">Recenter</ButtonLabel>
+      </Button>
+      <Button id="settings-voice-toggle" class="menu-button">
+        <ButtonLabel id="settings-voice-label" class="menu-button-label">Voice: Off</ButtonLabel>
       </Button>
     </div>
     <div id="card-stats" class="stats">

@@ -83,6 +83,8 @@ export class CookingSystem extends createSystem({}) {
   /** The rice heaped in the rice bowl ingredient; it empties into the pan. */
   private riceInBowl: Object3D | undefined;
   private scrambleRestY = 0;
+  private panRiceRestY = 0;
+  private sizzleTimeS = 0;
   private hasRiceInPan = false;
   private readonly riceColor = new Color();
   private readonly goldenRiceColor = new Color();
@@ -145,6 +147,7 @@ export class CookingSystem extends createSystem({}) {
     this.plateScramble = this.ownedMesh('plate', 'PlateScramble');
     this.plateRiceOnion = this.ownedMesh('plate', 'PlateRiceOnion');
     this.scrambleRestY = this.panScramble.position.y;
+    this.panRiceRestY = this.panRice.position.y;
     this.riceInBowl = this.world
       .requireSceneEntity('ingredient-rice')
       .object3D?.getObjectByName('RiceMound');
@@ -176,6 +179,11 @@ export class CookingSystem extends createSystem({}) {
         Math.min(delta, MAX_COOK_STEP_S),
         this.steps.activeRecipe.cookDurationS ?? TUNING.cookDurationS,
       );
+      if (!this.isFriedRice && !this.isFolded && !this.isTossing) {
+        this.sizzleTimeS += delta;
+        const pulse = 1 + Math.sin(this.sizzleTimeS * 14) * 0.015;
+        this.panEgg.scale.set(pulse, 1, pulse);
+      }
     }
     if (this.isFriedRice) {
       this.paintFriedRice();
@@ -231,10 +239,14 @@ export class CookingSystem extends createSystem({}) {
       );
       return;
     }
-    // Stir-frying: everything in the pan turns with the spatula.
+    // Stir-frying: everything in the pan turns and hops with the spatula.
     const turn = amount * Math.PI * 2;
+    const hop = Math.abs(Math.sin(turn * 3)) * 0.012;
     this.panRice.rotation.y = turn;
+    this.panRice.position.y = this.panRiceRestY + hop;
     this.panScramble.rotation.y = -turn * 1.5;
+    this.panScramble.position.y =
+      this.scrambleRestY + SCRAMBLE_ON_RICE_Y + hop * 1.3;
     this.panRiceOnion.rotation.y = turn * 0.7;
   }
 
@@ -392,6 +404,7 @@ export class CookingSystem extends createSystem({}) {
     this.panButter.scale.setScalar(
       BUTTER_START_SCALE + (1 - BUTTER_START_SCALE) * melted,
     );
+    this.panButter.rotation.y = melted * Math.PI * 0.5;
   }
 
   private serveFriedRice(): void {
@@ -478,6 +491,7 @@ export class CookingSystem extends createSystem({}) {
     this.isFolded = false;
     this.tossT = 1;
     this.butterMeltS = 0;
+    this.sizzleTimeS = 0;
     this.hasOnion = false;
     this.sauceDashes = 0;
     this.hasRiceInPan = false;
@@ -492,6 +506,7 @@ export class CookingSystem extends createSystem({}) {
       mesh.visible = false;
       mesh.rotation.set(0, 0, 0);
     }
+    this.panRice.position.y = this.panRiceRestY;
     this.panScramble.position.y = this.scrambleRestY;
     this.panScramble.scale.setScalar(1);
     this.material(this.panRice).color.copy(SAUCE_COLORS[0] ?? RAW_COLOR);

@@ -97,6 +97,20 @@ export class GuideSystem extends createSystem({}) {
   }
 
   update(delta: number): void {
+    if (this.steps.isPracticing && this.steps.practiceStage === 0) {
+      const egg = this.entityFor('egg').object3D;
+      if (egg != null && !this.entityFor('egg').hasComponent(Grabbed)) {
+        egg.getWorldPosition(this.center);
+        this.ring.position.set(this.center.x, this.center.y - 0.015, this.center.z);
+        this.ring.scale.setScalar(0.065);
+        this.ring.visible = true;
+        this.timeS += delta;
+        this.material.color.copy(this.glowColor);
+        this.material.opacity =
+          0.6 + 0.3 * Math.sin(this.timeS * PULSE_PER_S * Math.PI * 2);
+        return;
+      }
+    }
     const guide = this.activeGuide();
     if (guide == null) {
       this.ring.visible = false;
@@ -144,7 +158,7 @@ export class GuideSystem extends createSystem({}) {
 
   /** The first guide of this step whose object is in a hand right now. */
   private activeGuide(): StepGuide | null {
-    if (this.steps.isGamePaused) {
+    if (this.steps.isGamePaused || this.steps.isChallengeMode) {
       return null;
     }
     for (const guide of this.steps.step?.guides ?? []) {

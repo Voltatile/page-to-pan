@@ -177,6 +177,44 @@
       ]
     },
     {
+      "id": "recipe-sheet-pancake",
+      "name": "Recipe Sheet Pancake",
+      "content": {
+        "type": "asset",
+        "asset": "recipe-sheet-pancake"
+      },
+      "transform": {
+        "position": [
+          0,
+          0.887,
+          -0.33
+        ]
+      },
+      "children": [
+        {
+          "id": "recipe-labels-pancake",
+          "name": "Recipe Labels Pancake",
+          "content": {
+            "type": "asset",
+            "asset": "recipe-labels"
+          },
+          "transform": {
+            "position": [
+              0,
+              0.0045,
+              0
+            ],
+            "rotationDeg": [
+              -90,
+              0,
+              0
+            ],
+            "scale": 0.1
+          }
+        }
+      ]
+    },
+    {
       "id": "recipe-stand",
       "name": "Recipe Stand",
       "transform": {
@@ -255,6 +293,28 @@
               0.01
             ],
             "scale": 0.1
+          }
+        },
+        {
+          "id": "pause-modal",
+          "name": "Pause Modal",
+          "content": {
+            "type": "asset",
+            "asset": "pause-modal"
+          },
+          "transform": {
+            "position": [
+              0,
+              0.01,
+              0.12
+            ],
+            "scale": 0.1
+          },
+          "components": {
+            "RayInteractable": {},
+            "Visibility": {
+              "isVisible": false
+            }
           }
         }
       ]

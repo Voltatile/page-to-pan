@@ -1,14 +1,40 @@
-import { createSystem, type Object3D, Vector3, Visibility } from '@iwsdk/core';
+import {
+  BoxGeometry,
+  createSystem,
+  Group,
+  Mesh,
+  MeshStandardMaterial,
+  type Object3D,
+  Vector3,
+  Visibility,
+} from '@iwsdk/core';
 import { ALL_RECIPES, sheetNodeId } from '../config/recipes/index.js';
 import type { Recipe } from '../config/recipes/recipe.js';
+import { mergeColored } from '../scene-assets/lib/merge-colored.js';
 import { SoundSystem } from './SoundSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const TURN_S = 0.7;
+const FLOATING_TURN_S = 0.52;
 /** The spine runs along the sheet's left edge, half its width from center. */
 const HALF_WIDTH_M = 0.2;
 /** A turning page lifts a little, so it never cuts through the one below. */
 const LIFT_M = 0.004;
+
+const floatingBookMaterial = new MeshStandardMaterial({
+  vertexColors: true,
+  roughness: 0.85,
+  metalness: 0.05,
+});
+
+function box(
+  size: readonly [number, number, number],
+  pos: readonly [number, number, number],
+): Mesh {
+  const mesh = new Mesh(new BoxGeometry(size[0], size[1], size[2]));
+  mesh.position.set(pos[0], pos[1], pos[2]);
+  return mesh;
+}
 
 interface Turn {
   page: Object3D;
@@ -20,17 +46,26 @@ interface Turn {
   hideAfter: Recipe | null;
 }
 
+interface FloatingTurn {
+  isForward: boolean;
+  elapsedS: number;
+}
+
 /**
  * The recipe sheets are pages of a book. Choosing another recipe turns the
- * page over the spine, and only the open page stays on the table.
+ * 3D paper page over the cookbook spine with a smooth page-flip animation.
  */
 export class BookSystem extends createSystem({}) {
   private steps!: StepSystem;
   private sound: SoundSystem | undefined;
   private shown: Recipe | null = null;
   private turn: Turn | null = null;
+  private floatingTurn: FloatingTurn | null = null;
   private readonly rests = new Map<string, Vector3>();
   private activeRecipeId = '';
+  private readonly floatingBook = new Group();
+  private readonly floatingTurnPivot = new Group();
+  private cardObject: Object3D | undefined;
 
   init(): void {
     const steps = this.world.getSystem(StepSystem);
@@ -39,16 +74,61 @@ export class BookSystem extends createSystem({}) {
     }
     this.steps = steps;
     this.sound = this.world.getSystem(SoundSystem);
+    this.cardObject = this.world.requireSceneEntity('recipe-card').object3D;
+    this.buildFloatingBook();
+    this.world
+      .requireSceneEntity('recipe-stand')
+      .object3D?.add(this.floatingBook);
+
     for (const recipe of ALL_RECIPES) {
       const page = this.pageOf(recipe);
       this.rests.set(recipe.id, page?.position.clone() ?? new Vector3());
     }
-    this.cleanupFuncs.push(steps.subscribe(() => this.onStepChange()));
+    this.cleanupFuncs.push(
+      steps.subscribe(() => this.onStepChange()),
+      () => this.floatingBook.removeFromParent(),
+    );
     this.activeRecipeId = steps.activeRecipe.id;
     this.updateVisibility();
   }
 
+  private buildFloatingBook(): void {
+    this.floatingBook.name = 'FloatingCookbook';
+    // Leather cover, left binding spine with brass bands, and stacked paper edges
+    const backing = mergeColored(
+      'FloatingBookBacking',
+      [
+        [box([0.52, 0.282, 0.008], [0, 0, -0.012]), '#6E351F'],
+        [box([0.024, 0.288, 0.024], [-0.252, 0, -0.004]), '#472011'],
+        [box([0.026, 0.014, 0.026], [-0.252, 0.09, -0.004]), '#D4A359'],
+        [box([0.026, 0.014, 0.026], [-0.252, -0.09, -0.004]), '#D4A359'],
+        [box([0.494, 0.264, 0.01], [0.004, 0, -0.006]), '#E6DCC5'],
+      ],
+      floatingBookMaterial,
+    );
+    this.floatingBook.add(backing);
+
+    // 3D turning paper sheet hinged at the left spine (-0.24 m)
+    this.floatingTurnPivot.name = 'FloatingTurnPagePivot';
+    this.floatingTurnPivot.position.set(-0.24, 0, 0.006);
+    const turnSheet = mergeColored(
+      'FloatingTurnSheet',
+      [
+        [box([0.476, 0.248, 0.002], [0.238, 0, 0]), '#F6F0E2'],
+        [box([0.42, 0.016, 0.003], [0.238, 0.075, 0]), '#D8CEB8'],
+        [box([0.42, 0.004, 0.003], [0.238, 0.03, 0]), '#C9893A'],
+        [box([0.36, 0.01, 0.003], [0.208, -0.015, 0]), '#D8CEB8'],
+        [box([0.3, 0.01, 0.003], [0.178, -0.045, 0]), '#D8CEB8'],
+      ],
+      floatingBookMaterial,
+    );
+    this.floatingTurnPivot.add(turnSheet);
+    this.floatingTurnPivot.visible = false;
+    this.floatingBook.add(this.floatingTurnPivot);
+  }
+
   update(delta: number): void {
+    this.updateFloatingTurn(delta);
     const turn = this.turn;
     if (turn == null) {
       return;
@@ -56,9 +136,11 @@ export class BookSystem extends createSystem({}) {
     turn.elapsedS = Math.min(turn.elapsedS + delta, TURN_S);
     const t = turn.elapsedS / TURN_S;
     const eased = t * t * (3 - 2 * t);
-    // Forward pages rise from flat (0) over the spine to face down on the
-    // left (pi); turning back plays the same path in reverse.
-    this.placePage(turn.page, turn.rest, Math.PI * (turn.isForward ? eased : 1 - eased));
+    this.placePage(
+      turn.page,
+      turn.rest,
+      Math.PI * (turn.isForward ? eased : 1 - eased),
+    );
     if (turn.elapsedS >= TURN_S) {
       this.placePage(turn.page, turn.rest, 0);
       if (turn.hideAfter != null) {
@@ -68,9 +150,37 @@ export class BookSystem extends createSystem({}) {
     }
   }
 
+  private updateFloatingTurn(delta: number): void {
+    const fTurn = this.floatingTurn;
+    if (fTurn == null) {
+      return;
+    }
+    fTurn.elapsedS = Math.min(fTurn.elapsedS + delta, FLOATING_TURN_S);
+    const t = fTurn.elapsedS / FLOATING_TURN_S;
+    const eased = t * t * (3 - 2 * t);
+    // Swing the 3D paper sheet across the left spine and slide the card into place
+    const progress = fTurn.isForward ? eased : 1 - eased;
+    const angle = -Math.PI * 0.92 * progress;
+    this.floatingTurnPivot.rotation.set(0, angle, 0);
+    this.floatingTurnPivot.position.z = 0.006 + Math.sin(t * Math.PI) * 0.022;
+    if (this.cardObject != null) {
+      const slideOffset = (fTurn.isForward ? 1 : -1) * (1 - eased) * 0.045;
+      this.cardObject.position.x = slideOffset;
+    }
+    if (fTurn.elapsedS >= FLOATING_TURN_S) {
+      this.floatingTurnPivot.visible = false;
+      this.floatingTurnPivot.rotation.set(0, 0, 0);
+      if (this.cardObject != null) {
+        this.cardObject.position.x = 0;
+      }
+      this.floatingTurn = null;
+    }
+  }
+
   private onStepChange(): void {
     const next = this.steps.activeRecipe;
     const isCooking = this.steps.state.phase !== 'title';
+    this.floatingBook.visible = !this.steps.isGamePaused;
 
     this.world
       .requireSceneEntity('recipe-book')
@@ -86,7 +196,12 @@ export class BookSystem extends createSystem({}) {
       }
       if (next.id !== this.activeRecipeId) {
         this.activeRecipeId = next.id;
-        this.sound?.playSound('whoosh', null, 0.4, 1.8);
+        this.floatingTurnPivot.visible = true;
+        this.floatingTurn = {
+          isForward: this.steps.lastPageTurn === 1,
+          elapsedS: 0,
+        };
+        this.sound?.playSound('whoosh', this.floatingTurnPivot, 0.55, 1.5);
       }
       return;
     }
@@ -104,8 +219,6 @@ export class BookSystem extends createSystem({}) {
     this.finishTurn();
     const isForward = this.steps.lastPageTurn === 1;
     this.setShown(next, true);
-    // Forward: the old page lifts away to the left, revealing the new one.
-    // Back: the new page comes in from the left and covers the old one.
     const moving = isForward ? previous : next;
     const page = this.pageOf(moving);
     const rest = this.rests.get(moving.id);
@@ -126,6 +239,7 @@ export class BookSystem extends createSystem({}) {
 
   private updateVisibility(): void {
     const isCooking = this.steps.state.phase !== 'title';
+    this.floatingBook.visible = !this.steps.isGamePaused;
     this.world
       .requireSceneEntity('recipe-book')
       .setValue(Visibility, 'isVisible', isCooking);

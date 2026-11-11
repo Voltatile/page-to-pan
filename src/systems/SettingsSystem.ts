@@ -11,9 +11,14 @@ export class SettingsSystem extends createSystem({}) {
   private sound: SoundSystem | undefined;
   private calibration: SeatedCalibrationSystem | undefined;
   private currentVolume: number = TUNING.masterVolume;
+  private voiceEnabled = false;
 
   get volume(): number {
     return this.currentVolume;
+  }
+
+  get isVoiceEnabled(): boolean {
+    return this.voiceEnabled;
   }
 
   init(): void {
@@ -35,5 +40,41 @@ export class SettingsSystem extends createSystem({}) {
   recenter(): void {
     this.calibration?.recalibrate();
     this.sound?.playSound('resume', null);
+  }
+
+  /** Toggles optional Web Speech API voice narration for cooking steps. */
+  toggleVoice(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    this.sound?.playSound('snap', null);
+    if (this.voiceEnabled) {
+      this.speak('Voice guide enabled.');
+    } else if (typeof globalThis.speechSynthesis !== 'undefined') {
+      try {
+        globalThis.speechSynthesis.cancel();
+      } catch {
+        // Ignore speech synthesis errors on unsupported runtimes
+      }
+    }
+  }
+
+  /** Speaks a short prompt aloud when the voice guide is enabled. */
+  speak(text: string): void {
+    if (
+      !this.voiceEnabled ||
+      typeof globalThis.speechSynthesis === 'undefined' ||
+      typeof globalThis.SpeechSynthesisUtterance === 'undefined'
+    ) {
+      return;
+    }
+    try {
+      globalThis.speechSynthesis.cancel();
+      const utterance = new globalThis.SpeechSynthesisUtterance(text);
+      utterance.rate = 1.02;
+      utterance.pitch = 1.05;
+      utterance.volume = Math.max(0.1, Math.min(1, this.currentVolume));
+      globalThis.speechSynthesis.speak(utterance);
+    } catch {
+      // Ignore speech synthesis errors in headless/unsupported browsers
+    }
   }
 }

@@ -7,6 +7,7 @@ import {
   OMELETTE,
   OMELETTE_INGREDIENTS,
 } from './config/recipes/omelette.js';
+import { PANCAKE } from './config/recipes/pancake.js';
 import {
   createBowl,
   createPan,
@@ -48,6 +49,7 @@ export default defineAssets({
   'book-nav': uikitml('book-nav.uikitml', 'Book Nav'),
   'recipe-sheet-omelette': createRecipeSheet(OMELETTE),
   'recipe-sheet-nasi-goreng': createRecipeSheet(NASI_GORENG),
+  'recipe-sheet-pancake': createRecipeSheet(PANCAKE),
   'ingredient-egg': createEgg(OMELETTE_INGREDIENTS.egg),
   'ingredient-salt': createSaltShaker(OMELETTE_INGREDIENTS.salt),
   'ingredient-butter': createButter(OMELETTE_INGREDIENTS.butter),
@@ -69,4 +71,5 @@ export default defineAssets({
   'title-logo': uikitml('title-logo.uikitml', 'Title Logo'),
   'result-banner': uikitml('result-banner.uikitml', 'Result Banner'),
   'praise-popup': uikitml('praise-popup.uikitml', 'Praise Popup'),
+  'pause-modal': uikitml('pause-modal.uikitml', 'Pause Modal'),
 });

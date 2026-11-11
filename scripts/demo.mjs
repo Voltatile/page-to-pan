@@ -416,6 +416,49 @@ async function grabPanOffStove() {
   ]);
 }
 
+/** Points the right hand at the Pause Modal Resume button and pinches. */
+async function pressPauseResume() {
+  const found = await runCli([
+    'ecs',
+    'find',
+    '--input-json',
+    JSON.stringify({ namePattern: '^Pause Modal$' }),
+  ]);
+  const modalEntity = found.entities[0].entityIndex;
+  const { targets } = await xr('list-targets', {});
+  const button = targets.find((target) => target.name === 'pause-resume');
+  const from = { x: 0.2, y: 1.2, z: -0.25 };
+  for (const nudge of [0, 0.015, -0.015, 0.03, -0.03]) {
+    const target = {
+      x: button.position.x + nudge,
+      y: button.position.y,
+      z: button.position.z,
+    };
+    await xr('animate-to', {
+      device: 'hand-right',
+      position: from,
+      orientation: aim(from, target),
+      duration: 0.7,
+    });
+    await sleep(350);
+    const state = JSON.stringify(
+      await runCli([
+        'ui',
+        'inspect',
+        '--input-json',
+        JSON.stringify({ entityIndex: modalEntity, selector: '#pause-resume' }),
+      ]),
+    );
+    if (state.includes('"hovered":true')) {
+      await sleep(400);
+      await xr('select', { device: 'hand-right', duration: 0.3 });
+      await sleep(500);
+      return;
+    }
+  }
+  throw new Error('The hand ray never reached the pause resume button');
+}
+
 /** Turns the free left hand palm up until the ring fills, then resumes. */
 async function pauseAndResume(resumedTitle) {
   await lookAt({ x: -0.05, y: 1.0, z: -0.5 });
@@ -437,7 +480,7 @@ async function pauseAndResume(resumedTitle) {
       duration: 0.6,
     },
   ]);
-  await pressCardButton();
+  await pressPauseResume();
   await expectTitle(resumedTitle);
 }
 

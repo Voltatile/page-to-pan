@@ -61,6 +61,7 @@ export class StepSystem extends createSystem({
   private titlePage: TitlePage = 'main';
   private pageTurn: 1 | -1 = 1;
   private practiceStageNow = 0;
+  private challengeMode = false;
   /** Seconds of play since the step started or last showed progress. */
   private idleS = 0;
   private isHintingNow = false;
@@ -107,6 +108,26 @@ export class StepSystem extends createSystem({
   /** True while the player has stepped away. Gameplay systems freeze. */
   get isGamePaused(): boolean {
     return this.isPausedNow;
+  }
+
+  /** True when on the main recipe selection page of the title screen. */
+  get isMainTitlePage(): boolean {
+    return this.gameState.phase === 'title' && this.titlePage === 'main';
+  }
+
+  /** True when the player opted into Chef Exam (memory challenge) mode. */
+  get isChallengeMode(): boolean {
+    return this.challengeMode;
+  }
+
+  toggleChallengeMode(): void {
+    this.challengeMode = !this.challengeMode;
+    this.notify();
+  }
+
+  /** Ends the current cooking session and returns to the main cookbook menu. */
+  exitToMenu(): void {
+    this.restart();
   }
 
   get recipeId(): string {
@@ -218,7 +239,7 @@ export class StepSystem extends createSystem({
         title: PAUSED_TITLE,
         instruction: PAUSED_INSTRUCTION,
         action: 'Resume',
-        secondaryAction: MENU_LABEL,
+        secondaryAction: null,
         tip: PAUSED_TIP,
         menu: false,
         settings: false,
@@ -230,13 +251,16 @@ export class StepSystem extends createSystem({
       ? isPreparationReady(recipe, this.placedIds)
       : this.isActionReady;
     const title = step?.title ?? '';
+    const defaultTip = this.challengeMode
+      ? 'Chef Exam: cook from memory without target rings!'
+      : (step?.tip ?? '');
     return {
       state,
       title: this.progress === '' ? title : `${title}: ${this.progress}`,
       instruction: step?.instruction ?? '',
       action: isReady ? 'Next' : null,
       secondaryAction: null,
-      tip: (this.isHintingNow ? step?.hint : step?.tip) ?? '',
+      tip: (this.isHintingNow ? step?.hint : defaultTip) ?? '',
       menu: false,
       settings: false,
     };

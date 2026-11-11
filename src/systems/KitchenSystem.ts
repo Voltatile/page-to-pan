@@ -112,7 +112,9 @@ export class KitchenSystem extends createSystem({
       ? 'paused'
       : state.phase === 'cooking'
         ? `step-${state.stepIndex}`
-        : state.phase;
+        : this.steps.isPracticing
+          ? 'title-practice'
+          : state.phase;
     const key = `${recipe.id}:${phaseKey}`;
     if (key === this.stageKey) {
       return;
@@ -146,14 +148,18 @@ export class KitchenSystem extends createSystem({
       const isInRecipe = recipe.ingredients.some(
         (ingredient) => ingredient.id === id,
       );
+      const isPracticeEgg =
+        state.phase === 'title' && this.steps.isPracticing && id === 'egg';
       const isVisible =
-        state.phase !== 'title' &&
-        isInRecipe &&
-        (step == null || step.ingredients.includes(id));
+        isPracticeEgg ||
+        (state.phase !== 'title' &&
+          isInRecipe &&
+          (step == null || step.ingredients.includes(id)));
       const isGrabbable =
-        state.phase !== 'title' &&
-        isInRecipe &&
-        (step == null || step.grabbableIngredients.includes(id));
+        isPracticeEgg ||
+        (state.phase !== 'title' &&
+          isInRecipe &&
+          (step == null || step.grabbableIngredients.includes(id)));
       this.setGrabbable(entity, isGrabbable);
       entity.setValue(Visibility, 'isVisible', isVisible);
     }

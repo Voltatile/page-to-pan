@@ -64,7 +64,7 @@ export class TitlePreviewSystem extends createSystem({}) {
     this.world.requireSceneEntity('recipe-stand').object3D?.add(this.pivot);
 
     const show = () => {
-      this.pivot.visible = steps.state.phase === 'title';
+      this.pivot.visible = steps.isMainTitlePage;
       const active = steps.activeRecipe.dish;
       for (const [dish, object] of this.dishes) {
         object.visible = dish === active;

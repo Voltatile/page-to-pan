@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ALL_RECIPES, initialRecipe, RECIPES, sheetNodeId } from './index.js';
 import { NASI_GORENG } from './nasi-goreng.js';
 import { OMELETTE } from './omelette.js';
+import { PANCAKE } from './pancake.js';
 
 describe('recipe registry', () => {
   it('opens the first recipe by default', () => {
@@ -12,6 +13,7 @@ describe('recipe registry', () => {
   it('opens a recipe named in the address', () => {
     expect(initialRecipe('?recipe=omelette')).toBe(OMELETTE);
     expect(initialRecipe('?recipe=nasi-goreng')).toBe(NASI_GORENG);
+    expect(initialRecipe('?recipe=pancake')).toBe(PANCAKE);
   });
 
   it('names one sheet node per recipe', () => {
