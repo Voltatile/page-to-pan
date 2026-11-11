@@ -13,6 +13,10 @@
     height: 72px;
     padding-left: 8px;
     padding-right: 8px;
+    background-color: #f6f0e2;
+    border-color: #d8ceb8;
+    border-width: 2px;
+    border-radius: 36px;
   }
 
   .arrow {
@@ -32,10 +36,10 @@
   }
 
   .page:dark {
-    color: #fafaf7;
+    color: #1c1d20;
   }
 </style>
-<Panel class="nav">
+<div class="nav">
   <Button id="book-prev" class="arrow">
     <ButtonLabel class="arrow-label">&lt;</ButtonLabel>
   </Button>
@@ -43,4 +47,4 @@
   <Button id="book-next" class="arrow">
     <ButtonLabel class="arrow-label">&gt;</ButtonLabel>
   </Button>
-</Panel>
+</div>

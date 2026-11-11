@@ -30,6 +30,7 @@ export class BookSystem extends createSystem({}) {
   private shown: Recipe | null = null;
   private turn: Turn | null = null;
   private readonly rests = new Map<string, Vector3>();
+  private activeRecipeId = '';
 
   init(): void {
     const steps = this.world.getSystem(StepSystem);
@@ -43,7 +44,8 @@ export class BookSystem extends createSystem({}) {
       this.rests.set(recipe.id, page?.position.clone() ?? new Vector3());
     }
     this.cleanupFuncs.push(steps.subscribe(() => this.onStepChange()));
-    this.showOnly(steps.activeRecipe);
+    this.activeRecipeId = steps.activeRecipe.id;
+    this.updateVisibility();
   }
 
   update(delta: number): void {
@@ -68,8 +70,35 @@ export class BookSystem extends createSystem({}) {
 
   private onStepChange(): void {
     const next = this.steps.activeRecipe;
+    const isCooking = this.steps.state.phase !== 'title';
+
+    this.world
+      .requireSceneEntity('recipe-book')
+      .setValue(Visibility, 'isVisible', isCooking);
+
+    if (!isCooking) {
+      this.finishTurn();
+      if (this.shown != null) {
+        for (const recipe of ALL_RECIPES) {
+          this.setShown(recipe, false);
+        }
+        this.shown = null;
+      }
+      if (next.id !== this.activeRecipeId) {
+        this.activeRecipeId = next.id;
+        this.sound?.playSound('whoosh', null, 0.4, 1.8);
+      }
+      return;
+    }
+
+    this.activeRecipeId = next.id;
+    if (this.shown == null) {
+      this.showOnly(next);
+      return;
+    }
+
     const previous = this.shown;
-    if (previous == null || next === previous) {
+    if (next === previous) {
       return;
     }
     this.finishTurn();
@@ -93,6 +122,21 @@ export class BookSystem extends createSystem({}) {
       hideAfter: previous,
     };
     this.sound?.playSound('whoosh', page, 0.5, 1.6);
+  }
+
+  private updateVisibility(): void {
+    const isCooking = this.steps.state.phase !== 'title';
+    this.world
+      .requireSceneEntity('recipe-book')
+      .setValue(Visibility, 'isVisible', isCooking);
+    if (!isCooking) {
+      for (const recipe of ALL_RECIPES) {
+        this.setShown(recipe, false);
+      }
+      this.shown = null;
+    } else {
+      this.showOnly(this.steps.activeRecipe);
+    }
   }
 
   /** Rotates a page about the spine by `angle`, from lying open (0). */

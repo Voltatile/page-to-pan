@@ -18,6 +18,10 @@
     padding-left: 20px;
     padding-right: 20px;
     gap: 6px;
+    background-color: #f6f0e2;
+    border-color: #d8ceb8;
+    border-width: 2px;
+    border-radius: 16px;
   }
 
   .header {
@@ -34,7 +38,7 @@
   }
 
   .title:dark {
-    color: #fafaf7;
+    color: #1c1d20;
   }
 
   .buttons {
@@ -60,7 +64,7 @@
   }
 
   .instruction:dark {
-    color: #eceef2;
+    color: #3a3b40;
   }
 
   .strip {
@@ -80,7 +84,7 @@
   }
 
   .tip:dark {
-    color: #ffc46b;
+    color: #8a5a14;
   }
 
   .menu {
@@ -123,7 +127,7 @@
   }
 
   .settings-value:dark {
-    color: #eceef2;
+    color: #3a3b40;
   }
 
   .stats {
@@ -144,7 +148,7 @@
   }
 
   .stat-value:dark {
-    color: #ffc46b;
+    color: #8a5a14;
   }
 
   .stat-label {
@@ -153,10 +157,10 @@
   }
 
   .stat-label:dark {
-    color: #eceef2;
+    color: #3a3b40;
   }
 </style>
-<Panel class="card">
+<div class="card">
   <div class="header">
     <div id="recipe-title" class="title">Omelette</div>
     <div class="buttons">
@@ -210,4 +214,4 @@
       </div>
     </div>
   </div>
-</Panel>
+</div>

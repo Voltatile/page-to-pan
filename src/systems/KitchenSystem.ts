@@ -146,15 +146,16 @@ export class KitchenSystem extends createSystem({
       const isInRecipe = recipe.ingredients.some(
         (ingredient) => ingredient.id === id,
       );
-      this.setGrabbable(
-        entity,
-        isInRecipe && (step == null || step.grabbableIngredients.includes(id)),
-      );
-      entity.setValue(
-        Visibility,
-        'isVisible',
-        isInRecipe && (step == null || step.ingredients.includes(id)),
-      );
+      const isVisible =
+        state.phase !== 'title' &&
+        isInRecipe &&
+        (step == null || step.ingredients.includes(id));
+      const isGrabbable =
+        state.phase !== 'title' &&
+        isInRecipe &&
+        (step == null || step.grabbableIngredients.includes(id));
+      this.setGrabbable(entity, isGrabbable);
+      entity.setValue(Visibility, 'isVisible', isVisible);
     }
   }
 
