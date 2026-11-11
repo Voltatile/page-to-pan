@@ -9,10 +9,10 @@ import type { Recipe } from '../config/recipes/recipe.js';
 import { KitchenSystem } from './KitchenSystem.js';
 import { StepSystem } from './StepSystem.js';
 
-/** Above the recipe card, in the stand's space: where the stars show later. */
-const PREVIEW_POSITION = [0, 0.26, -0.2] as const;
+/** Above the recipe card, in the floating menu's space. */
+const PREVIEW_POSITION = [0, 0.2, 0.05] as const;
 /** Tipped toward the seat, so the top of the dish faces the player. */
-const PREVIEW_TILT_RAD = 0.55;
+const PREVIEW_TILT_RAD = 0.35;
 const PREVIEW_SCALE = 1.3;
 const SPIN_RAD_PER_S = 0.6;
 const BOB_M = 0.006;

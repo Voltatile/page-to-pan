@@ -179,15 +179,16 @@
     {
       "id": "recipe-stand",
       "name": "Recipe Stand",
-      "content": {
-        "type": "asset",
-        "asset": "recipe-stand"
-      },
       "transform": {
         "position": [
           0,
-          0.88,
-          -0.6
+          1.24,
+          -0.76
+        ],
+        "rotationDeg": [
+          -6,
+          0,
+          0
         ]
       },
       "children": [
@@ -199,15 +200,24 @@
             "asset": "recipe-card"
           },
           "transform": {
+            "scale": 0.1
+          },
+          "components": {
+            "RayInteractable": {}
+          }
+        },
+        {
+          "id": "book-nav",
+          "name": "Book Nav",
+          "content": {
+            "type": "asset",
+            "asset": "book-nav"
+          },
+          "transform": {
             "position": [
               0,
-              0.1008,
-              -0.0902
-            ],
-            "rotationDeg": [
-              -45,
-              0,
-              0
+              -0.18,
+              0.005
             ],
             "scale": 0.1
           },
@@ -225,12 +235,7 @@
           "transform": {
             "position": [
               0,
-              0.4,
-              -0.21
-            ],
-            "rotationDeg": [
-              -10,
-              0,
+              0.32,
               0
             ],
             "scale": 0.1
@@ -246,13 +251,8 @@
           "transform": {
             "position": [
               0,
-              0.31,
-              -0.215
-            ],
-            "rotationDeg": [
-              -10,
-              0,
-              0
+              0.27,
+              0.01
             ],
             "scale": 0.1
           }
@@ -711,30 +711,6 @@
           -0.45
         ],
         "scale": 0.1
-      }
-    },
-    {
-      "id": "book-nav",
-      "name": "Book Nav",
-      "content": {
-        "type": "asset",
-        "asset": "book-nav"
-      },
-      "transform": {
-        "position": [
-          0,
-          0.9,
-          -0.545
-        ],
-        "rotationDeg": [
-          -70,
-          0,
-          0
-        ],
-        "scale": 0.1
-      },
-      "components": {
-        "RayInteractable": {}
       }
     }
   ]

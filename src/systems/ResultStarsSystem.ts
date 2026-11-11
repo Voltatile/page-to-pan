@@ -19,10 +19,10 @@ const OUTER_RADIUS_M = 0.028;
 const INNER_RADIUS_M = 0.012;
 const DEPTH_M = 0.006;
 const SPACING_M = 0.075;
-/** Above the recipe card, in the stand's space. */
-const ROW_POSITION = [0, 0.235, -0.2] as const;
-/** Tipped back a little so the faces point at a seated player's eyes. */
-const ROW_TILT_RAD = -0.2;
+/** Above the recipe card, in the floating menu's space. */
+const ROW_POSITION = [0, 0.19, 0.03] as const;
+/** Faces the seated player directly. */
+const ROW_TILT_RAD = 0;
 const POP_DELAY_S = 0.3;
 const POP_S = 0.35;
 /** The "New best!" ribbon pops in just after the last star has landed. */
