@@ -199,6 +199,10 @@ export class CookingSystem extends createSystem({}) {
     return this.steps.activeRecipe.dish === 'fried-rice';
   }
 
+  private get isPancake(): boolean {
+    return this.steps.activeRecipe.dish === 'pancake';
+  }
+
   /** Only some steps brown the food, when the recipe says which. */
   private isBrowningStep(): boolean {
     const heatSteps = this.steps.activeRecipe.heatSteps;
@@ -341,6 +345,11 @@ export class CookingSystem extends createSystem({}) {
     this.hasEggInPan = false;
     this.panEgg.visible = false;
     this.plateOmelette.visible = true;
+    if (this.isPancake) {
+      this.plateOmelette.scale.set(1.06, 2.2, 1.06);
+    } else {
+      this.plateOmelette.scale.set(1, 1.6, 0.55);
+    }
     this.plateOnion.visible = this.hasOnion;
     this.material(this.plateOmelette).color.copy(
       this.material(this.panEgg).color,
@@ -369,10 +378,13 @@ export class CookingSystem extends createSystem({}) {
       Math.min(Math.max((t - SPIN_START) / (SPIN_END - SPIN_START), 0), 1),
     );
     const egg = this.panEgg;
+    const targetX = this.isPancake ? 0.96 : FOLDED_SCALE_X;
+    const targetY = this.isPancake ? 2.0 : FOLDED_SCALE_Y;
+    const targetZ = this.isPancake ? 0.96 : FOLDED_SCALE_Z;
     egg.scale.set(
-      1 + (FOLDED_SCALE_X - 1) * eased,
-      1 + (FOLDED_SCALE_Y - 1) * eased,
-      1 + (FOLDED_SCALE_Z - 1) * eased,
+      1 + (targetX - 1) * eased,
+      1 + (targetY - 1) * eased,
+      1 + (targetZ - 1) * eased,
     );
     // The landing spot is read every frame, so it follows the pan as it moves.
     this.tossLanding.set(0, this.panEggRestY, 0);

@@ -13,7 +13,7 @@ const AFTER_CRACK = ['salt', 'butter', 'green-onion'];
 export const PANCAKE: Recipe = {
   id: 'pancake',
   title: 'Egg Pancake',
-  dish: 'omelette',
+  dish: 'pancake',
   cookDurationS: 20,
   intro: 'A golden, crispy-edged egg pancake. Point at Start to begin.',
   outro: 'Hot and golden! Press Again to cook another pancake.',

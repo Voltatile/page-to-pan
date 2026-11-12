@@ -83,7 +83,7 @@ export interface Recipe {
   id: string;
   title: string;
   /** Which food the pan and plate show while this recipe cooks. */
-  dish: 'omelette' | 'fried-rice';
+  dish: 'omelette' | 'fried-rice' | 'pancake';
   /**
    * Step ids during which the food in the pan browns. Left out, it browns
    * whenever the pan is on the stove with food in it.

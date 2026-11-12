@@ -52,6 +52,13 @@ export class TitlePreviewSystem extends createSystem({}) {
       'fried-rice',
       this.copyParts(plate, ['PlateRice', 'PlateScramble', 'PlateRiceOnion']),
     );
+    const pancakePreview = this.copyParts(plate, ['PlateOmelette']);
+    const pancakeMesh = pancakePreview.getObjectByName('PlateOmelette');
+    if (pancakeMesh instanceof Mesh) {
+      pancakeMesh.scale.set(1.06, 2.2, 1.06);
+      (pancakeMesh.material as MeshStandardMaterial).color.set('#D68A28');
+    }
+    this.dishes.set('pancake', pancakePreview);
     for (const dish of this.dishes.values()) {
       this.turntable.add(dish);
     }
