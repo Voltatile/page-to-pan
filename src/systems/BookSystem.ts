@@ -1,5 +1,6 @@
 import {
   BoxGeometry,
+  type BufferAttribute,
   createSystem,
   Group,
   Mesh,
@@ -18,13 +19,12 @@ import { SoundSystem } from './SoundSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const TURN_S = 0.62;
-const FLOATING_TURN_S = 0.58;
-/** Point in normalized time (0..1) where the slid sheet clears the side edge and tucks under. */
-const TUCK_SPLIT = 0.52;
-const STRIP_COUNT_PER_SIDE = 4;
-const STRIP_STEP_M = 0.06;
-const STRIP_WIDTH_M = 0.0592;
+const FLOATING_TURN_S = 0.64;
+/** Point in normalized time (0..1) where the slid sheet clears the side edge and tucks behind. */
+const TUCK_SPLIT = 0.5;
+const SHEET_WIDTH_M = 0.48;
 const SHEET_HEIGHT_M = 0.252;
+const SEGMENTS_X = 16;
 
 const floatingBookMaterial = new MeshStandardMaterial({
   vertexColors: true,
@@ -35,71 +35,55 @@ const floatingBookMaterial = new MeshStandardMaterial({
 function box(
   size: readonly [number, number, number],
   pos: readonly [number, number, number],
+  segX = 1,
 ): Mesh {
-  const mesh = new Mesh(new BoxGeometry(size[0], size[1], size[2]));
+  const mesh = new Mesh(new BoxGeometry(size[0], size[1], size[2], segX, 1, 1));
   mesh.position.set(pos[0], pos[1], pos[2]);
   return mesh;
 }
 
-/** Builds one articulated vertical slice of a printed recipe paper sheet. */
-function buildPaperStripMesh(side: -1 | 1, index: number): Mesh {
-  const cx = side * (STRIP_STEP_M * 0.5);
+/**
+ * Builds a single seamless, subdivided recipe paper sheet mesh (16 segments
+ * along X) so it can bend smoothly without any gaps or slits.
+ */
+function buildSeamlessSlideSheet(): Mesh {
   const parts: ColoredPart[] = [
-    // Main cream paper body and subtle top/bottom border rules
-    [box([STRIP_WIDTH_M, SHEET_HEIGHT_M - 0.008, 0.002], [cx, 0, 0]), '#F6F0E2'],
+    // Seamless cream paper body and top/bottom border rules
     [
-      box([STRIP_WIDTH_M, 0.004, 0.002], [cx, SHEET_HEIGHT_M * 0.5 - 0.002, 0]),
+      box(
+        [SHEET_WIDTH_M, SHEET_HEIGHT_M - 0.008, 0.0022],
+        [0, 0, 0],
+        SEGMENTS_X,
+      ),
+      '#F6F0E2',
+    ],
+    [
+      box(
+        [SHEET_WIDTH_M, 0.004, 0.0022],
+        [0, SHEET_HEIGHT_M * 0.5 - 0.002, 0],
+        SEGMENTS_X,
+      ),
       '#D8CEB8',
     ],
     [
-      box([STRIP_WIDTH_M, 0.004, 0.002], [cx, -SHEET_HEIGHT_M * 0.5 + 0.002, 0]),
+      box(
+        [SHEET_WIDTH_M, 0.004, 0.0022],
+        [0, -SHEET_HEIGHT_M * 0.5 + 0.002, 0],
+        SEGMENTS_X,
+      ),
       '#D8CEB8',
     ],
+    // Printed recipe header, action button silhouette, amber divider, and body lines
+    // Placed strictly in front of the paper face (z = +0.0019) so zero faces intersect
+    [box([0.19, 0.028, 0.0014], [-0.12, 0.076, 0.0019], 6), '#2E3036'],
+    [box([0.11, 0.04, 0.0014], [0.155, 0.076, 0.0019], 4), '#C9893A'],
+    [box([0.43, 0.011, 0.0014], [0, 0.022, 0.0019], 14), '#CFC4AE'],
+    [box([0.36, 0.01, 0.0014], [-0.035, -0.002, 0.0019], 12), '#D8CEB8'],
+    [box([0.44, 0.0035, 0.0014], [0, -0.024, 0.0019], 14), '#C9893A'],
+    [box([0.42, 0.028, 0.0014], [0, -0.068, 0.0019], 14), '#E5DBC6'],
   ];
 
-  // Printed header, divider, and body lines (placed strictly in front of z = +0.001)
-  if (index < 3) {
-    // Amber horizontal divider across the sheet
-    parts.push([
-      box([STRIP_WIDTH_M, 0.0035, 0.0014], [cx, -0.022, 0.0018]),
-      '#C9893A',
-    ]);
-    // Printed instruction lines
-    parts.push([
-      box([STRIP_WIDTH_M * 0.92, 0.011, 0.0014], [cx, 0.022, 0.0018]),
-      '#CFC4AE',
-    ]);
-    if (side === -1 || index < 2) {
-      parts.push([
-        box([STRIP_WIDTH_M * 0.88, 0.01, 0.0014], [cx, -0.002, 0.0018]),
-        '#D8CEB8',
-      ]);
-    }
-    // Bottom menu / tip strip silhouette
-    parts.push([
-      box([STRIP_WIDTH_M * 0.84, 0.028, 0.0014], [cx, -0.068, 0.0018]),
-      '#E5DBC6',
-    ]);
-  }
-
-  // Top left title block vs top right action button block
-  if (side === -1 && index >= 1 && index <= 2) {
-    parts.push([
-      box([STRIP_WIDTH_M * 0.94, 0.028, 0.0014], [cx, 0.076, 0.0018]),
-      '#2E3036',
-    ]);
-  } else if (side === 1 && index >= 1 && index <= 2) {
-    parts.push([
-      box([STRIP_WIDTH_M * 0.86, 0.038, 0.0014], [cx, 0.076, 0.0018]),
-      '#C9893A',
-    ]);
-  }
-
-  const mesh = mergeColored(
-    `PaperStrip_${side > 0 ? 'R' : 'L'}_${index}`,
-    parts,
-    floatingBookMaterial,
-  );
+  const mesh = mergeColored('FloatingSlideSheetMesh', parts, floatingBookMaterial);
   mesh.frustumCulled = false;
   return mesh;
 }
@@ -121,9 +105,10 @@ interface FloatingTurn {
 }
 
 /**
- * Animates recipe transitions like sliding a real, flexible sheet of paper
- * off the top of a recipe stack and tucking it underneath while the next
- * sheet glides and straightens into place.
+ * Animates recipe transitions like a real stack of recipe sheets:
+ * 1. The front sheet curves and slides off to the side, then tucks into the back.
+ * 2. The next sheet underneath rises up slightly ("naik sedikit") and steps
+ *    forward to become the active front sheet.
  */
 export class BookSystem extends createSystem({}) {
   private steps!: StepSystem;
@@ -135,9 +120,10 @@ export class BookSystem extends createSystem({}) {
   private activePageKey = '';
   private readonly floatingBook = new Group();
   private readonly slideSheetGroup = new Group();
-  private readonly leftSegments: Group[] = [];
-  private readonly rightSegments: Group[] = [];
+  private slidePosAttr: BufferAttribute | undefined;
+  private baseSlidePositions: Float32Array | undefined;
   private cardObject: Object3D | undefined;
+  private cardBaseScale = 0.1;
 
   init(): void {
     const steps = this.world.getSystem(StepSystem);
@@ -147,6 +133,7 @@ export class BookSystem extends createSystem({}) {
     this.steps = steps;
     this.sound = this.world.getSystem(SoundSystem);
     this.cardObject = this.world.requireSceneEntity('recipe-card').object3D;
+    this.cardBaseScale = this.cardObject?.scale.x ?? 0.1;
     this.buildFloatingBook();
     this.world
       .requireSceneEntity('recipe-stand')
@@ -166,77 +153,85 @@ export class BookSystem extends createSystem({}) {
 
   private buildFloatingBook(): void {
     this.floatingBook.name = 'FloatingCookbook';
-    // Layered recipe pad backing and loose paper stack behind the active card (z <= -0.013)
+    // Layered recipe pad backing and loose paper stack behind the active card (z <= -0.016)
     const backing = mergeColored(
       'FloatingBookBacking',
       [
-        [box([0.508, 0.282, 0.008], [0.008, -0.002, -0.024]), '#6E351F'],
-        [box([0.488, 0.258, 0.004], [0.007, -0.004, -0.016]), '#DDD1B8'],
-        [box([0.022, 0.044, 0.018], [-0.257, 0.119, -0.018]), '#472011'],
-        [box([0.022, 0.162, 0.018], [-0.257, 0, -0.018]), '#472011'],
-        [box([0.022, 0.044, 0.018], [-0.257, -0.119, -0.018]), '#472011'],
-        [box([0.024, 0.014, 0.02], [-0.257, 0.089, -0.018]), '#D4A359'],
-        [box([0.024, 0.014, 0.02], [-0.257, -0.089, -0.018]), '#D4A359'],
+        [box([0.508, 0.282, 0.008], [0.008, -0.004, -0.026]), '#6E351F'],
+        [box([0.488, 0.258, 0.004], [0.006, -0.008, -0.018]), '#DDD1B8'],
+        [box([0.022, 0.044, 0.018], [-0.257, 0.119, -0.02]), '#472011'],
+        [box([0.022, 0.162, 0.018], [-0.257, 0, -0.02]), '#472011'],
+        [box([0.022, 0.044, 0.018], [-0.257, -0.119, -0.02]), '#472011'],
+        [box([0.024, 0.014, 0.02], [-0.257, 0.089, -0.02]), '#D4A359'],
+        [box([0.024, 0.014, 0.02], [-0.257, -0.089, -0.02]), '#D4A359'],
       ],
       floatingBookMaterial,
     );
     backing.frustumCulled = false;
     this.floatingBook.add(backing);
 
-    // Articulated 8-strip flexible paper sheet that slides out from the top
-    // and tucks back underneath the recipe stack
     this.slideSheetGroup.name = 'FloatingSlideSheet';
-    let leftParent: Group = this.slideSheetGroup;
-    let rightParent: Group = this.slideSheetGroup;
-    for (let i = 0; i < STRIP_COUNT_PER_SIDE; i += 1) {
-      const leftSeg = new Group();
-      leftSeg.position.set(i === 0 ? 0 : -STRIP_STEP_M, 0, 0);
-      leftSeg.add(buildPaperStripMesh(-1, i));
-      leftParent.add(leftSeg);
-      this.leftSegments.push(leftSeg);
-      leftParent = leftSeg;
-
-      const rightSeg = new Group();
-      rightSeg.position.set(i === 0 ? 0 : STRIP_STEP_M, 0, 0);
-      rightSeg.add(buildPaperStripMesh(1, i));
-      rightParent.add(rightSeg);
-      this.rightSegments.push(rightSeg);
-      rightParent = rightSeg;
-    }
+    const sheetMesh = buildSeamlessSlideSheet();
+    const posAttr = sheetMesh.geometry.getAttribute(
+      'position',
+    ) as BufferAttribute;
+    this.slidePosAttr = posAttr;
+    this.baseSlidePositions = new Float32Array(posAttr.array);
+    this.slideSheetGroup.add(sheetMesh);
     this.setSlideSheetRestPose(1);
     this.floatingBook.add(this.slideSheetGroup);
   }
 
-  /** Places the articulated paper sheet at rest as a slightly fanned under-sheet in the stack. */
+  /** Places the seamless paper sheet at rest tucked neatly behind the active card. */
   private setSlideSheetRestPose(direction: 1 | -1): void {
-    this.slideSheetGroup.position.set(0.005 * direction, -0.004, -0.009);
-    this.slideSheetGroup.rotation.set(0, 0, -0.015 * direction);
-    for (let i = 0; i < STRIP_COUNT_PER_SIDE; i += 1) {
-      this.leftSegments[i]?.rotation.set(0, 0, 0);
-      this.rightSegments[i]?.rotation.set(0, 0, 0);
-    }
+    this.slideSheetGroup.position.set(0.004 * direction, -0.006, -0.01);
+    this.slideSheetGroup.rotation.set(0, 0, -0.012 * direction);
+    this.applyPaperBend(direction, 0);
   }
 
-  /** Applies a travelling S-curve / C-curl across the 8 hinged paper strips. */
-  private setPaperCurl(direction: 1 | -1, curlAmount: number): void {
-    for (let i = 0; i < STRIP_COUNT_PER_SIDE; i += 1) {
-      const weight = (i + 1) / STRIP_COUNT_PER_SIDE;
-      // Leading edge curls upward into the air; trailing edge peels off the stack
-      const leftCurl =
-        direction === 1
-          ? -curlAmount * (0.09 + 0.06 * weight)
-          : -curlAmount * (0.045 * weight);
-      const rightCurl =
-        direction === -1
-          ? curlAmount * (0.09 + 0.06 * weight)
-          : curlAmount * (0.045 * weight);
-      this.leftSegments[i]?.rotation.set(0, leftCurl, curlAmount * 0.018 * direction);
-      this.rightSegments[i]?.rotation.set(
-        0,
-        rightCurl,
-        curlAmount * 0.018 * direction,
+  /**
+   * Smoothly curves the seamless paper sheet vertices without any slits or
+   * per-frame allocations.
+   */
+  private applyPaperBend(direction: 1 | -1, bendAmount: number): void {
+    const posAttr = this.slidePosAttr;
+    const base = this.baseSlidePositions;
+    if (posAttr == null || base == null) {
+      return;
+    }
+    const halfW = SHEET_WIDTH_M * 0.5;
+    const halfH = SHEET_HEIGHT_M * 0.5;
+    const count = posAttr.count;
+    if (bendAmount <= 0.0001) {
+      for (let i = 0; i < count; i += 1) {
+        const at = i * 3;
+        posAttr.setXYZ(i, base[at] ?? 0, base[at + 1] ?? 0, base[at + 2] ?? 0);
+      }
+      posAttr.needsUpdate = true;
+      return;
+    }
+    for (let i = 0; i < count; i += 1) {
+      const at = i * 3;
+      const bx = base[at] ?? 0;
+      const by = base[at + 1] ?? 0;
+      const bz = base[at + 2] ?? 0;
+      const nx = bx / halfW; // -1..+1
+      const ny = by / halfH; // -1..+1
+      // Center of the sheet arches gently; leading edge curls up as it slides
+      const centerArch = Math.cos(nx * Math.PI * 0.5) * 0.012 * bendAmount;
+      const leadingEdge = Math.max(0, -nx * direction);
+      const edgeCurl = leadingEdge * leadingEdge * 0.022 * bendAmount;
+      const cornerLift = Math.max(0, -ny) * leadingEdge * 0.008 * bendAmount;
+      const foreshortenX =
+        -direction * leadingEdge * leadingEdge * 0.007 * bendAmount;
+      posAttr.setXYZ(
+        i,
+        bx + foreshortenX,
+        by,
+        bz + centerArch + edgeCurl + cornerLift,
       );
     }
+    posAttr.needsUpdate = true;
   }
 
   update(delta: number): void {
@@ -268,58 +263,63 @@ export class BookSystem extends createSystem({}) {
     const dir = fTurn.direction;
 
     if (t < TUCK_SPLIT) {
-      // Phase 1: Top paper sheet lifts, curls across its strips, fans in-plane, and slides out to the side
+      // Phase 1: The old front sheet curves and slides horizontally off to the side
       const u = t / TUCK_SPLIT;
-      const uEase = 1 - Math.pow(1 - u, 2.5);
+      const uEase = 1 - Math.pow(1 - u, 2.3);
       const arch = Math.sin(u * Math.PI);
       this.slideSheetGroup.position.set(
-        -dir * 0.5 * uEase,
-        0.022 * arch,
-        0.013 + 0.016 * arch,
+        -dir * 0.51 * uEase,
+        0.012 * arch - 0.01 * u,
+        0.012 + 0.012 * arch,
       );
       this.slideSheetGroup.rotation.set(
-        -0.065 * arch,
-        -dir * 0.14 * arch,
-        dir * 0.115 * Math.sin(u * Math.PI * 0.85),
+        -0.045 * arch,
+        -dir * 0.08 * arch,
+        dir * 0.085 * arch,
       );
-      this.setPaperCurl(dir, arch);
+      this.applyPaperBend(dir, arch);
     } else {
-      // Phase 2: Having cleared the card edge (|x| = 0.50 m), the sheet steps behind the card
-      // (z = -0.009 m), uncurls, and tucks smoothly underneath the paper stack
+      // Phase 2: Once clear of the side edge (|x| = 0.51 m), the slid sheet steps behind
+      // the newly raised card (z = -0.010 m) and slides back in behind it
       if (!fTurn.playedSettleSound) {
         fTurn.playedSettleSound = true;
-        this.sound?.playSound('whoosh', this.slideSheetGroup, 0.28, 1.75);
+        this.sound?.playSound('whoosh', this.slideSheetGroup, 0.3, 1.72);
       }
       const v = (t - TUCK_SPLIT) / (1 - TUCK_SPLIT);
       const vEase = v * v * (3 - 2 * v);
-      const settleArch = Math.sin(v * Math.PI);
+      const tuckArch = Math.sin(v * Math.PI);
       this.slideSheetGroup.position.set(
-        -dir * 0.5 * (1 - vEase) + 0.005 * dir * vEase,
-        -0.009 * settleArch - 0.004 * vEase,
-        -0.009,
+        -dir * 0.51 * (1 - vEase) + 0.004 * dir * vEase,
+        -0.01 * (1 - vEase) - 0.006 * vEase - 0.006 * tuckArch,
+        -0.01,
       );
       this.slideSheetGroup.rotation.set(
-        0.025 * settleArch,
+        0.02 * tuckArch,
         0,
-        dir * 0.05 * (1 - vEase) - 0.015 * dir * vEase,
+        dir * 0.04 * (1 - vEase) - 0.012 * dir * vEase,
       );
-      this.setPaperCurl(dir, (1 - vEase) * 0.35);
+      this.applyPaperBend(dir, (1 - vEase) * 0.3);
     }
 
-    // Active recipe-card glides in from the opposite side and flattens onto the board
+    // The new sheet to be used ("kertas yang akan digunakan") starts underneath/behind
+    // at y = -0.036 m, z = -0.012 m, and rises up slightly ("naik sedikit") + steps forward
     if (this.cardObject != null) {
-      const cardEase = 1 - Math.pow(1 - t, 3.6);
-      const rem = 1 - cardEase;
-      const flutter = Math.sin(t * Math.PI) * rem;
+      const r = Math.max(0, Math.min(1, (t - 0.06) / 0.88));
+      const rEase = 1 - Math.pow(1 - r, 3);
+      const rem = 1 - rEase;
+      const liftCrest = Math.sin(r * Math.PI);
       this.cardObject.position.set(
-        dir * 0.25 * rem,
-        -0.016 * rem + 0.007 * flutter,
-        0.004 * flutter,
+        dir * 0.018 * rem,
+        -0.036 * rem + 0.014 * liftCrest,
+        -0.012 * rem + 0.004 * liftCrest,
       );
       this.cardObject.rotation.set(
-        0.055 * flutter,
-        dir * 0.16 * rem,
-        -dir * 0.075 * rem,
+        -0.06 * liftCrest * rem,
+        dir * 0.03 * rem,
+        -dir * 0.02 * rem,
+      );
+      this.cardObject.scale.setScalar(
+        this.cardBaseScale * (1 - 0.038 * rem + 0.012 * liftCrest),
       );
     }
 
@@ -328,6 +328,7 @@ export class BookSystem extends createSystem({}) {
       if (this.cardObject != null) {
         this.cardObject.position.set(0, 0, 0);
         this.cardObject.rotation.set(0, 0, 0);
+        this.cardObject.scale.setScalar(this.cardBaseScale);
       }
       this.floatingTurn = null;
     }
