@@ -153,7 +153,9 @@ export class UISystem extends createSystem({}) {
       const keyChanged = key !== this.nudgeKey;
       if (keyChanged) {
         this.nudgeKey = key;
-        this.nudgeS = 0;
+        if (state.phase !== 'title') {
+          this.nudgeS = 0;
+        }
         if (!isPaused && state.phase === 'cooking') {
           settings?.speak(`${view.title}. ${view.instruction}`);
         }

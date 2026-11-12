@@ -115,6 +115,11 @@ export class StepSystem extends createSystem({
     return this.gameState.phase === 'title' && this.titlePage === 'main';
   }
 
+  /** Which subpage of the title card is currently shown. */
+  get activeTitlePage(): TitlePage {
+    return this.titlePage;
+  }
+
   /** True when the player opted into Chef Exam (memory challenge) mode. */
   get isChallengeMode(): boolean {
     return this.challengeMode;
@@ -290,6 +295,7 @@ export class StepSystem extends createSystem({
   /** Shows How to Play, Settings, Credits, or the recipe on the title card. */
   openTitlePage(page: TitlePage): void {
     if (this.gameState.phase === 'title' && page !== this.titlePage) {
+      this.pageTurn = page === 'main' ? -1 : 1;
       this.titlePage = page;
       this.practiceStageNow = 0;
       this.notify();
