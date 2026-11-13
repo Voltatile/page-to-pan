@@ -76,6 +76,17 @@ yang lambat mengambil kecap tidak keburu gosong. Pemain memilihnya lewat buku re
 - [x] **F. Buku resep**: lembar resep menjadi halaman buku bersampul kulit. Strip "< Recipe 1 of 2 >"
   di depan kartu membalik halaman dengan animasi; judul, bahan, lembar, dan preview ikut berganti.
 
+## Prioritas 4: pancake dan sentuhan akhir (11–13 Nov)
+
+- [x] **Resep ketiga: pancake.** Tepung dan telur dikocok di mangkuk, adonan dituang lalu diratakan
+  dengan sudip, dibalik, diberi sirup maple, lalu sisi kedua dimatangkan. Demonya
+  `DEMO_RECIPE=pancake npm run demo`. Durasi masak 28 detik.
+- [x] **Chef Exam**: mode memasak dari ingatan, tanpa cincin penanda dan tips.
+- [x] **Little Chef**: maskot di samping kartu; melompat tiap langkah selesai, empat kali untuk 3 bintang.
+- [x] **Alat dipegang di gagangnya**: whisk, sudip, dan wajan berada di ujung jari yang menjepit.
+- [x] **Catatan "Try it at home"** di samping piring saat hasil.
+- [x] **Gelembung pancake** saat sisi pertama mendekati Ready.
+
 Opsional kalau masih ada waktu: model 3D CC0 untuk menggantikan bentuk primitif, serta mode Learn
 dan Challenge (lihat CLAUDE.md bagian 5).
 

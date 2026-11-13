@@ -15,6 +15,8 @@ satu per satu dengan gerakan tangan. Di akhir, pemain mendapat skor bintang dan 
 - Resep 1 (wajib, sekaligus tutorial): **Omelette**.
 - Resep 2: **Nasi Goreng**, sudah bisa dimainkan. Pemain memilih resep lewat buku resep di meja;
   desainnya di `docs/roadmap.md` (Prioritas 3).
+- Resep 3: **Pancake**, sudah bisa dimainkan: tepung dan telur dikocok di mangkuk, adonan dituang dan
+  diratakan dengan sudip, dibalik, lalu diberi sirup maple (ideal 2 kali) sebelum sisi kedua matang.
 
 ## 2. Aturan lomba yang WAJIB dipatuhi
 
@@ -38,7 +40,8 @@ satu per satu dengan gerakan tangan. Di akhir, pemain mendapat skor bintang dan 
 - Semua aset (meja, alat masak, bahan, partikel) dibuat prosedural di kode, dan semua suara disintesis di kode.
   Tidak ada file GLB, tekstur, atau audio.
 - Testing: emulator IWER di browser desktop, dikendalikan lewat IWSDK CLI/skills. `npm run demo` memainkan satu
-  omelette penuh sebagai tes end-to-end; `DEMO_DEBUG=1 npm run demo` juga mencetak angka performa.
+  omelette penuh sebagai tes end-to-end; `DEMO_RECIPE=nasi-goreng` atau `DEMO_RECIPE=pancake` memainkan
+  resep lain, `DEMO_DEBUG=1` juga mencetak angka performa, dan `DEMO_SHOTS=<folder>` menyimpan gambar.
 - Deploy: build statis ke **GitHub Pages** (HTTPS wajib untuk WebXR).
 
 **Penting:** sebelum menulis kode yang memakai API IWSDK, cek dokumentasi resmi (iwsdk.dev / repo `facebook/immersive-web-sdk`)
@@ -67,13 +70,14 @@ Semua pengujian dilakukan di emulator, jadi kode harus ditulis dengan **asumsi a
 ## 5. Desain gameplay
 
 ### Alur
-`Halaman pembuka 2D (Enter VR)` → `Title (papan "Page to Pan", buku resep "< Recipe 1 of 2 >", tombol "Start", menu How to Play (latihan tangan 3 tahap) / Settings / Credits)` → `Persiapan bahan (snap ke siluet)` → `Langkah memasak` → `Hasil (skor, bintang, catatan chef, "New best!" kalau rekor)` → `"Again" (langsung masak baru) atau "Menu" (kembali ke Title)`
+`Halaman pembuka 2D (Enter VR)` → `Title (papan "Page to Pan", buku resep "< Recipe 1 of 3 >", tombol "Start", menu How to Play (latihan tangan 3 tahap) / Mode / Settings / Credits)` → `Persiapan bahan (snap ke siluet)` → `Langkah memasak` → `Hasil (skor, bintang, catatan chef, "New best!" kalau rekor, catatan "Try it at home" di samping piring)` → `"Again" (langsung masak baru) atau "Menu" (kembali ke Title)`
 
 Pause kapan saja selama memasak: telapak tangan yang kosong menghadap ke atas ditahan ±1 detik sampai cincinnya
 penuh, atau otomatis saat sesi XR kehilangan fokus. Kartu lalu menampilkan **Resume** dan **Menu**.
 
 ### Mekanik (omelette)
-Semua benda dipegang dengan pinch. Angka ambang ada di `src/config/tuning.ts`.
+Semua benda dipegang dengan pinch. Whisk, sudip, dan wajan dipegang di gagangnya: gagang berada di
+ujung jari yang menjepit. Angka ambang ada di `src/config/tuning.ts`.
 
 | Langkah | Interaksi | Deteksi |
 |---|---|---|
@@ -106,10 +110,13 @@ Setiap langkah menampilkan **kartu tips** singkat dalam bahasa Inggris (kenapa l
 - Bintang: ≥ 85 = 3★, ≥ 60 = 2★, sisanya 1★ (selalu dapat minimal 1★ supaya pemula tidak frustrasi).
 - **Catatan chef:** 1 kalimat feedback dari komponen dengan nilai terendah; skor ≥ 95 hanya mendapat pujian.
 - Bintang terbaik per resep disimpan di `localStorage` (dibungkus try/catch) dan tampil di kartu Title.
+- Setelah disajikan, catatan **"Try it at home"** muncul di samping piring: takaran dan cara memasak
+  hidangan itu di dapur sungguhan (`atHome` di data resep).
 
 ### Mode
-- Prioritas: satu mode dengan penilaian yang lunak dan panduan selalu tampil.
-- Kalau waktunya cukup: pisahkan Learn (tanpa skor) dan Challenge (dengan skor).
+- **Guided** (bawaan): penilaian lunak, tips dan cincin penanda selalu tampil.
+- **Chef Exam**: dipilih lewat tombol Mode di kartu Title. Memasak dari ingatan, tanpa cincin penanda
+  dan tanpa tips.
 
 ## 6. Arsitektur kode (ECS)
 
@@ -120,7 +127,7 @@ src/
   assets.ts             # Manifest aset (semua prosedural)
   components.ts         # Daftar komponen untuk editor; definisinya di game-components.ts (Ingredient)
   config/
-    recipes/            # Data resep (omelette, nasi goreng) + index.ts (daftar resep): langkah, bahan, tips, zona, alat
+    recipes/            # Data resep (omelette, nasi goreng, pancake) + index.ts (daftar resep): langkah, bahan, tips, zona, alat
     menu.ts             # Teks halaman judul: How to Play (latihan), Settings, Credits
     tuning.ts           # Semua konstanta tuning
     cookware.ts         # Ukuran alat masak
@@ -142,6 +149,8 @@ src/
     GuideSystem.ts      # Cincin penanda tujuan benda yang dipegang
     EggShellSystem.ts   # Kulit telur yang terlempar saat telur pecah
     PraiseSystem.ts     # Pujian singkat yang melayang setelah tiap langkah
+    HomeNoteSystem.ts   # Catatan "Try it at home" di samping piring saat hasil
+    LittleChefSystem.ts # Maskot topi koki di samping kartu: melompat tiap langkah selesai
     SettingsSystem.ts   # Volume dan recenter meja
     PracticeSystem.ts   # Latihan tangan di halaman How to Play
     ResultStarsSystem.ts    # Bintang 3D dan banner "New best!" saat hasil

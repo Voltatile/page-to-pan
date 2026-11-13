@@ -1,45 +1,67 @@
-# IWSDK App
+# Page to Pan
 
-This project uses `iwsdk.config.json` for declarative scene, asset, component,
-XR, and emulator configuration. Application systems remain explicit in
-`src/index.ts`.
+A VR cooking game for beginners. A printed recipe sheet on the kitchen table
+shows every ingredient as a life-size outline. Set each ingredient on its
+outline, then cook the dish step by step with your own hands.
+
+**Play it:** https://voltatile.github.io/page-to-pan/ (open in the Meta Quest
+Browser and press **Enter VR**)
+
+Made for the Meta VR Start Developer Competition 2026 (Gaming track).
+
+## How to play
+
+- **Sit down and use your hands.** No controllers and no walking: everything is
+  within reach of a seated player.
+- **Pick a recipe** from the recipe book: Omelette, Nasi Goreng or Pancake.
+- **Pinch** to pick things up. Place the ingredients on their outlines, then
+  follow the card: crack the egg with two hands, whisk in circles, tip the
+  shaker, flick your wrist to flip.
+- **Watch the pan.** Food goes from raw to golden to burnt, and you choose when
+  to take it off the heat.
+- **Pause** by holding an empty hand palm up for a second. The game also pauses
+  by itself when you take the headset off.
+- At the end you get a score, up to three stars, a note from the chef, and a
+  short note on how to cook the same dish at home.
+
+The **Mode** button on the title card switches to **Chef Exam**: cook from
+memory, with no rings showing where things go.
+
+## What is in it
+
+- Three recipes, each built from one data file in `src/config/recipes/`.
+- Every model is built in code and every sound is synthesized in code. The game
+  ships no model, texture or audio files. See [CREDITS.md](CREDITS.md).
+- Built with the Meta Immersive Web SDK (Three.js, ECS, Vite, TypeScript).
+
+## Run it locally
+
+Needs Node.js 22.
 
 ```sh
 npm install
 npm run dev
 ```
 
-Use the Runtime and Editor controls in the managed browser to switch between
-the running experience and its authored scene.
+`npm run dev` opens a browser with a built-in headset emulator, so no headset
+is needed to try the game.
 
-## Starter content
+## Checks
 
-The robot and welcome panel are small examples of authored scene content plus
-runtime systems. The robot turns toward the player's head and plays a sound
-when pressed. To remove the robot, delete its scene node, its `RobotSystem`
-registration from `src/index.ts` or `src/index.js`, and its `Robot` registration
-from `src/components.ts` or `src/components.js`; you can then delete the unused
-robot component and system files. To remove the welcome panel, delete its scene
-node and its `PanelSystem` registration from the application entry point.
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run demo                          # plays one full omelette in the emulator
+DEMO_RECIPE=nasi-goreng npm run demo  # or pancake
+DEMO_DEBUG=1 npm run demo             # also prints frame rate and draw calls
+```
 
-The robot stands on the second of three numbered stations. The first holds dark
-pieces you can grab and move, and the third holds a ring you can spin in place.
-The studio props (the plinths and the dark pieces, plus the floor and stage in VR
-and Desktop 3D) are built in code in `src/scene-assets/studio.scene-asset.ts` or
-`.js`. The VR and Desktop 3D background furniture is built the same way in
-`src/scene-assets/decor.scene-asset.ts` or `.js`, so the starter downloads no
-extra models. To remove any of them, delete their scene nodes and their entries
-in `src/assets.ts` or `src/assets.js`, then delete the files you no longer use.
-The station labels are `public/ui/label-*.uikitml`.
+Add `?debug=1` to the game's address to show a frame-rate board beside the
+table, in the emulator or on a headset.
 
-The rest of the look is built-in components in the scene, which you can edit in
-the editor without code. The soft light on every object is the scene root's
-`IBLGradient` (select the Level Root to edit it), and the soft shadows under
-each object are `ContactShadow` nodes. In VR and Desktop 3D, the sky is the
-scene root's `DomeGradient` (its colors, tilt and dither are also on the Level
-Root), and the floor fades into it through the `DomeFade` on the floor node. AR
-projects have no sky or floor, so passthrough stays visible, and a
-`ShadowCatcher` node grounds the stations.
+## Project notes
 
-- Minimal scene walkthrough: https://iwsdk.dev/guides/01b-minimal-scene.html
-- XR-enabled projects — IWER emulator controls: https://iwsdk.dev/guides/02-testing-experience.html#iwer-controls
+- [docs/roadmap.md](docs/roadmap.md): what was planned and what is done.
+- [docs/quest-checklist.md](docs/quest-checklist.md): what still has to be
+  checked on a real headset.
