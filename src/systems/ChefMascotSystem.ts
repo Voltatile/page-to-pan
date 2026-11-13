@@ -22,12 +22,12 @@ const CHEER_HOP_M = 0.032;
 const PARTY_HOPS = 4;
 
 /**
- * Builds the procedural "Little Chef" toque mascot (5 low-poly parts, ~280
+ * Builds the procedural chef-hat mascot (5 low-poly parts, ~280
  * triangles total) so the player has a lively culinary companion in VR.
  */
-function buildLittleChefMesh(): Group {
+function buildChefMascotMesh(): Group {
   const root = new Group();
-  root.name = 'LittleChef';
+  root.name = 'ChefMascot';
 
   const clothMat = new MeshStandardMaterial({
     color: '#FFFDF8',
@@ -94,12 +94,12 @@ function buildLittleChefMesh(): Group {
 }
 
 /**
- * Animates the Little Chef companion beside the floating recipe card:
+ * Animates the chef-hat mascot beside the floating recipe card:
  * - gentle idle bobbing
  * - happy celebration hop when a step completes
  * - nervous wobble when food on the stove is close to burning
  */
-export class LittleChefSystem extends createSystem({}) {
+export class ChefMascotSystem extends createSystem({}) {
   private steps!: StepSystem;
   private cooking: CookingSystem | undefined;
   private score: ScoreSystem | undefined;
@@ -114,7 +114,7 @@ export class LittleChefSystem extends createSystem({}) {
   init(): void {
     const steps = this.world.getSystem(StepSystem);
     if (steps == null) {
-      throw new Error('LittleChefSystem needs StepSystem first');
+      throw new Error('ChefMascotSystem needs StepSystem first');
     }
     this.steps = steps;
     this.cooking = this.world.getSystem(CookingSystem);
@@ -124,7 +124,7 @@ export class LittleChefSystem extends createSystem({}) {
     if (stand == null) {
       throw new Error('Missing recipe-stand object3D');
     }
-    this.chef = buildLittleChefMesh();
+    this.chef = buildChefMascotMesh();
     this.chef.position.set(CHEF_X, CHEF_Y, CHEF_Z);
     this.chef.rotation.y = -0.24;
     stand.add(this.chef);

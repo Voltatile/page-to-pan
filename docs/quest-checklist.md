@@ -47,6 +47,17 @@ play session from start to finish, so it can be worked through in order.
 - [ ] **Depth precision**: outlines and labels sit a few millimeters above the paper.
   Confirm there is no flicker at the near plane of 0.02 m.
 
+- [ ] **Narrow view, Meta VR Glasses** (`src/systems/ViewFitSystem.ts`): the glasses see 37 degrees
+  to each side, 25 up and 43 down. There the card stand moves to 1.10 m high and 0.55 m away, tilted
+  back 20 degrees, so one look 25 to 33 degrees down holds the card and the whole recipe sheet. It
+  is picked by the eye's view angle or by a gaze input. Only the gaze sign could be proven on the
+  emulator, which masks the picture instead of narrowing the camera. Still outside that view: the
+  right 40% of the pan on the stove, which needs a small head turn.
+- [ ] **Gaze and pinch** (`gazeTracking` in `iwsdk.config.json`): on the glasses profile, looking at
+  Start and pinching starts the recipe, and with gaze off the hand ray works as before. A pinch
+  held longer than 0.3 s does not count as a click. Confirm that real players pinch fast enough,
+  and that a whole recipe can be played on the glasses: the demo script only covers Quest.
+
 ## 2. Hands and gestures, in recipe order
 
 Every threshold is tuned on the emulator, whose hands do not shake

@@ -88,6 +88,16 @@ export const TUNING = {
   tableTopHeightM: 0.88,
   /** Seated calibration keeps the table this far under the player's head. */
   tableBelowHeadM: 0.42,
+  /**
+   * A headset whose view is shorter than this, top to bottom, cannot show the
+   * eye-level card and the table together. Meta VR Glasses see 68 degrees and
+   * a Quest about 96.
+   */
+  narrowViewBelowDeg: 80,
+  /** Where the card stand sits for such a headset: low, just behind the sheet. */
+  narrowViewCardY: 1.1,
+  narrowViewCardZ: -0.55,
+  narrowViewCardTiltDeg: -20,
   /** Head poses under this height are treated as not tracked yet. */
   minTrackedHeadHeightM: 0.3,
   /** How long a palm held up fills the pause ring. */

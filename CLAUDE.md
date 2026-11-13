@@ -34,7 +34,7 @@ satu per satu dengan gerakan tangan. Di akhir, pemain mendapat skor bintang dan 
 ## 3. Stack teknis
 
 - **Meta Immersive Web SDK (IWSDK)**: Three.js + ECS (elics) + Vite + TypeScript. Dibuat dengan `npm create @iwsdk@latest`.
-- Fitur IWSDK yang dipakai: hand tracking, grab satu tangan (`OneHandGrabbable` lewat pinch), spatial UI (UIKitML),
+- Fitur IWSDK yang dipakai: hand tracking, gaze (opsional, untuk Meta VR Glasses: lihat tombol lalu pinch), grab satu tangan (`OneHandGrabbable` lewat pinch), spatial UI (UIKitML),
   dan audio spasial lewat listener IWSDK. Physics (Havok) **tidak** dipakai: gerakan benda (meluncur pulang, lempar
   omelette) dihitung sendiri oleh system.
 - Semua aset (meja, alat masak, bahan, partikel) dibuat prosedural di kode, dan semua suara disintesis di kode.
@@ -135,6 +135,7 @@ src/
   scene-assets/         # Geometri prosedural: dapur, lembar resep, bahan, alat masak
   systems/
     SeatedCalibrationSystem.ts  # Tinggi kepala ke meja, sekali per sesi XR
+    ViewFitSystem.ts    # Kartu resep turun dan mendekat di headset berbidang pandang sempit (Meta VR Glasses)
     SnapSystem.ts       # Snap bahan ke siluet, bahan yang lepas meluncur pulang
     StepSystem.ts       # State machine langkah resep + pause
     KitchenSystem.ts    # Alat masak yang tampil/bisa dipegang per langkah, wajan di kompor
@@ -150,7 +151,7 @@ src/
     EggShellSystem.ts   # Kulit telur yang terlempar saat telur pecah
     PraiseSystem.ts     # Pujian singkat yang melayang setelah tiap langkah
     HomeNoteSystem.ts   # Catatan "Try it at home" di samping piring saat hasil
-    LittleChefSystem.ts # Maskot topi koki di samping kartu: melompat tiap langkah selesai
+    ChefMascotSystem.ts # Maskot topi koki di samping kartu: melompat tiap langkah selesai
     SettingsSystem.ts   # Volume dan recenter meja
     PracticeSystem.ts   # Latihan tangan di halaman How to Play
     ResultStarsSystem.ts    # Bintang 3D dan banner "New best!" saat hasil

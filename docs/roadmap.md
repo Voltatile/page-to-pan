@@ -82,7 +82,7 @@ yang lambat mengambil kecap tidak keburu gosong. Pemain memilihnya lewat buku re
   dengan sudip, dibalik, diberi sirup maple, lalu sisi kedua dimatangkan. Demonya
   `DEMO_RECIPE=pancake npm run demo`. Durasi masak 28 detik.
 - [x] **Chef Exam**: mode memasak dari ingatan, tanpa cincin penanda dan tips.
-- [x] **Little Chef**: maskot di samping kartu; melompat tiap langkah selesai, empat kali untuk 3 bintang.
+- [x] **Maskot topi koki**: di samping kartu; melompat tiap langkah selesai, empat kali untuk 3 bintang.
 - [x] **Alat dipegang di gagangnya**: whisk, sudip, dan wajan berada di ujung jari yang menjepit.
 - [x] **Catatan "Try it at home"** di samping piring saat hasil.
 - [x] **Gelembung pancake** saat sisi pertama mendekati Ready.
