@@ -8,6 +8,8 @@ import {
   Visibility,
   VisibilityState,
 } from '@iwsdk/core';
+import { paint, panelColors } from '../config/contrast.js';
+import { SettingsSystem } from './SettingsSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 const POP_IN_S = 0.3;
@@ -29,6 +31,9 @@ export class HomeNoteSystem extends createSystem({}) {
   private note!: Entity;
   private noteObject: Object3D | undefined;
   private text!: UIKit.Text;
+  private card!: UIKit.Component;
+  private heading!: UIKit.Text;
+  private settings: SettingsSystem | undefined;
   private baseScale = 1;
   /** Seconds since the dish was served, or -1 while the note is away. */
   private shownS = -1;
@@ -43,9 +48,11 @@ export class HomeNoteSystem extends createSystem({}) {
     this.note = this.world.requireSceneEntity('home-note');
     this.noteObject = this.note.object3D;
     this.baseScale = this.noteObject?.scale.x ?? 1;
-    this.text = this.world
-      .requireSceneObject<UIKitMLAsset>('home-note')
-      .requireElementById<UIKit.Text>('home-note-text');
+    const panel = this.world.requireSceneObject<UIKitMLAsset>('home-note');
+    this.text = panel.requireElementById<UIKit.Text>('home-note-text');
+    this.card = panel.requireElementById('home-note-card');
+    this.heading = panel.requireElementById<UIKit.Text>('home-note-heading');
+    this.settings = this.world.getSystem(SettingsSystem);
     this.note.setValue(Visibility, 'isVisible', false);
     this.cleanupFuncs.push(steps.subscribe(() => this.onStepChange()));
   }
@@ -79,6 +86,11 @@ export class HomeNoteSystem extends createSystem({}) {
     const isDone = this.steps.state.phase === 'done';
     if (isDone && this.shownS < 0) {
       this.text.setProperties({ text: this.steps.activeRecipe.atHome });
+      const colors = panelColors(this.settings?.isHighContrast ?? false);
+      paint(this.card, 'backgroundColor', colors.background);
+      paint(this.card, 'borderColor', colors.accent);
+      paint(this.heading, 'color', colors.accent);
+      paint(this.text, 'color', colors.body);
       this.shownS = 0;
     } else if (!isDone && this.shownS >= 0) {
       this.shownS = -1;

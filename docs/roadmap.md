@@ -87,6 +87,13 @@ yang lambat mengambil kecap tidak keburu gosong. Pemain memilihnya lewat buku re
 - [x] **Catatan "Try it at home"** di samping piring saat hasil.
 - [x] **Gelembung pancake** saat sisi pertama mendekati Ready.
 
+## Prioritas 5: kategori khusus (13 Nov)
+
+- [x] **Chef rank** untuk *Best Reason to Come Back*: gelar dari total bintang semua resep, target
+  berikutnya di kartu judul, banner "Rank up" saat naik.
+- [x] **Contrast: High** untuk *Best Accessibility Forward Experience*, melengkapi Voice dan tatap-pinch.
+- [x] **First five minutes** diukur: dari kartu judul sampai memegang bahan pertama sekitar 10 detik di demo.
+
 Opsional kalau masih ada waktu: model 3D CC0 untuk menggantikan bentuk primitif, serta mode Learn
 dan Challenge (lihat CLAUDE.md bagian 5).
 

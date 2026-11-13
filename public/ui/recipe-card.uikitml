@@ -104,6 +104,10 @@
     font-size: 20px;
   }
 
+  .settings-block {
+    flex-direction: column;
+    gap: 8px;
+  }
   .settings {
     flex-direction: row;
     align-items: center;
@@ -161,7 +165,7 @@
     color: #3a3b40;
   }
 </style>
-<div class="card">
+<div id="card" class="card">
   <div class="header">
     <div id="recipe-title" class="title">Omelette</div>
     <div class="buttons">
@@ -175,7 +179,7 @@
   </div>
   <div id="recipe-instruction" class="instruction">Place each ingredient on its outline.</div>
   <div id="card-strip" class="strip">
-    <div class="divider"></div>
+    <div id="card-divider" class="divider"></div>
     <div id="card-tip" class="tip">Why: having everything within reach keeps you calm.</div>
     <div id="card-menu" class="menu">
       <Button id="menu-how-to-play" class="menu-button">
@@ -191,33 +195,40 @@
         <ButtonLabel class="menu-button-label">Credits</ButtonLabel>
       </Button>
     </div>
-    <div id="card-settings" class="settings">
-      <Button id="settings-volume-down" class="step-button">
-        <ButtonLabel class="step-button-label">-</ButtonLabel>
-      </Button>
-      <div id="settings-volume" class="settings-value">Volume 90%</div>
-      <Button id="settings-volume-up" class="step-button">
-        <ButtonLabel class="step-button-label">+</ButtonLabel>
-      </Button>
-      <Button id="settings-recenter" class="menu-button">
-        <ButtonLabel class="menu-button-label">Recenter</ButtonLabel>
-      </Button>
-      <Button id="settings-voice-toggle" class="menu-button">
-        <ButtonLabel id="settings-voice-label" class="menu-button-label">Voice: Off</ButtonLabel>
-      </Button>
+    <div id="card-settings" class="settings-block">
+      <div class="settings">
+        <Button id="settings-volume-down" class="step-button">
+          <ButtonLabel class="step-button-label">-</ButtonLabel>
+        </Button>
+        <div id="settings-volume" class="settings-value">Volume 90%</div>
+        <Button id="settings-volume-up" class="step-button">
+          <ButtonLabel class="step-button-label">+</ButtonLabel>
+        </Button>
+        <Button id="settings-recenter" class="menu-button">
+          <ButtonLabel class="menu-button-label">Recenter</ButtonLabel>
+        </Button>
+      </div>
+      <div class="settings">
+        <Button id="settings-voice-toggle" class="menu-button">
+          <ButtonLabel id="settings-voice-label" class="menu-button-label">Voice: Off</ButtonLabel>
+        </Button>
+        <Button id="settings-contrast-toggle" class="menu-button">
+          <ButtonLabel id="settings-contrast-label" class="menu-button-label">Contrast: Normal</ButtonLabel>
+        </Button>
+      </div>
     </div>
     <div id="card-stats" class="stats">
       <div class="stat">
         <div id="stat-accuracy" class="stat-value">100</div>
-        <div class="stat-label">Seasoning</div>
+        <div id="stat-accuracy-label" class="stat-label">Seasoning</div>
       </div>
       <div class="stat">
         <div id="stat-timing" class="stat-value">100</div>
-        <div class="stat-label">Timing</div>
+        <div id="stat-timing-label" class="stat-label">Timing</div>
       </div>
       <div class="stat">
         <div id="stat-technique" class="stat-value">100</div>
-        <div class="stat-label">Technique</div>
+        <div id="stat-technique-label" class="stat-label">Technique</div>
       </div>
     </div>
   </div>

@@ -49,8 +49,23 @@ about what to do better, and a short note on how to cook the same dish in a
 real kitchen.
 
 There are three recipes: an omelette, nasi goreng and a pancake. Chef Exam mode
-removes the guide rings for players who want to cook from memory, and the best
-star count for each recipe is kept between sessions.
+removes the guide rings for players who want to cook from memory.
+
+**A reason to come back.** The best stars of every recipe add up to a chef rank,
+from Kitchen Newcomer through Home Cook, Line Cook and Sous Chef to Head Chef.
+The title card always says how many more stars the next rank takes, and the
+result shows "Rank up!" the moment a cook earns one.
+
+**Accessible by default.** Every step can be read aloud (Voice), a high-contrast
+mode turns the recipe card and notes into light text on black, nothing needs
+precise fingers (one pinch holds everything), and on Meta VR Glasses buttons
+press with a look and a pinch.
+
+**A fast first five minutes.** The game opens on a ready recipe: one pinch on
+Start and, in our emulator test runs, the first ingredient is in hand about ten
+seconds later. The omelette doubles as the tutorial, teaching one motion per
+step with a short tip instead of a page of text, and How to Play offers an
+optional three-step hand practice.
 
 ## How it was built
 

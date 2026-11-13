@@ -1,17 +1,22 @@
 import { createSystem } from '@iwsdk/core';
 import { TUNING } from '../config/tuning.js';
 import { browserStorage } from '../util/best-stars.js';
+import { loadHighContrast, saveHighContrast } from '../util/contrast.js';
 import { loadVolume, saveVolume, stepVolume } from '../util/volume.js';
 import { SeatedCalibrationSystem } from './SeatedCalibrationSystem.js';
 import { SoundSystem } from './SoundSystem.js';
 
-/** Player settings: the volume, kept between visits, and table recentering. */
+/**
+ * Player settings: the volume and high contrast, kept between visits, the
+ * voice guide, and table recentering.
+ */
 export class SettingsSystem extends createSystem({}) {
   private readonly storage = browserStorage();
   private sound: SoundSystem | undefined;
   private calibration: SeatedCalibrationSystem | undefined;
   private currentVolume: number = TUNING.masterVolume;
   private voiceEnabled = false;
+  private highContrast = false;
 
   get volume(): number {
     return this.currentVolume;
@@ -21,11 +26,17 @@ export class SettingsSystem extends createSystem({}) {
     return this.voiceEnabled;
   }
 
+  /** Text panels show light text on black, for players who see less contrast. */
+  get isHighContrast(): boolean {
+    return this.highContrast;
+  }
+
   init(): void {
     this.sound = this.world.getSystem(SoundSystem);
     this.calibration = this.world.getSystem(SeatedCalibrationSystem);
     this.currentVolume = loadVolume(this.storage, TUNING.masterVolume);
     this.sound?.setGameVolume(this.currentVolume);
+    this.highContrast = loadHighContrast(this.storage);
   }
 
   /** One step louder (+1) or quieter (-1), with a tick to hear the result. */
@@ -40,6 +51,12 @@ export class SettingsSystem extends createSystem({}) {
   recenter(): void {
     this.calibration?.recalibrate();
     this.sound?.playSound('resume', null);
+  }
+
+  toggleContrast(): void {
+    this.highContrast = !this.highContrast;
+    saveHighContrast(this.storage, this.highContrast);
+    this.sound?.playSound('snap', null);
   }
 
   /** Toggles optional Web Speech API voice narration for cooking steps. */

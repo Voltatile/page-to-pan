@@ -1,11 +1,16 @@
 import { createSystem } from '@iwsdk/core';
+import { RECIPES } from '../config/recipes/index.js';
 import { TUNING } from '../config/tuning.js';
+import { rankUpTitle } from '../game/chef-rank.js';
 import { type CookRecord, type CookScore, scoreCook } from '../game/score.js';
 import {
   browserStorage,
   loadBestStars,
   saveBestStars,
+  totalBestStars,
 } from '../util/best-stars.js';
+
+const RECIPE_IDS = RECIPES.map((recipe) => recipe.id);
 import { CookingSystem } from './CookingSystem.js';
 import { StepSystem } from './StepSystem.js';
 
@@ -27,6 +32,8 @@ export class ScoreSystem extends createSystem({}) {
   private lastScore: CookScore | null = null;
   private best = 0;
   private beatBest = false;
+  private total = 0;
+  private rankUp: string | null = null;
 
   /** The score of the cook that just ended, or null before the end. */
   get result(): CookScore | null {
@@ -43,6 +50,16 @@ export class ScoreSystem extends createSystem({}) {
     return this.beatBest;
   }
 
+  /** Best stars over every recipe added up: what the chef rank counts. */
+  get totalStars(): number {
+    return this.total;
+  }
+
+  /** The rank the cook that just ended reached, or null without a rank up. */
+  get rankUpTo(): string | null {
+    return this.rankUp;
+  }
+
   /** Best stars ever earned on this recipe, 0 before the first cook. */
   get bestStars(): number {
     return this.best;
@@ -57,6 +74,7 @@ export class ScoreSystem extends createSystem({}) {
     this.steps = steps;
     this.cooking = cooking;
     this.best = loadBestStars(this.storage, steps.recipeId);
+    this.total = totalBestStars(this.storage, RECIPE_IDS);
     this.cleanupFuncs.push(steps.subscribe(() => this.onStepChange()));
   }
 
@@ -82,6 +100,8 @@ export class ScoreSystem extends createSystem({}) {
       this.best = loadBestStars(this.storage, this.steps.recipeId);
       this.lastScore = null;
       this.beatBest = false;
+      this.rankUp = null;
+      this.total = totalBestStars(this.storage, RECIPE_IDS);
       this.record.saltDashes = 0;
       this.record.servedProgress = 0;
       this.record.flipProgress = 0;
@@ -100,6 +120,9 @@ export class ScoreSystem extends createSystem({}) {
         this.steps.recipeId,
         this.lastScore.stars,
       );
+      const before = this.total;
+      this.total = totalBestStars(this.storage, RECIPE_IDS);
+      this.rankUp = rankUpTitle(before, this.total);
     }
   }
 }

@@ -113,6 +113,13 @@ Setiap langkah menampilkan **kartu tips** singkat dalam bahasa Inggris (kenapa l
 - Bintang terbaik per resep disimpan di `localStorage` (dibungkus try/catch) dan tampil di kartu Title.
 - Setelah disajikan, catatan **"Try it at home"** muncul di samping piring: takaran dan cara memasak
   hidangan itu di dapur sungguhan (`atHome` di data resep).
+- **Chef rank** (`src/game/chef-rank.ts`): jumlah bintang terbaik semua resep (maks 9) menentukan gelar
+  Kitchen Newcomer → Home Cook (2) → Line Cook (4) → Sous Chef (6) → Head Chef (9). Tampil di bawah papan
+  "Page to Pan", kartu judul menyebut berapa bintang lagi ke rank berikutnya, dan banner hasil menjadi
+  "Rank up: ...!" saat naik rank.
+- **Aksesibilitas:** Settings punya Voice (membacakan tiap langkah) dan **Contrast: High** (kartu resep dan
+  catatan jadi teks terang di latar hitam, disimpan di `localStorage`). Di Meta VR Glasses tombol bisa
+  ditekan dengan tatapan plus pinch.
 
 ### Mode
 - **Guided** (bawaan): penilaian lunak, tips dan cincin penanda selalu tampil.

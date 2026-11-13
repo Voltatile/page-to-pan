@@ -6,6 +6,8 @@ import {
   MeshStandardMaterial,
   type Object3D,
   Shape,
+  UIKit,
+  UIKitMLAsset,
   Vector3,
   Visibility,
 } from '@iwsdk/core';
@@ -84,6 +86,7 @@ export class ResultStarsSystem extends createSystem({}) {
   private bannerScale = 1;
   private showsBanner = false;
   private setBannerShown: (isShown: boolean) => void = () => undefined;
+  private bannerText: UIKit.Text | undefined;
   private sound: SoundSystem | undefined;
   private effects: EffectsSystem | undefined;
 
@@ -116,6 +119,9 @@ export class ResultStarsSystem extends createSystem({}) {
     this.setBannerShown = (isShown: boolean) =>
       bannerEntity.setValue(Visibility, 'isVisible', isShown);
     this.setBannerShown(false);
+    this.bannerText = this.world
+      .requireSceneObject<UIKitMLAsset>('result-banner')
+      .requireElementById<UIKit.Text>('banner-text');
     this.cleanupFuncs.push(
       steps.subscribe(() => this.onStepChange()),
       () => this.row.removeFromParent(),
@@ -180,6 +186,10 @@ export class ResultStarsSystem extends createSystem({}) {
     this.popped = 0;
     this.earnedCount = result.stars;
     this.showsBanner = this.score.isNewBest;
+    const rankUp = this.score.rankUpTo;
+    this.bannerText?.setProperties({
+      text: rankUp == null ? 'New best!' : `Rank up: ${rankUp}!`,
+    });
     this.banner?.scale.setScalar(this.bannerScale * 0.001);
     this.setBannerShown(this.showsBanner);
   }

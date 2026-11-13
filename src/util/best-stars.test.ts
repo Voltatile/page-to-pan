@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { loadBestStars, saveBestStars, type StarStorage } from './best-stars.js';
+import {
+  loadBestStars,
+  saveBestStars,
+  type StarStorage,
+  totalBestStars,
+} from './best-stars.js';
 
 function memoryStorage(): StarStorage {
   const values = new Map<string, string>();
@@ -37,5 +42,15 @@ describe('best stars', () => {
     expect(loadBestStars(broken, 'omelette')).toBe(0);
     expect(saveBestStars(broken, 'omelette', 2)).toBe(2);
     expect(loadBestStars(null, 'omelette')).toBe(0);
+  });
+});
+
+describe('totalBestStars', () => {
+  it('adds the best of every recipe, counting missing ones as none', () => {
+    const storage = memoryStorage();
+    saveBestStars(storage, 'omelette', 3);
+    saveBestStars(storage, 'pancake', 2);
+    expect(totalBestStars(storage, ['omelette', 'nasi-goreng', 'pancake'])).toBe(5);
+    expect(totalBestStars(null, ['omelette'])).toBe(0);
   });
 });

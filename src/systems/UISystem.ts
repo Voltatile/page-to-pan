@@ -6,6 +6,8 @@ import {
   Visibility,
   VisibilityState,
 } from '@iwsdk/core';
+import { paint, panelColors } from '../config/contrast.js';
+import { nextRankLine, rankFor } from '../game/chef-rank.js';
 import { ScoreSystem } from './ScoreSystem.js';
 import { SettingsSystem } from './SettingsSystem.js';
 import { StepSystem } from './StepSystem.js';
@@ -21,12 +23,16 @@ const NUDGE_GROWTH = 0.05;
 
 const percent = (part: number) => String(Math.round(part * 100));
 
-/** The intro, plus the best result once there is one. */
-function titleLine(intro: string, stars: number): string {
+/**
+ * The intro on a recipe not cooked yet. Once it has a best, that best and
+ * what the next chef rank takes, so there is always something to aim for.
+ */
+function titleLine(intro: string, stars: number, totalStars: number): string {
   if (stars <= 0) {
     return intro;
   }
-  return `${intro} Your best: ${stars} of 3 ${stars === 1 ? 'star' : 'stars'}.`;
+  const best = `Your best: ${stars} of 3 ${stars === 1 ? 'star' : 'stars'}.`;
+  return `${best} ${nextRankLine(totalStars)}`;
 }
 
 /**
@@ -73,6 +79,18 @@ export class UISystem extends createSystem({}) {
     const voiceLabel = card.requireElementById<UIKit.Text>(
       'settings-voice-label',
     );
+    const contrastToggle = card.requireElementById('settings-contrast-toggle');
+    const contrastLabel = card.requireElementById<UIKit.Text>(
+      'settings-contrast-label',
+    );
+    const cardBox = card.requireElementById('card');
+    const divider = card.requireElementById('card-divider');
+    const statLabels = ['accuracy', 'timing', 'technique'].map((key) =>
+      card.requireElementById(`stat-${key}-label`),
+    );
+    const logoRank = this.world
+      .requireSceneObject<UIKitMLAsset>('title-logo')
+      .requireElementById<UIKit.Text>('logo-rank');
     const settings = this.world.getSystem(SettingsSystem);
     const bookNav = this.world.requireSceneEntity('book-nav');
     const bookPanel = this.world.requireSceneObject<UIKitMLAsset>('book-nav');
@@ -121,6 +139,7 @@ export class UISystem extends createSystem({}) {
     volumeUp.name = 'settings-volume-up';
     recenter.name = 'settings-recenter';
     voiceToggle.name = 'settings-voice-toggle';
+    contrastToggle.name = 'settings-contrast-toggle';
     pauseResume.name = 'pause-resume';
     pauseSettings.name = 'pause-settings';
     pauseExit.name = 'pause-exit';
@@ -136,6 +155,29 @@ export class UISystem extends createSystem({}) {
     if (steps == null || score == null) {
       throw new Error('UISystem needs StepSystem and ScoreSystem first');
     }
+
+    let paintedHigh: boolean | null = null;
+    /** Light text on black, or the normal look, on every part of the card. */
+    const paintCard = (isHigh: boolean) => {
+      if (isHigh === paintedHigh) {
+        return;
+      }
+      paintedHigh = isHigh;
+      const colors = panelColors(isHigh);
+      paint(cardBox, 'backgroundColor', colors.background);
+      paint(cardBox, 'borderColor', colors.border);
+      paint(title, 'color', colors.heading);
+      paint(instruction, 'color', colors.body);
+      paint(volumeText, 'color', colors.body);
+      paint(tip, 'color', colors.accent);
+      paint(divider, 'backgroundColor', colors.accent);
+      for (const stat of [accuracy, timing, technique]) {
+        paint(stat, 'color', colors.accent);
+      }
+      for (const label of statLabels) {
+        paint(label, 'color', colors.body);
+      }
+    };
 
     const render = () => {
       const view = steps.view;
@@ -204,8 +246,12 @@ export class UISystem extends createSystem({}) {
       const showMenu = view.menu && !isFlat;
       const showSettings = view.settings && !isFlat;
       const instructionText = view.menu
-        ? titleLine(view.instruction, score.bestStars)
+        ? titleLine(view.instruction, score.bestStars, score.totalStars)
         : view.instruction;
+      paintCard(settings?.isHighContrast ?? false);
+      logoRank.setProperties({
+        text: `Chef rank: ${rankFor(score.totalStars).title}`,
+      });
 
       logo.setValue(Visibility, 'isVisible', state.phase === 'title');
       const { index, count } = steps.recipePage;
@@ -221,12 +267,19 @@ export class UISystem extends createSystem({}) {
       voiceLabel.setProperties({
         text: `Voice: ${settings?.isVoiceEnabled ? 'On' : 'Off'}`,
       });
+      contrastLabel.setProperties({
+        text: `Contrast: ${settings?.isHighContrast ? 'High' : 'Normal'}`,
+      });
       title.setProperties({
         text: result == null ? view.title : `Score: ${result.total}`,
         fontSize:
           secondaryAction == null ? TITLE_FONT_SIZE : CROWDED_TITLE_FONT_SIZE,
       });
-      instruction.setProperties({ text: result?.note ?? instructionText });
+      instruction.setProperties({
+        text: result?.note ?? instructionText,
+        // Settings needs both rows of buttons, and its title says enough.
+        display: showSettings ? 'none' : 'flex',
+      });
       label.setProperties({ text: action ?? '' });
       button.setProperties({ display: action == null ? 'none' : 'flex' });
       secondaryLabel.setProperties({ text: secondaryAction ?? '' });
@@ -285,6 +338,10 @@ export class UISystem extends createSystem({}) {
       settings?.toggleVoice();
       render();
     };
+    const onContrastToggle = () => {
+      settings?.toggleContrast();
+      render();
+    };
     const onPauseResume = () => steps.resumeGame();
     const onPauseSettings = () => {
       this.isPauseSettingsOpen = true;
@@ -311,6 +368,7 @@ export class UISystem extends createSystem({}) {
     volumeUp.addEventListener('click', onVolumeUp);
     recenter.addEventListener('click', onRecenter);
     voiceToggle.addEventListener('click', onVoiceToggle);
+    contrastToggle.addEventListener('click', onContrastToggle);
     pauseResume.addEventListener('click', onPauseResume);
     pauseSettings.addEventListener('click', onPauseSettings);
     pauseExit.addEventListener('click', onPauseExit);
@@ -332,6 +390,7 @@ export class UISystem extends createSystem({}) {
       () => volumeUp.removeEventListener('click', onVolumeUp),
       () => recenter.removeEventListener('click', onRecenter),
       () => voiceToggle.removeEventListener('click', onVoiceToggle),
+      () => contrastToggle.removeEventListener('click', onContrastToggle),
       () => pauseResume.removeEventListener('click', onPauseResume),
       () => pauseSettings.removeEventListener('click', onPauseSettings),
       () => pauseExit.removeEventListener('click', onPauseExit),

@@ -1,19 +1,36 @@
 <!--
   The game name over the recipe card on the title screen. Authored at
-  1 unit = 1 mm (placed at scale 0.1): this sign is 52 x 12 cm, and its
-  76-unit letters are about 5.5 cm tall, easy to read from the seat.
+  1 unit = 1 mm (placed at scale 0.1): this sign is 52 x 15.5 cm, and its
+  76-unit letters are about 5.5 cm tall, easy to read from the seat. The line
+  under the name shows the player's chef rank.
   Note: comments inside the style block break the UIKitML parser.
 -->
 <style>
   .sign {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 520px;
-    height: 120px;
+    height: 155px;
     padding-left: 24px;
     padding-right: 24px;
     render-order: 7;
+  }
+
+  .name {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rank {
+    color: #8a5a14;
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .rank:dark {
+    color: #ffc46b;
   }
 
   .word {
@@ -39,7 +56,10 @@
   }
 </style>
 <Panel class="sign">
-  <div class="word">Page</div>
-  <div class="accent">to</div>
-  <div class="word">Pan</div>
+  <div class="name">
+    <div class="word">Page</div>
+    <div class="accent">to</div>
+    <div class="word">Pan</div>
+  </div>
+  <div id="logo-rank" class="rank">Chef rank: Kitchen Newcomer</div>
 </Panel>

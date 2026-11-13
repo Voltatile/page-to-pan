@@ -38,6 +38,9 @@ play session from start to finish, so it can be worked through in order.
   shaky hand can hit it without several tries. If not, make the whole card the button.
 - [ ] **Label readability**: the 24-unit sheet labels and 26-unit card text must stay
   sharp at 0.8 m on the Quest 2 display.
+- [ ] **High contrast** (Settings, `src/config/contrast.ts`): white and yellow text on black. Confirm it
+  is easier to read in the headset than the normal card, and that the gray Horizon buttons still
+  stand out on black.
 - [ ] **Card tips**: the 24-unit tip line under each step must stay readable at 0.8 m,
   and the longest tips (about 66 characters) must fit in two lines.
 - [ ] **Stuck hints**: after 20 s on a step without progress (`hintAfterS`), the tip

@@ -42,3 +42,15 @@ export function saveBestStars(
   }
   return best;
 }
+
+/** Best stars added up over every listed recipe. */
+export function totalBestStars(
+  storage: StarStorage | null,
+  recipeIds: readonly string[],
+): number {
+  let total = 0;
+  for (const recipeId of recipeIds) {
+    total += loadBestStars(storage, recipeId);
+  }
+  return total;
+}
