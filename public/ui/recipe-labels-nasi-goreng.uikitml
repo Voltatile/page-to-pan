@@ -22,7 +22,7 @@
     align-items: center;
     width: 200px;
     height: 160px;
-    padding-bottom: 5px;
+    padding-bottom: 1px;
   }
 
   .label {

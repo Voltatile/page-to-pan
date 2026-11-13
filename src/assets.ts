@@ -7,7 +7,7 @@ import {
   OMELETTE,
   OMELETTE_INGREDIENTS,
 } from './config/recipes/omelette.js';
-import { PANCAKE } from './config/recipes/pancake.js';
+import { PANCAKE, PANCAKE_INGREDIENTS } from './config/recipes/pancake.js';
 import {
   createBowl,
   createPan,
@@ -19,10 +19,12 @@ import {
 import {
   createButter,
   createEgg,
+  createFlourBowl,
   createGreenOnion,
   createRiceBowl,
   createSaltShaker,
   createSoyBottle,
+  createSyrupBottle,
 } from './scene-assets/ingredients.scene-asset.js';
 import {
   createKitchenRoom,
@@ -56,6 +58,8 @@ export default defineAssets({
   'ingredient-green-onion': createGreenOnion(OMELETTE_INGREDIENTS.greenOnion),
   'ingredient-soy-sauce': createSoyBottle(NASI_GORENG_INGREDIENTS.soySauce),
   'ingredient-rice': createRiceBowl(NASI_GORENG_INGREDIENTS.rice),
+  'ingredient-syrup': createSyrupBottle(PANCAKE_INGREDIENTS.syrup),
+  'ingredient-flour': createFlourBowl(PANCAKE_INGREDIENTS.flour),
   'tool-bowl': createBowl(),
   'tool-whisk': createWhisk(),
   'tool-spatula': createSpatula(),
@@ -67,6 +71,10 @@ export default defineAssets({
   'recipe-labels-nasi-goreng': uikitml(
     'recipe-labels-nasi-goreng.uikitml',
     'Recipe Labels Nasi Goreng',
+  ),
+  'recipe-labels-pancake': uikitml(
+    'recipe-labels-pancake.uikitml',
+    'Recipe Labels Pancake',
   ),
   'title-logo': uikitml('title-logo.uikitml', 'Title Logo'),
   'result-banner': uikitml('result-banner.uikitml', 'Result Banner'),

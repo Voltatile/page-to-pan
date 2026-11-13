@@ -196,7 +196,7 @@
           "name": "Recipe Labels Pancake",
           "content": {
             "type": "asset",
-            "asset": "recipe-labels"
+            "asset": "recipe-labels-pancake"
           },
           "transform": {
             "position": [
@@ -584,6 +584,94 @@
       }
     },
     {
+      "id": "ingredient-flour",
+      "name": "Flour",
+      "content": {
+        "type": "asset",
+        "asset": "ingredient-flour"
+      },
+      "transform": {
+        "position": [
+          -0.4,
+          0.9025,
+          -0.22
+        ]
+      },
+      "children": [
+        {
+          "id": "ingredient-flour-contact",
+          "name": "Contact Shadow",
+          "transform": {
+            "position": [
+              0,
+              -0.022,
+              0
+            ]
+          },
+          "components": {
+            "ContactShadow": {
+              "size": [
+                0.12,
+                0.12
+              ],
+              "height": 0.0005
+            }
+          }
+        }
+      ],
+      "components": {
+        "Ingredient": {
+          "ingredientId": "flour",
+          "placed": false
+        },
+        "OneHandGrabbable": {}
+      }
+    },
+    {
+      "id": "ingredient-syrup",
+      "name": "Maple Syrup",
+      "content": {
+        "type": "asset",
+        "asset": "ingredient-syrup"
+      },
+      "transform": {
+        "position": [
+          0.29,
+          0.95,
+          -0.36
+        ]
+      },
+      "children": [
+        {
+          "id": "ingredient-syrup-contact",
+          "name": "Contact Shadow",
+          "transform": {
+            "position": [
+              0,
+              -0.0695,
+              0
+            ]
+          },
+          "components": {
+            "ContactShadow": {
+              "size": [
+                0.08,
+                0.08
+              ],
+              "height": 0.0005
+            }
+          }
+        }
+      ],
+      "components": {
+        "Ingredient": {
+          "ingredientId": "syrup",
+          "placed": false
+        },
+        "OneHandGrabbable": {}
+      }
+    },
+    {
       "id": "tool-bowl",
       "name": "Bowl",
       "content": {
@@ -680,6 +768,11 @@
           0.16,
           0.91,
           -0.53
+        ],
+        "rotationDeg": [
+          0,
+          90,
+          0
         ]
       },
       "components": {

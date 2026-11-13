@@ -35,6 +35,9 @@ export class KitchenSystem extends createSystem({
   private readonly stoveSeat = new Vector3();
   private readonly identity = new Quaternion();
   private readonly tempPosition = new Vector3();
+  private readonly heldPanAt = new Vector3();
+  private readonly heldPanTurn = new Quaternion();
+  private hasHeldPanPose = false;
   private steps!: StepSystem;
   private grabSystem: GrabSystem | undefined;
   private stageKey = '';
@@ -91,6 +94,16 @@ export class KitchenSystem extends createSystem({
   /** Writes the stove center, at pan height, into `target`. */
   copyStoveSeat(target: Vector3): Vector3 {
     return target.copy(this.stoveSeat);
+  }
+
+  /**
+   * Where the held pan is shown this frame. The grab system keeps its own
+   * pose for a held object, so a release starts from this one instead.
+   */
+  setHeldPanPose(position: Vector3, quaternion: Quaternion): void {
+    this.heldPanAt.copy(position);
+    this.heldPanTurn.copy(quaternion);
+    this.hasHeldPanPose = true;
   }
 
   /** Takes the pan out of the hand and sends it back to the stove. */
@@ -198,11 +211,16 @@ export class KitchenSystem extends createSystem({
     }
     if (entity === this.tools.get('pan')) {
       this.isPanOnStove = false;
+      this.hasHeldPanPose = false;
       this.setToolFlame(false);
     }
   }
 
   private onRelease(entity: Entity): void {
+    if (entity === this.tools.get('pan') && this.hasHeldPanPose) {
+      entity.object3D?.position.copy(this.heldPanAt);
+      entity.object3D?.quaternion.copy(this.heldPanTurn);
+    }
     if (entity === this.tools.get('pan') && this.isPanOverStove()) {
       this.seatPan();
     } else {

@@ -18,7 +18,14 @@ import { CookingSystem } from './CookingSystem.js';
 import { KitchenSystem } from './KitchenSystem.js';
 import { StepSystem } from './StepSystem.js';
 
-export type BurstKind = 'salt' | 'soy' | 'yolk' | 'onion' | 'sparkle';
+export type BurstKind =
+  | 'salt'
+  | 'soy'
+  | 'syrup'
+  | 'flour'
+  | 'yolk'
+  | 'onion'
+  | 'sparkle';
 
 interface BurstStyle {
   color: Color;
@@ -59,6 +66,36 @@ const BURSTS: Readonly<Record<BurstKind, BurstStyle>> = {
       endSize: 0.007,
       floorY: -Infinity,
       fadeS: 0,
+    },
+  },
+  syrup: {
+    color: new Color('#C86D18'),
+    count: 10,
+    spread: 0.05,
+    fall: 0.32,
+    motion: {
+      gravity: -3.8,
+      drag: 0.35,
+      lifeS: 0.75,
+      startSize: 0.01,
+      endSize: 0.008,
+      floorY: -Infinity,
+      fadeS: 0,
+    },
+  },
+  flour: {
+    color: new Color('#FAF8F2'),
+    count: 16,
+    spread: 0.18,
+    fall: 0.15,
+    motion: {
+      gravity: -1.8,
+      drag: 0.8,
+      lifeS: 0.85,
+      startSize: 0.012,
+      endSize: 0.02,
+      floorY: -Infinity,
+      fadeS: 0.2,
     },
   },
   yolk: {

@@ -16,7 +16,12 @@
  *
  *   DEMO_RECIPE=nasi-goreng npm run demo
  *
- * cooks nasi goreng instead of the omelette.
+ * cooks nasi goreng instead of the omelette, and DEMO_RECIPE=pancake cooks
+ * the pancake.
+ *
+ *   DEMO_SHOTS=some/folder npm run demo
+ *
+ * also saves pictures of the plated dish and the result card in that folder.
  */
 import { execFile, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -32,6 +37,8 @@ const COUNTDOWN_S = 5;
 const VIDEO_LIMIT_S = 180;
 const IS_DEBUG = process.env.DEMO_DEBUG === '1';
 const IS_NASI_GORENG = process.env.DEMO_RECIPE === 'nasi-goreng';
+const IS_PANCAKE = process.env.DEMO_RECIPE === 'pancake';
+const SHOTS_DIR = process.env.DEMO_SHOTS ? resolve(process.env.DEMO_SHOTS) : null;
 /** Seated eye height: the game keeps the table 42 cm under the head. */
 const HEAD = { x: 0, y: 1.3, z: 0 };
 /** Time on the heat after the card first says Golden, aiming for doneness 0.7. */
@@ -147,7 +154,9 @@ async function turnBookPage() {
   const { targets } = await xr('list-targets', {});
   const button = targets.find((target) => target.name === 'book-next');
   const from = { x: 0.2, y: 1.2, z: -0.25 };
-  for (const nudge of [0, 0.01, -0.01, 0.02]) {
+  const before = await cardTitle();
+  // A pinch can land while the book is still settling, so try a few times.
+  for (const nudge of [0, 0.01, -0.01, 0.02, 0, 0.01, -0.01]) {
     const target = { ...button.position, x: button.position.x + nudge };
     await xr('animate-to', {
       device: 'hand-right',
@@ -168,10 +177,12 @@ async function turnBookPage() {
       await sleep(300);
       await xr('select', { device: 'hand-right', duration: 0.3 });
       await sleep(1200);
-      return;
+      if ((await cardTitle()) !== before) {
+        return;
+      }
     }
   }
-  throw new Error('The hand ray never reached the book page button');
+  throw new Error('The book page did not turn');
 }
 
 async function uiElement(selector) {
@@ -265,7 +276,7 @@ async function placeIngredient(device, target, x, z) {
   log(`      placed ${target}`);
 }
 
-async function crackEgg() {
+async function crackEgg(next = /^Whisk/) {
   const y = 1.03;
   await hand('hand-left', [
     { target: 'Egg', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
@@ -290,25 +301,26 @@ async function crackEgg() {
       duration: 0.7,
     }),
   ]);
-  await expectTitle(/^Whisk/);
+  await expectTitle(next);
   await Promise.all([
     hand('hand-left', [{ pinch: 0, duration: 0.2 }]),
     hand('hand-right', [{ pinch: 0, duration: 0.2 }]),
   ]);
 }
 
-async function whiskEggs() {
+async function whiskEggs(next = /^Season/) {
   await hand('hand-left', [
     { target: 'Whisk', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
     { anchor: 'grasp', position: { x: BOWL.x + 0.07, y: 1.1, z: BOWL.z } },
   ]);
+  await saveShot('hold-whisk');
   for (let attempt = 0; attempt < 4; attempt += 1) {
     await runCli(['browser', 'run', 'scripts/demo-whisk-circle.mjs']);
-    if (await waitForTitle(/^Season/, 400)) {
+    if (await waitForTitle(next, 400)) {
       break;
     }
   }
-  await expectTitle(/^Season/);
+  await expectTitle(next);
   await hand('hand-left', [{ pinch: 0, duration: 0.2 }]);
 }
 
@@ -358,10 +370,11 @@ async function addGreenOnion() {
   await expectTitle(/^Heat the pan/);
 }
 
-async function heatPan() {
+async function heatPan(next = /^Pour/) {
   await hand('hand-right', [
-    { target: 'Pan', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
-    { position: { x: STOVE.x, y: 0.97, z: STOVE.z }, depart: { distance: 0.06 } },
+    { target: 'Pan', approach: { distance: 0.06 }, orientation: LEVEL, pinch: { value: 1, at: 'arrival' } },
+    // The pan hangs from its handle, so the hand stops where the handle goes.
+    { anchor: 'grasp', position: { x: STOVE.x, y: 0.97, z: STOVE.z + 0.175 }, orientation: LEVEL },
     { pinch: 0, duration: 0.25 },
   ]);
   log('      pan on the stove');
@@ -370,14 +383,14 @@ async function heatPan() {
     { position: { x: STOVE.x, y: 1.0, z: STOVE.z }, depart: { distance: 0.06 } },
     { pinch: 0, duration: 0.25 },
   ]);
-  await expectTitle(/^Pour/);
+  await expectTitle(next);
   await sleep(1500);
   await hand('hand-right', [
     { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
   ]);
 }
 
-async function pourEggs() {
+async function pourEggs(next = /^Cook: Raw/) {
   await hand('hand-left', [
     { target: 'Bowl', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
     { position: { x: 0.2, y: 1.02, z: -0.33 }, depart: { distance: 0.05 } },
@@ -390,10 +403,10 @@ async function pourEggs() {
       duration: 0.8,
     },
   ]);
-  if (!(await waitForTitle(/^Cook/, 4000))) {
+  if (!(await waitForTitle(next, 4000))) {
     throw new Error('Pouring did not finish');
   }
-  await expectTitle(/^Cook: Raw/);
+  await expectTitle(next);
   await hand('hand-left', [
     { pinch: 0, duration: 0.2 },
     {
@@ -484,7 +497,7 @@ async function pauseAndResume(resumedTitle) {
   await expectTitle(resumedTitle);
 }
 
-async function cookFirstSide() {
+async function cookFirstSide(next = /^Flip/) {
   await lookAt({ x: STOVE.x, y: 0.92, z: STOVE.z });
   if (!(await waitForTitle(/Cook: Ready/, 20000))) {
     throw new Error('The omelette never got ready to flip');
@@ -492,10 +505,11 @@ async function cookFirstSide() {
   await expectTitle(/^Cook: Ready/);
   await sleep(1000);
   await grabPanOffStove();
-  await expectTitle(/^Flip/);
+  await expectTitle(next);
+  await saveShot('hold-pan');
 }
 
-async function flipOmelette() {
+async function flipOmelette(next = /^Finish/) {
   const position = PAN_LIFTED;
   await sleep(500);
   for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -514,11 +528,11 @@ async function flipOmelette() {
       },
       { anchor: 'grip', position, orientation: LEVEL, duration: 0.6 },
     ]);
-    if (await waitForTitle(/^Finish/, 2500)) {
+    if (await waitForTitle(next, 2500)) {
       break;
     }
   }
-  await expectTitle(/^Finish/);
+  await expectTitle(next);
 }
 
 async function finishOmelette() {
@@ -530,11 +544,19 @@ async function finishOmelette() {
     },
     { pinch: 0, duration: 0.25 },
   ]);
+  await finishAndServe();
+}
+
+/**
+ * Waits for Golden with the pan on the stove, then lifts it and serves.
+ * `extraMs` is the time left on the heat after Golden, aiming for doneness 0.7.
+ */
+async function finishAndServe(extraMs = GOLDEN_EXTRA_MS) {
   if (!(await waitForTitle(/Golden/, 25000))) {
     throw new Error('The omelette never turned golden');
   }
   await expectTitle(/^Finish: Golden/);
-  await sleep(GOLDEN_EXTRA_MS);
+  await sleep(extraMs);
   await grabPanOffStove();
   await expectTitle(/^Serve/);
   await sleep(500);
@@ -552,6 +574,7 @@ async function stirPan(next) {
     { target: 'Spatula', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
     { anchor: 'grasp', position: { x: STOVE.x - 0.07, y: 1.1, z: STOVE.z } },
   ]);
+  await saveShot('hold-spatula');
   for (let attempt = 0; attempt < 4; attempt += 1) {
     await runCli(['browser', 'run', 'scripts/demo-stir-pan.mjs']);
     if (await waitForTitle(next, 400)) {
@@ -592,8 +615,9 @@ async function cookNasiGoreng() {
   await sleep(800);
 
   await hand('hand-right', [
-    { target: 'Pan', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
-    { position: { x: STOVE.x, y: 0.97, z: STOVE.z }, depart: { distance: 0.06 } },
+    { target: 'Pan', approach: { distance: 0.06 }, orientation: LEVEL, pinch: { value: 1, at: 'arrival' } },
+    // The pan hangs from its handle, so the hand stops where the handle goes.
+    { anchor: 'grasp', position: { x: STOVE.x, y: 0.97, z: STOVE.z + 0.175 }, orientation: LEVEL },
     { pinch: 0, duration: 0.25 },
     { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
   ]);
@@ -684,6 +708,76 @@ async function cookNasiGoreng() {
   ]);
   await expectTitle(/^Score: \d+$/);
   await hand('hand-right', [{ pinch: 0, duration: 0.25 }]);
+  await lookAt({ x: PLATE.x, y: 0.9, z: PLATE.z }, 1.2);
+  await sleep(4000);
+}
+
+async function cookPancake() {
+  log('Title');
+  await sleep(1500);
+  await turnBookPage();
+  await expectTitle(/^Nasi Goreng$/);
+  await turnBookPage();
+  await expectTitle(/^Pancake$/);
+  await sleep(800);
+  await pressCardButton();
+  await expectTitle(/^Ingredients$/);
+
+  await placeIngredient('hand-right', 'Maple Syrup', 0.1, -0.415);
+  await placeIngredient('hand-left', 'Egg', -0.1, -0.415);
+  await placeIngredient('hand-left', 'Flour', -0.1, -0.245);
+  await placeIngredient('hand-left', 'Butter', 0.1, -0.245);
+  await expectTitle(/^Add the flour$/);
+  await sleep(1000);
+
+  await hand('hand-left', [
+    { target: 'Flour', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
+    { position: { x: BOWL.x, y: 1.03, z: BOWL.z }, depart: { distance: 0.06 } },
+    { pinch: 0, duration: 0.25 },
+  ]);
+  await expectTitle(/^Crack the egg$/);
+  await sleep(800);
+
+  await crackEgg(/^Mix batter/);
+  await sleep(800);
+  await whiskEggs(/^Butter the pan$/);
+  await sleep(800);
+  await heatPan(/^Pour batter$/);
+  await pourEggs(/^Spread batter/);
+  await sleep(600);
+  await stirPan(/^Cook/);
+  await cookFirstSide(/^Toss & flip/);
+  await flipOmelette(/^Drizzle syrup/);
+  // The step takes the pan out of the hand and slides it back to the stove.
+  await hand('hand-right', [
+    { pinch: 0, duration: 0.2 },
+    { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
+  ]);
+  await sleep(1200);
+
+  const position = { x: STOVE.x + 0.11, y: 1.1, z: STOVE.z };
+  const tipped = { pitch: 0, yaw: 0, roll: 105 };
+  const move = (orientation) => ({ anchor: 'grip', position, orientation, duration: 0.4 });
+  await hand('hand-right', [
+    { target: 'Maple Syrup', approach: { distance: 0.06 }, orientation: LEVEL, pinch: { value: 1, at: 'arrival' } },
+    { anchor: 'grip', position, orientation: LEVEL },
+    move(tipped),
+    move(LEVEL),
+    move(tipped),
+    move(LEVEL),
+  ]);
+  await expectTitle(/^Drizzle syrup: 2$/);
+  await hand('hand-right', [
+    { pinch: 0, duration: 0.2 },
+    { anchor: 'grip', position: { x: 0.45, y: 1.12, z: -0.2 } },
+  ]);
+  await sleep(600);
+  await pressCardButton();
+  await expectTitle(/^Finish/);
+  await lookAt({ x: STOVE.x, y: 0.92, z: STOVE.z });
+  // The pancake browns faster than the omelette, so lift it at once.
+  await finishAndServe(0);
+
   await lookAt({ x: PLATE.x, y: 0.9, z: PLATE.z }, 1.2);
   await sleep(4000);
 }
@@ -785,9 +879,23 @@ async function cook() {
   await sleep(4000);
 }
 
+/** Saves a picture of the view, when DEMO_SHOTS names a folder. */
+async function saveShot(name) {
+  if (SHOTS_DIR == null) {
+    return;
+  }
+  mkdirSync(SHOTS_DIR, { recursive: true });
+  const file = join(SHOTS_DIR, `${name}.png`);
+  await runCli(['browser', 'screenshot', '--output-file', file]);
+  log(`      saved ${file}`);
+}
+
 /** Again must clear the table and start a second cook from the beginning. */
 async function cookAgain() {
+  await saveShot('result-plate');
   await lookAt({ x: 0, y: 1.0, z: -0.6 }, 0.6);
+  await sleep(900);
+  await saveShot('result-card');
   await pressCardButton();
   await expectTitle(/^Ingredients$/);
 }
@@ -800,7 +908,11 @@ async function main() {
     console.log(`  ${seconds}...`);
     await sleep(1000);
   }
-  await (IS_NASI_GORENG ? cookNasiGoreng() : cook());
+  if (IS_PANCAKE) {
+    await cookPancake();
+  } else {
+    await (IS_NASI_GORENG ? cookNasiGoreng() : cook());
+  }
   const seconds = Math.round((Date.now() - cookingFrom) / 1000) - COUNTDOWN_S;
   await cookAgain();
 

@@ -54,6 +54,16 @@ const WHISK_AXIS = new Vector3(1, 0, 0);
 const WHISK_UPRIGHT = new Quaternion().setFromEuler(
   new Euler(0, 0, Math.PI / 2),
 );
+/** Where the fingers close on the pan handle, in the pan's own space. */
+const PAN_HOLD_POINT = new Vector3(
+  0,
+  (COOKWARE.pan.height / 2) * 0.6,
+  TUNING.panHoldAlongHandleM,
+);
+const STIR_MAX_TILT: Readonly<Record<Zone, number>> = {
+  bowl: TUNING.stirMaxTiltBowlDeg * DEG_TO_RAD,
+  pan: TUNING.stirMaxTiltPanDeg * DEG_TO_RAD,
+};
 
 /**
  * Turns hand and tool movement into recipe progress. Each frame it runs only
@@ -79,6 +89,12 @@ export class GestureSystem extends createSystem({}) {
   private readonly whiskShownAt = new Vector3();
   private readonly whiskShownTurn = new Quaternion();
   private readonly gripAtGrab = new Quaternion();
+  private readonly pinchAt = new Vector3();
+  private readonly gripAt = new Vector3();
+  private readonly whiskTip = new Vector3();
+  private readonly panGripAtGrab = new Quaternion();
+  private readonly panTargetAt = new Vector3();
+  private readonly panTargetTurn = new Quaternion();
   private readonly panShownAt = new Vector3();
   private readonly panShownTurn = new Quaternion();
   private readonly shakerTurn = new Quaternion();
@@ -358,6 +374,9 @@ export class GestureSystem extends createSystem({}) {
       this.whiskShownAt.copy(object.position);
       this.whiskShownTurn.copy(object.quaternion);
     }
+    const pinch = this.pinchPoint(holder, this.pinchAt);
+    const length =
+      toolId === 'spatula' ? COOKWARE.spatula.length : COOKWARE.whisk.length;
     if (isInBowl) {
       const offsetX = hand.x - bowlAt.x;
       const offsetZ = hand.z - bowlAt.z;
@@ -365,18 +384,28 @@ export class GestureSystem extends createSystem({}) {
       const headRadius =
         zone === 'pan' ? TUNING.panStirHeadRadiusM : TUNING.whiskHeadRadiusM;
       const scale = Math.min(headRadius / (radius || 1), 1);
-      this.whiskTarget.set(
+      this.whiskTip.set(
         bowlAt.x + offsetX * scale,
         bowlAt.y + STIR_TIP_Y[zone],
         bowlAt.z + offsetZ * scale,
       );
-      this.setWhiskLean(holder, hand);
+      const reach = this.setWhiskLean(pinch, STIR_MAX_TILT[zone]);
+      // A hand lifted beyond the tool's length takes the tip up with it.
+      const maxReach = length - TUNING.toolHoldFromEndM;
+      if (reach > maxReach) {
+        this.whiskTip.copy(pinch).addScaledVector(this.whiskLean, -maxReach);
+      }
       this.whiskTargetTurn.setFromUnitVectors(WHISK_AXIS, this.whiskLean);
-      const length =
-        toolId === 'spatula' ? COOKWARE.spatula.length : COOKWARE.whisk.length;
-      this.whiskTarget.addScaledVector(this.whiskLean, length / 2);
+      this.whiskTarget
+        .copy(this.whiskTip)
+        .addScaledVector(this.whiskLean, length / 2);
     } else {
-      this.whiskTarget.set(hand.x, hand.y - TUNING.whiskUnderHandM, hand.z);
+      // Carried: the head hangs down and the handle stays in the fingers.
+      this.whiskTarget.set(
+        pinch.x,
+        pinch.y - (length / 2 - TUNING.toolHoldFromEndM),
+        pinch.z,
+      );
       this.whiskTargetTurn.copy(WHISK_UPRIGHT);
     }
     const blend = Math.min(TUNING.whiskFollowRatePerS * delta, 1);
@@ -386,22 +415,40 @@ export class GestureSystem extends createSystem({}) {
     object.quaternion.copy(this.whiskShownTurn);
   }
 
-  /** Points `whiskLean` from the whisk tip toward the hand, within the tilt limits. */
-  private setWhiskLean(holder: 'left' | 'right', hand: Vector3): void {
-    const side = holder === 'left' ? -1 : 1;
-    const x = hand.x + side * TUNING.whiskLeanSideM - this.whiskTarget.x;
-    const y = hand.y - this.whiskTarget.y;
-    const z = hand.z + TUNING.whiskLeanTowardPlayerM - this.whiskTarget.z;
-    const reach = Math.hypot(x, z);
-    const tilt = Math.min(
-      Math.max(
-        Math.atan2(reach, y),
-        TUNING.whiskMinTiltDeg * DEG_TO_RAD,
-      ),
-      TUNING.whiskMaxTiltDeg * DEG_TO_RAD,
-    );
-    const lean = Math.sin(tilt) / (reach || 1);
-    this.whiskLean.set(x * lean, Math.cos(tilt), z * lean);
+  /**
+   * Points `whiskLean` from the tool tip to the pinching fingers, so the handle
+   * runs through the hand. Returns the distance between the two.
+   */
+  private setWhiskLean(pinch: Vector3, maxTilt: number): number {
+    const lean = this.whiskLean.subVectors(pinch, this.whiskTip);
+    const reach = lean.length();
+    if (reach < 0.001) {
+      lean.set(0, 1, 0);
+      return reach;
+    }
+    lean.divideScalar(reach);
+    const flat = Math.hypot(lean.x, lean.z);
+    const tilt = Math.atan2(flat, lean.y);
+    if (tilt > maxTilt) {
+      const side = Math.sin(maxTilt) / (flat || 1);
+      lean.set(lean.x * side, Math.cos(maxTilt), lean.z * side);
+    }
+    return reach;
+  }
+
+  /**
+   * Where the thumb and index finger meet, written into `out`. Held tools sit
+   * here, not at the palm.
+   * QUEST-CHECK: the emulator's fingertip is steady; confirm tools do not
+   * shake in a real pinch.
+   */
+  private pinchPoint(holder: 'left' | 'right', out: Vector3): Vector3 {
+    const grip = this.player.gripSpaces[holder].getWorldPosition(this.gripAt);
+    this.player.indexTipSpaces[holder].getWorldPosition(out);
+    if (out.distanceTo(grip) > TUNING.pinchMaxFromGripM) {
+      out.copy(grip);
+    }
+    return out;
   }
 
   /**
@@ -468,8 +515,10 @@ export class GestureSystem extends createSystem({}) {
     );
     if (hasTipped) {
       const isSalt = itemId === 'salt';
+      const burstKind =
+        itemId === 'salt' ? 'salt' : itemId === 'syrup' ? 'syrup' : 'soy';
       this.sound.playSound('shake', capAt, 1, isSalt ? 1 : 0.55);
-      this.effects.burst(isSalt ? 'salt' : 'soy', capAt, bowlAt.y + FOOD_Y[zone]);
+      this.effects.burst(burstKind, capAt, bowlAt.y + FOOD_Y[zone]);
       this.cooking.onSeason(itemId, this.salt.count);
       this.score.noteSalt(this.salt.count);
       this.steps.setProgress(String(this.salt.count));
@@ -478,26 +527,39 @@ export class GestureSystem extends createSystem({}) {
   }
 
   /**
-   * The pan swings around its long handle, so a small flick of the hand would
-   * jolt it. A held pan eases toward the hand instead.
+   * A held pan is held by its handle: the handle sits in the pinching fingers,
+   * pointing back at the player, and the pan turns with the wrist from there.
+   * It eases toward that pose, so a small flick of the hand does not jolt it.
    */
   private updatePanHold(delta: number): void {
     const pan = this.kitchen.requireTool('pan');
     const object = pan.object3D;
-    if (object == null || !pan.hasComponent(Grabbed)) {
+    const holder = this.grabSystem?.getHolderHand(pan) ?? null;
+    if (object == null || holder == null) {
       this.isPanInHand = false;
       return;
     }
+    const grip = this.player.gripSpaces[holder].getWorldQuaternion(
+      this.orientation,
+    );
     if (!this.isPanInHand) {
       this.isPanInHand = true;
       this.panShownAt.copy(object.position);
       this.panShownTurn.copy(object.quaternion);
+      this.panGripAtGrab.copy(grip).invert();
     }
+    this.panTargetTurn.copy(grip).multiply(this.panGripAtGrab);
+    this.panTargetAt.copy(PAN_HOLD_POINT).applyQuaternion(this.panTargetTurn);
+    this.panTargetAt.subVectors(
+      this.pinchPoint(holder, this.pinchAt),
+      this.panTargetAt,
+    );
     const blend = Math.min(TUNING.panFollowRatePerS * delta, 1);
-    this.panShownAt.lerp(object.position, blend);
-    this.panShownTurn.slerp(object.quaternion, blend);
+    this.panShownAt.lerp(this.panTargetAt, blend);
+    this.panShownTurn.slerp(this.panTargetTurn, blend);
     object.position.copy(this.panShownAt);
     object.quaternion.copy(this.panShownTurn);
+    this.kitchen.setHeldPanPose(this.panShownAt, this.panShownTurn);
   }
 
   /** An ingredient counts once it is let go over the bowl or pan. */
@@ -523,10 +585,14 @@ export class GestureSystem extends createSystem({}) {
       const bowlAt = this.zoneCenter(zone, this.positionB);
       if (bowlAt != null) {
         this.sound.playSound('plop', bowlAt);
-        if (itemId === 'green-onion') {
+        if (itemId === 'green-onion' || itemId === 'flour') {
           this.positionA.copy(bowlAt);
           this.positionA.y += BOWL_DROP_Y_M;
-          this.effects.burst('onion', this.positionA, bowlAt.y + FOOD_Y[zone]);
+          this.effects.burst(
+            itemId === 'flour' ? 'flour' : 'onion',
+            this.positionA,
+            bowlAt.y + FOOD_Y[zone],
+          );
         }
       }
       this.cooking.onDrop(itemId, zone);

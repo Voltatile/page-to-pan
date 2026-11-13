@@ -26,16 +26,17 @@ export const TUNING = {
   crackZoneRadiusM: 0.1,
   /** Inside the zone the whisk tip stays within this radius of the bowl center. */
   whiskHeadRadiusM: 0.026,
-  /** While stirring, the whisk leans this far from upright, like a real one. */
-  whiskMinTiltDeg: 20,
-  whiskMaxTiltDeg: 28,
-  /** The whisk leans toward a point this far beyond the hand, to its own side. */
-  whiskLeanSideM: 0.09,
-  whiskLeanTowardPlayerM: 0.08,
+  /**
+   * A stirring tool runs from its tip in the food up to the pinching fingers.
+   * It leans at most this far from upright, so it never cuts through the wall
+   * of the bowl or the rim of the pan.
+   */
+  stirMaxTiltBowlDeg: 42,
+  stirMaxTiltPanDeg: 68,
+  /** The fingers hold a whisk or spatula this far from the end of its handle. */
+  toolHoldFromEndM: 0.04,
   /** How fast the held whisk settles into its pose, as a fraction per second. */
   whiskFollowRatePerS: 18,
-  /** Outside the bowl, the whisk center hangs this far under the holding hand. */
-  whiskUnderHandM: 0.08,
   /** The whisk counts anywhere inside this horizontal radius of the bowl. */
   bowlZoneRadiusM: 0.13,
   /** Over the pan, stirring, tipping and dropping count inside this radius. */
@@ -55,6 +56,10 @@ export const TUNING = {
   saltRearmDeg: 60,
   /** How fast a held pan catches up with the hand, as a fraction per second. */
   panFollowRatePerS: 9,
+  /** The fingers hold the pan handle this far from the middle of the pan. */
+  panHoldAlongHandleM: 0.19,
+  /** A fingertip farther than this from the hand is not tracked; use the hand. */
+  pinchMaxFromGripM: 0.25,
   /** The butter lands in the pan when dropped inside this radius of it. */
   butterDropRadiusM: 0.13,
   butterDropHeightM: 0.25,

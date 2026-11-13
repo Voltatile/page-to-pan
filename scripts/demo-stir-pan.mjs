@@ -5,7 +5,7 @@
  */
 import { STOVE } from './demo-layout.mjs';
 
-const TURNS = 3.4;
+const TURNS = 3.6;
 const POINTS_PER_TURN = 16;
 const MOVE_S = 0.1;
 const HAND_CIRCLE_M = 0.07;
@@ -16,7 +16,9 @@ export default async function run({ frame }) {
     async ({ pan, points, moveS, radius, y }) => {
       const remote = window.IWER_DEVICE.remote;
       for (let index = 1; index <= points; index += 1) {
-        const angle = (index / 16) * Math.PI * 2;
+        // The hand starts left of the pan center, so the circle starts there
+        // too: a jump across the middle would lose part of the first turn.
+        const angle = Math.PI + (index / 16) * Math.PI * 2;
         await remote.dispatch('animate_to', {
           device: 'hand-right',
           position: {

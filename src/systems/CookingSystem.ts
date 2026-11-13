@@ -23,6 +23,8 @@ const GOLDEN_COLOR = new Color('#E0A93B');
 const BROWN_COLOR = new Color('#6B4A1F');
 const BURNT_COLOR = new Color('#2A1E14');
 const YOLK_COLOR = new Color('#F5B335');
+const FLOUR_COLOR = new Color('#FAF8F2');
+const SYRUP_GLAZE_COLOR = new Color('#C46D1B');
 
 /** The omelette's shape when lying folded in half. */
 const FOLDED_SCALE_X = 0.85;
@@ -82,6 +84,8 @@ export class CookingSystem extends createSystem({}) {
   private plateRiceOnion!: Mesh;
   /** The rice heaped in the rice bowl ingredient; it empties into the pan. */
   private riceInBowl: Object3D | undefined;
+  /** The flour heaped in the flour bowl ingredient; it empties into the bowl. */
+  private flourInBowl: Object3D | undefined;
   private scrambleRestY = 0;
   private panRiceRestY = 0;
   private sizzleTimeS = 0;
@@ -91,6 +95,8 @@ export class CookingSystem extends createSystem({}) {
   private hasOnion = false;
   /** Dashes of a dark sauce in the pan; they tint the food. */
   private sauceDashes = 0;
+  /** Dashes of maple syrup drizzled onto the pancake. */
+  private syrupDashes = 0;
   private butterMeltS = 0;
   private progress = 0;
   private hasEggInPan = false;
@@ -151,6 +157,9 @@ export class CookingSystem extends createSystem({}) {
     this.riceInBowl = this.world
       .requireSceneEntity('ingredient-rice')
       .object3D?.getObjectByName('RiceMound');
+    this.flourInBowl = this.world
+      .requireSceneEntity('ingredient-flour')
+      .object3D?.getObjectByName('FlourMound');
     this.cleanupFuncs.push(
       steps.subscribe(() => {
         if (steps.state.phase === 'title') {
@@ -231,6 +240,13 @@ export class CookingSystem extends createSystem({}) {
       this.setWhiskProgress(amount);
       return;
     }
+    if (this.isPancake) {
+      // Spreading thick pancake batter with the spatula widens it into an even disc.
+      const radius = 0.72 + (1.0 - 0.72) * amount;
+      const height = 1.45 + (1.25 - 1.45) * amount;
+      this.panEgg.scale.set(radius, height, radius);
+      return;
+    }
     if (!this.hasRiceInPan) {
       // Scrambling: the egg sets and breaks into bits.
       this.material(this.panScramble).color.lerpColors(
@@ -256,6 +272,15 @@ export class CookingSystem extends createSystem({}) {
 
   /** An ingredient was let go over the bowl or pan. */
   onDrop(itemId: string, zone: 'bowl' | 'pan'): void {
+    if (itemId === 'flour' && zone === 'bowl') {
+      if (this.flourInBowl != null) {
+        this.flourInBowl.visible = false;
+      }
+      this.bowlEgg.visible = true;
+      this.material(this.bowlEgg).color.copy(FLOUR_COLOR);
+      this.bowlEgg.scale.set(0.86, 1.3, 0.86);
+      return;
+    }
     if (itemId === 'rice' && zone === 'pan') {
       this.hasRiceInPan = true;
       this.panRice.visible = true;
@@ -277,9 +302,14 @@ export class CookingSystem extends createSystem({}) {
 
   /**
    * A dash of seasoning went in; `dashes` counts them so far. Salt vanishes
-   * into the egg, while a dark sauce such as sweet soy darkens the food.
+   * into the egg, while a dark sauce or maple syrup tints the food.
    */
   onSeason(itemId: string, dashes: number): void {
+    if (itemId === 'syrup') {
+      this.syrupDashes = dashes;
+      this.paintDoneness();
+      return;
+    }
     if (itemId !== 'salt') {
       this.sauceDashes = dashes;
     }
@@ -320,6 +350,9 @@ export class CookingSystem extends createSystem({}) {
   /** The whole egg is in the pan, so the heat now counts. */
   startCooking(): void {
     this.setPourProgress(1);
+    if (this.isPancake) {
+      this.panEgg.scale.set(0.72, 1.45, 0.72);
+    }
     this.panOnion.visible = this.hasOnion;
     this.bowlEgg.visible = false;
     this.panButter.visible = false;
@@ -494,6 +527,10 @@ export class CookingSystem extends createSystem({}) {
         ),
       );
     }
+    if (this.syrupDashes > 0) {
+      const glaze = Math.min(this.syrupDashes, 3) * 0.16;
+      color.lerp(SYRUP_GLAZE_COLOR, glaze);
+    }
   }
 
   private reset(): void {
@@ -506,6 +543,7 @@ export class CookingSystem extends createSystem({}) {
     this.sizzleTimeS = 0;
     this.hasOnion = false;
     this.sauceDashes = 0;
+    this.syrupDashes = 0;
     this.hasRiceInPan = false;
     for (const mesh of [
       this.panRice,
@@ -524,6 +562,9 @@ export class CookingSystem extends createSystem({}) {
     this.material(this.panRice).color.copy(SAUCE_COLORS[0] ?? RAW_COLOR);
     if (this.riceInBowl != null) {
       this.riceInBowl.visible = true;
+    }
+    if (this.flourInBowl != null) {
+      this.flourInBowl.visible = true;
     }
     this.bowlOnion.visible = false;
     this.panOnion.visible = false;

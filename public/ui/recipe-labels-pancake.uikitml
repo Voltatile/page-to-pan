@@ -1,0 +1,43 @@
+<!--
+  Transparent overlay printed on the pancake recipe sheet. Authored at 1 unit = 1 mm
+  (placed at scale 0.1), so it matches the 40 x 32 cm sheet exactly. The grid
+  cells line up with the outline positions in src/config/recipes/pancake.ts.
+-->
+<style>
+  .sheet {
+    flex-direction: column;
+    width: 400px;
+    height: 320px;
+    render-order: 2;
+  }
+
+  .row {
+    flex-direction: row;
+    height: 160px;
+  }
+
+  .cell {
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    width: 200px;
+    height: 160px;
+    padding-bottom: 1px;
+  }
+
+  .label {
+    color: #1e2228;
+    font-size: 24px;
+    font-weight: 700;
+  }
+</style>
+<div class="sheet">
+  <div class="row">
+    <div class="cell"><div id="label-egg" class="label">Egg</div></div>
+    <div class="cell"><div id="label-syrup" class="label">Maple syrup</div></div>
+  </div>
+  <div class="row">
+    <div class="cell"><div id="label-flour" class="label">Flour</div></div>
+    <div class="cell"><div id="label-butter" class="label">Butter</div></div>
+  </div>
+</div>

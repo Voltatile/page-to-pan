@@ -54,6 +54,10 @@ Every threshold is tuned on the emulator, whose hands do not shake
 
 - [ ] **Pinch grab**: confirm the thin green onion and small egg are easy to grab, and
   that the 7 cm snap radius feels forgiving.
+- [ ] **Tools held by the handle** (`pinchPoint` in `src/systems/GestureSystem.ts`): the whisk,
+  spatula and pan sit at the index fingertip while pinched, with the pan handle pointing back at
+  the player. The emulator's fingertip is steady. Confirm the tools do not shake in a real pinch
+  and that the handle looks like it is in the fingers, not beside them.
 - [ ] **Reach glow** (`src/systems/ReachHighlightSystem.ts`): objects glow when the grab
   pointer touches them. Confirm the glow appears before a real pinch would catch the
   object, and does not flicker when a hand hovers at the edge of range.

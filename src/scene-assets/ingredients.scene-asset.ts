@@ -177,6 +177,14 @@ const riceMaterial = new MeshStandardMaterial({
   color: '#F5F2EA',
   roughness: 0.9,
 });
+const flourBowlMaterial = new MeshStandardMaterial({
+  color: '#E6D5B8',
+  roughness: 0.45,
+});
+const flourMaterial = new MeshStandardMaterial({
+  color: '#FAF8F2',
+  roughness: 0.95,
+});
 
 /** A bottle of sweet soy sauce, standing on its long Y axis like the shaker. */
 export function createSoyBottle({ lengthM, widthM }: RecipeIngredient): Group {
@@ -230,6 +238,57 @@ export function createSoyBottle({ lengthM, widthM }: RecipeIngredient): Group {
   return bottle;
 }
 
+/** A bottle of golden maple syrup, standing upright on its long Y axis. */
+export function createSyrupBottle({ lengthM, widthM }: RecipeIngredient): Group {
+  const r = widthM / 2;
+  const h = lengthM / 2;
+  const glass = new Mesh(
+    lathe(
+      [
+        [0, -h],
+        [r * 0.96, -h],
+        [r, -h + 0.003],
+        [r, h * 0.28],
+        [r * 0.48, h * 0.6],
+        [r * 0.4, h * 0.7],
+      ],
+      12,
+    ),
+  );
+  glass.name = 'SyrupGlass';
+  const cap = new Mesh(
+    lathe(
+      [
+        [r * 0.42, h * 0.7],
+        [r * 0.46, h * 0.72],
+        [r * 0.46, h],
+        [0, h],
+      ],
+      12,
+    ),
+  );
+  cap.name = 'SyrupCap';
+  const label = new Mesh(
+    new CylinderGeometry(r * 1.01, r * 1.01, lengthM * 0.32, 12, 1, true),
+  );
+  label.name = 'SyrupLabel';
+  label.position.y = -h * 0.22;
+  const bottle = new Group();
+  bottle.name = 'SyrupBottle';
+  bottle.add(
+    mergeColored(
+      'SyrupBody',
+      [
+        [glass, '#B8621B'],
+        [cap, '#E09F3E'],
+        [label, '#F7EED6'],
+      ],
+      propMaterial,
+    ),
+  );
+  return bottle;
+}
+
 /** A small bowl heaped with cooked rice. The origin is at its middle. */
 export function createRiceBowl({ lengthM }: RecipeIngredient): Group {
   const r = lengthM / 2;
@@ -260,6 +319,40 @@ export function createRiceBowl({ lengthM }: RecipeIngredient): Group {
   mound.position.y = h * 0.35;
   const group = new Group();
   group.name = 'RiceBowl';
+  group.add(bowl, mound);
+  return group;
+}
+
+/** A warm ceramic bowl heaped with snowy wheat flour. */
+export function createFlourBowl({ lengthM }: RecipeIngredient): Group {
+  const r = lengthM / 2;
+  const h = 0.0225;
+  const wall = 0.004;
+  const bowl = new Mesh(
+    lathe(
+      [
+        [0, -h],
+        [r * 0.55, -h],
+        [r * 0.62, -h + 0.004],
+        [r * 0.95, h * 0.55],
+        [r, h],
+        [r - wall, h],
+        [r * 0.9, h * 0.4],
+        [r * 0.55, -h + wall + 0.004],
+        [0, -h + wall + 0.004],
+      ],
+      16,
+    ),
+    flourBowlMaterial,
+  );
+  bowl.name = 'FlourBowlDish';
+  const moundGeometry = new SphereGeometry(r * 0.88, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+  moundGeometry.scale(1, 0.62, 1);
+  const mound = new Mesh(moundGeometry, flourMaterial);
+  mound.name = 'FlourMound';
+  mound.position.y = h * 0.35;
+  const group = new Group();
+  group.name = 'FlourBowl';
   group.add(bowl, mound);
   return group;
 }
