@@ -172,6 +172,11 @@ const riceMaterial = new MeshStandardMaterial({
   color: '#F5F2EA',
   roughness: 0.95,
 });
+/** The whole egg keeps its own white and yolk colors. */
+const friedEggMaterial = new MeshStandardMaterial({
+  vertexColors: true,
+  roughness: 0.35,
+});
 /** White vertices, so the cooking system can tint the egg by material color. */
 const scrambleMaterial = new MeshStandardMaterial({
   color: '#F6E27A',
@@ -341,6 +346,46 @@ export function createSpatula(): Group {
   return spatula;
 }
 
+/**
+ * A whole egg in the pan: a flat, slightly uneven white with the yolk off
+ * center. It stays whole until the spatula breaks it up.
+ */
+function friedEgg(name: string): Mesh {
+  const { whiteRadius, yolkRadius } = COOKWARE.friedEgg;
+  const white = new Mesh(
+    new CylinderGeometry(whiteRadius, whiteRadius * 1.04, 0.004, 20),
+  );
+  white.scale.set(1, 1, 0.86);
+  white.position.y = 0.002;
+  const lobe = new Mesh(
+    new CylinderGeometry(whiteRadius * 0.55, whiteRadius * 0.58, 0.0036, 14),
+  );
+  lobe.position.set(whiteRadius * 0.55, 0.0019, whiteRadius * 0.3);
+  const yolkGeometry = new SphereGeometry(
+    yolkRadius,
+    14,
+    6,
+    0,
+    Math.PI * 2,
+    0,
+    Math.PI / 2,
+  );
+  yolkGeometry.scale(1, 0.6, 1);
+  const yolk = new Mesh(yolkGeometry);
+  yolk.position.set(-whiteRadius * 0.15, 0.0035, -whiteRadius * 0.1);
+  const mesh = mergeColored(
+    name,
+    [
+      [white, '#FBF8EF'],
+      [lobe, '#FBF8EF'],
+      [yolk, '#F5A623'],
+    ],
+    friedEggMaterial,
+  );
+  mesh.visible = false;
+  return mesh;
+}
+
 /** Handle points +Z, toward the seated player. */
 export function createPan(): Group {
   const { rimRadius, baseRadius, height, handleLength } = COOKWARE.pan;
@@ -373,6 +418,8 @@ export function createPan(): Group {
   rice.position.y = floor;
   const scramble = scrambleBits('PanScramble', baseRadius * 0.6);
   scramble.position.y = floor;
+  const wholeEgg = friedEgg('PanFriedEgg');
+  wholeEgg.position.y = floor;
   const riceOnion = onionSpecks('PanRiceOnion', baseRadius * 0.65);
   riceOnion.position.y = floor + 0.021;
 
@@ -391,6 +438,7 @@ export function createPan(): Group {
     butter,
     rice,
     scramble,
+    wholeEgg,
     riceOnion,
   );
   return pan;

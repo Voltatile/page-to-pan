@@ -33,6 +33,21 @@ export const TUNING = {
    */
   stirMaxTiltBowlDeg: 42,
   stirMaxTiltPanDeg: 68,
+  /**
+   * While stirring, a whisk or turner leans back toward the player this far
+   * from upright, the way a cook holds one: the handle keeps pointing at the
+   * cook while the tip goes round the food. The deep bowl allows less lean
+   * than the shallow pan.
+   */
+  stirLeanBowlDeg: 35,
+  stirLeanPanDeg: 50,
+  /**
+   * A whisk or turner handle leans this far out to the side of the hand
+   * holding it: to the right for the right hand, to the left for the left.
+   */
+  toolHandleSideDeg: 40,
+  /** A carried whisk or turner points forward and down this far from upright. */
+  toolCarryTiltDeg: 50,
   /** The fingers hold a whisk or spatula this far from the end of its handle. */
   toolHoldFromEndM: 0.04,
   /** How fast the held whisk settles into its pose, as a fraction per second. */
@@ -42,7 +57,7 @@ export const TUNING = {
   /** Over the pan, stirring, tipping and dropping count inside this radius. */
   panZoneRadiusM: 0.13,
   /** In the pan the stirring tip may wander this far from the center. */
-  panStirHeadRadiusM: 0.05,
+  panStirHeadRadiusM: 0.06,
   /** The whisk and a salting hand count up to this far above the bowl. */
   bowlZoneHeightM: 0.3,
   /** Circles tighter than this are treated as hand jitter. */

@@ -28,7 +28,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BOWL, STOVE } from './demo-layout.mjs';
+import { BOWL, STOVE, TURNER_HAND, WHISK_HAND } from './demo-layout.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLI = join(ROOT, 'node_modules/@iwsdk/cli/bin/iwsdk.js');
@@ -311,7 +311,7 @@ async function crackEgg(next = /^Whisk/) {
 async function whiskEggs(next = /^Season/) {
   await hand('hand-left', [
     { target: 'Whisk', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
-    { anchor: 'grasp', position: { x: BOWL.x + 0.07, y: 1.1, z: BOWL.z } },
+    { anchor: 'grasp', position: { x: WHISK_HAND.x + 0.07, y: WHISK_HAND.y, z: WHISK_HAND.z } },
   ]);
   await saveShot('hold-whisk');
   for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -573,7 +573,7 @@ async function stirPan(next) {
   // The pan sits on the right, so the right hand stirs, as a seated cook would.
   await hand('hand-right', [
     { target: 'Spatula', approach: { distance: 0.06 }, pinch: { value: 1, at: 'arrival' } },
-    { anchor: 'grasp', position: { x: STOVE.x - 0.07, y: 1.1, z: STOVE.z } },
+    { anchor: 'grasp', position: { x: TURNER_HAND.x - 0.07, y: TURNER_HAND.y, z: TURNER_HAND.z } },
   ]);
   await saveShot('hold-spatula');
   for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -650,6 +650,7 @@ async function cookNasiGoreng() {
     }),
   ]);
   await expectTitle(/^Scramble/);
+  await saveShot('egg-cracked');
   await Promise.all([
     hand('hand-left', [{ pinch: 0, duration: 0.2 }]),
     hand('hand-right', [

@@ -69,6 +69,11 @@ Every threshold is tuned on the emulator, whose hands do not shake
   spatula and pan sit at the index fingertip while pinched, with the pan handle pointing back at
   the player. The emulator's fingertip is steady. Confirm the tools do not shake in a real pinch
   and that the handle looks like it is in the fingers, not beside them.
+- [ ] **Stirring from the handle** (`updateStir` in `src/systems/GestureSystem.ts`): a whisk leans
+  35 degrees and a turner 50 degrees back toward the player and out to the holding hand's side, and
+  the circles are counted where the tool tip would be. So the hand circles about 13 to 18 cm nearer
+  the player than the bowl or pan. Confirm real players find that spot without being told, or
+  lower `stirLeanBowlDeg` and `stirLeanPanDeg` in `src/config/tuning.ts`.
 - [ ] **Reach glow** (`src/systems/ReachHighlightSystem.ts`): objects glow when the grab
   pointer touches them. Confirm the glow appears before a real pinch would catch the
   object, and does not flicker when a hand hovers at the edge of range.

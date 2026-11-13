@@ -1,9 +1,9 @@
 import {
   createSystem,
   type Entity,
-  Euler,
   Grabbed,
   GrabSystem,
+  Matrix4,
   type Object3D,
   Quaternion,
   Vector3,
@@ -49,11 +49,6 @@ const STIR_TIP_Y: Readonly<Record<Zone, number>> = {
 /** Falling bits disappear at the food surface, this far above the zone origin. */
 const FOOD_Y: Readonly<Record<Zone, number>> = { bowl: 0.02, pan: 0.004 };
 
-/** The whisk model lies along X with its head at -X. */
-const WHISK_AXIS = new Vector3(1, 0, 0);
-const WHISK_UPRIGHT = new Quaternion().setFromEuler(
-  new Euler(0, 0, Math.PI / 2),
-);
 /** Where the fingers close on the pan handle, in the pan's own space. */
 const PAN_HOLD_POINT = new Vector3(
   0,
@@ -63,6 +58,37 @@ const PAN_HOLD_POINT = new Vector3(
 const STIR_MAX_TILT: Readonly<Record<Zone, number>> = {
   bowl: TUNING.stirMaxTiltBowlDeg * DEG_TO_RAD,
   pan: TUNING.stirMaxTiltPanDeg * DEG_TO_RAD,
+};
+/** How far a stirring tool leans back toward the player, in radians. */
+const STIR_LEAN: Readonly<Record<Zone, number>> = {
+  bowl: TUNING.stirLeanBowlDeg * DEG_TO_RAD,
+  pan: TUNING.stirLeanPanDeg * DEG_TO_RAD,
+};
+const WORLD_UP = new Vector3(0, 1, 0);
+const HANDLE_SIDE_COS = Math.cos(TUNING.toolHandleSideDeg * DEG_TO_RAD);
+const HANDLE_SIDE_SIN = Math.sin(TUNING.toolHandleSideDeg * DEG_TO_RAD);
+/** +1 for the right hand, -1 for the left: the side its tool handle leans to. */
+const HAND_SIDE: Readonly<Record<'left' | 'right', number>> = {
+  left: -1,
+  right: 1,
+};
+
+/**
+ * A carried tool leans from its tip, forward and down, back up to the hand:
+ * toward the player (+Z) and out to the side of the hand holding it, the way
+ * a whisk or turner hangs from the fingers.
+ */
+function carryLean(side: number): Vector3 {
+  const tilt = TUNING.toolCarryTiltDeg * DEG_TO_RAD;
+  return new Vector3(
+    Math.sin(tilt) * HANDLE_SIDE_SIN * side,
+    Math.cos(tilt),
+    Math.sin(tilt) * HANDLE_SIDE_COS,
+  );
+}
+const CARRY_LEAN: Readonly<Record<'left' | 'right', Vector3>> = {
+  left: carryLean(HAND_SIDE.left),
+  right: carryLean(HAND_SIDE.right),
 };
 
 /**
@@ -92,6 +118,10 @@ export class GestureSystem extends createSystem({}) {
   private readonly pinchAt = new Vector3();
   private readonly gripAt = new Vector3();
   private readonly whiskTip = new Vector3();
+  private readonly toPlayer = new Vector3();
+  private readonly toolSide = new Vector3();
+  private readonly toolBlade = new Vector3();
+  private readonly toolBasis = new Matrix4();
   private readonly panGripAtGrab = new Quaternion();
   private readonly panTargetAt = new Vector3();
   private readonly panTargetTurn = new Quaternion();
@@ -316,19 +346,36 @@ export class GestureSystem extends createSystem({}) {
       this.isWhiskInHand = false;
       return;
     }
-    const hand = this.player.gripSpaces[holder].getWorldPosition(
-      this.positionA,
-    );
-    const offsetX = hand.x - bowlAt.x;
-    const offsetZ = hand.z - bowlAt.z;
+    // A cook stirs with the handle pointing back at them, out to the side of
+    // the stirring hand, and the tip going round the food, so the circles are
+    // read where the tip would be.
+    const pinch = this.pinchPoint(holder, this.pinchAt);
+    const length =
+      toolId === 'spatula' ? COOKWARE.spatula.length : COOKWARE.whisk.length;
+    const handleWay = this.handleDirection(bowlAt, holder);
+    const reachFlat =
+      (length - TUNING.toolHoldFromEndM) * Math.sin(STIR_LEAN[zone]);
+    const offsetX = pinch.x - handleWay.x * reachFlat - bowlAt.x;
+    const offsetZ = pinch.z - handleWay.z * reachFlat - bowlAt.z;
     const isInBowl = isWithinSnapZone(
       offsetX,
-      hand.y - bowlAt.y,
+      pinch.y - bowlAt.y,
       offsetZ,
       this.zoneRadius(zone, TUNING.bowlZoneRadiusM),
       TUNING.bowlZoneHeightM,
     );
-    this.poseWhisk(object, holder, hand, bowlAt, isInBowl, delta, zone, toolId);
+    this.poseWhisk(
+      object,
+      holder,
+      pinch,
+      bowlAt,
+      offsetX,
+      offsetZ,
+      isInBowl,
+      delta,
+      zone,
+      length,
+    );
     const turns = this.whisk.update(
       offsetX,
       offsetZ,
@@ -354,32 +401,30 @@ export class GestureSystem extends createSystem({}) {
   }
 
   /**
-   * Holds the whisk head down. Near the bowl its tip stays inside and the
-   * handle leans out toward the hand, like a real whisk. The hand may circle
-   * wider than the bowl: the tip traces a smaller circle, so shaky tracking
-   * never pulls it through the wall.
+   * Holds a whisk or turner by its handle, head down. In the bowl or pan its
+   * tip stays inside the food and the handle runs up to the fingers; carried,
+   * it hangs forward from them. Either way it leans to the holding hand's side.
    */
   private poseWhisk(
     object: Object3D,
     holder: 'left' | 'right',
-    hand: Vector3,
+    pinch: Vector3,
     bowlAt: Vector3,
+    offsetX: number,
+    offsetZ: number,
     isInBowl: boolean,
     delta: number,
     zone: Zone,
-    toolId: ToolId,
+    length: number,
   ): void {
     if (!this.isWhiskInHand) {
       this.isWhiskInHand = true;
       this.whiskShownAt.copy(object.position);
       this.whiskShownTurn.copy(object.quaternion);
     }
-    const pinch = this.pinchPoint(holder, this.pinchAt);
-    const length =
-      toolId === 'spatula' ? COOKWARE.spatula.length : COOKWARE.whisk.length;
     if (isInBowl) {
-      const offsetX = hand.x - bowlAt.x;
-      const offsetZ = hand.z - bowlAt.z;
+      // The tip follows the circles, kept inside the food so shaky tracking
+      // never pulls it through the wall, and the handle runs to the fingers.
       const radius = Math.hypot(offsetX, offsetZ);
       const headRadius =
         zone === 'pan' ? TUNING.panStirHeadRadiusM : TUNING.whiskHeadRadiusM;
@@ -395,24 +440,64 @@ export class GestureSystem extends createSystem({}) {
       if (reach > maxReach) {
         this.whiskTip.copy(pinch).addScaledVector(this.whiskLean, -maxReach);
       }
-      this.whiskTargetTurn.setFromUnitVectors(WHISK_AXIS, this.whiskLean);
-      this.whiskTarget
-        .copy(this.whiskTip)
-        .addScaledVector(this.whiskLean, length / 2);
+      this.setToolTurn(this.whiskLean, this.whiskTargetTurn);
     } else {
-      // Carried: the head hangs down and the handle stays in the fingers.
-      this.whiskTarget.set(
-        pinch.x,
-        pinch.y - (length / 2 - TUNING.toolHoldFromEndM),
-        pinch.z,
-      );
-      this.whiskTargetTurn.copy(WHISK_UPRIGHT);
+      // Carried: the handle end stays in the fingers and the head points
+      // forward and down, as a tool hangs when held by its handle.
+      this.whiskLean.copy(CARRY_LEAN[holder]);
+      this.whiskTip
+        .copy(pinch)
+        .addScaledVector(this.whiskLean, -(length - TUNING.toolHoldFromEndM));
+      this.setToolTurn(this.whiskLean, this.whiskTargetTurn);
     }
+    this.whiskTarget
+      .copy(this.whiskTip)
+      .addScaledVector(this.whiskLean, length / 2);
     const blend = Math.min(TUNING.whiskFollowRatePerS * delta, 1);
     this.whiskShownAt.lerp(this.whiskTarget, blend);
     this.whiskShownTurn.slerp(this.whiskTargetTurn, blend);
     object.position.copy(this.whiskShownAt);
     object.quaternion.copy(this.whiskShownTurn);
+  }
+
+  /**
+   * The flat unit direction a stirring tool's handle points from `from`:
+   * back toward the player, turned out to the side of the holding hand.
+   * Written into `toPlayer`.
+   */
+  private handleDirection(from: Vector3, holder: 'left' | 'right'): Vector3 {
+    const way = this.player.head.getWorldPosition(this.toPlayer);
+    way.sub(from).setY(0);
+    if (way.lengthSq() < 1e-4) {
+      way.set(0, 0, 1);
+    }
+    way.normalize();
+    // The player's right, seen from the food: toward-player turned a quarter.
+    const rightX = way.z;
+    const rightZ = -way.x;
+    const side = HAND_SIDE[holder] * HANDLE_SIDE_SIN;
+    return way.set(
+      way.x * HANDLE_SIDE_COS + rightX * side,
+      0,
+      way.z * HANDLE_SIDE_COS + rightZ * side,
+    );
+  }
+
+  /**
+   * Turns a tool so its shaft (+X) runs along `lean` and its +Y side faces up
+   * and away from the hand, so a turner shows its flat blade, not its edge.
+   */
+  private setToolTurn(lean: Vector3, out: Quaternion): Quaternion {
+    // Up, minus its part along the shaft: up and away from the hand.
+    const side = this.toolBlade.copy(WORLD_UP).addScaledVector(lean, -lean.y);
+    if (side.lengthSq() < 1e-6) {
+      // An upright tool: let its blade face away from the player.
+      side.set(0, 0, -1);
+    }
+    side.normalize();
+    const across = this.toolSide.crossVectors(lean, side);
+    this.toolBasis.makeBasis(lean, side, across);
+    return out.setFromRotationMatrix(this.toolBasis);
   }
 
   /**

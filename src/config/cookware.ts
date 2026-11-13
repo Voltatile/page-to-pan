@@ -13,6 +13,8 @@ export const COOKWARE = {
   omelette: { thickness: 0.014 },
   whisk: { length: 0.26 },
   spatula: { length: 0.28, bladeWidth: 0.065, bladeLength: 0.08 },
+  /** A whole egg cracked straight into the pan, before it is scrambled. */
+  friedEgg: { whiteRadius: 0.045, yolkRadius: 0.016 },
 } as const;
 
 /** Height of the whisk tip above the bowl center while it stirs. */

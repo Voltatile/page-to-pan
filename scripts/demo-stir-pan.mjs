@@ -3,13 +3,13 @@
  * Like the whisk circle it runs inside the page through `iwsdk browser run`,
  * so the moves chain frame by frame with no gaps between them.
  */
-import { STOVE } from './demo-layout.mjs';
+import { TURNER_HAND } from './demo-layout.mjs';
 
 const TURNS = 3.6;
 const POINTS_PER_TURN = 16;
 const MOVE_S = 0.1;
 const HAND_CIRCLE_M = 0.07;
-const HAND_HEIGHT_M = 1.1;
+const HAND_HEIGHT_M = TURNER_HAND.y;
 
 export default async function run({ frame }) {
   await frame.evaluate(
@@ -31,7 +31,7 @@ export default async function run({ frame }) {
       }
     },
     {
-      pan: STOVE,
+      pan: TURNER_HAND,
       points: Math.round(TURNS * POINTS_PER_TURN),
       moveS: MOVE_S,
       radius: HAND_CIRCLE_M,

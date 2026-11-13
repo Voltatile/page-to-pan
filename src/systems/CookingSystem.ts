@@ -60,8 +60,13 @@ const TOASTED_COLOR = new Color('#A8692E');
 /** How far a golden moment pulls the rice toward the toasted color. */
 const TOAST_SHARE = 0.3;
 const SET_EGG_COLOR = new Color('#F2C94C');
-/** The raw egg starts as one big blob and breaks up as it is stirred. */
+/** The scrambled bits start large and break up smaller as they are stirred. */
 const SCRAMBLE_START_SCALE = 1.35;
+/**
+ * Share of the scramble step, 0 to 1, over which the whole egg breaks into
+ * bits: it goes from whole to gone while the bits grow in its place.
+ */
+const EGG_BREAKS_BY = 0.5;
 /** Scrambled egg sits on top of the rice, this far above the pan floor. */
 const SCRAMBLE_ON_RICE_Y = 0.016;
 
@@ -78,6 +83,8 @@ export class CookingSystem extends createSystem({}) {
   private plateOnion!: Object3D;
   private panRice!: Mesh;
   private panScramble!: Mesh;
+  /** The whole egg in the pan before it is scrambled. */
+  private panFriedEgg!: Mesh;
   private panRiceOnion!: Mesh;
   private plateRice!: Mesh;
   private plateScramble!: Mesh;
@@ -153,6 +160,7 @@ export class CookingSystem extends createSystem({}) {
     this.plateOnion = this.requirePart(this.plateOmelette, 'PlateOnion');
     this.panRice = this.ownedMesh('pan', 'PanRice');
     this.panScramble = this.ownedMesh('pan', 'PanScramble');
+    this.panFriedEgg = this.ownedMesh('pan', 'PanFriedEgg');
     this.panRiceOnion = this.ownedMesh('pan', 'PanRiceOnion');
     this.plateRice = this.ownedMesh('plate', 'PlateRice');
     this.plateScramble = this.ownedMesh('plate', 'PlateScramble');
@@ -233,8 +241,11 @@ export class CookingSystem extends createSystem({}) {
     // Fried rice is never flipped, so the card skips the Ready label.
     this.hasEggInPan = true;
     this.isFolded = true;
-    this.panScramble.visible = true;
-    this.panScramble.scale.setScalar(SCRAMBLE_START_SCALE);
+    // The egg lands whole; stirring breaks it up into the scramble.
+    this.panFriedEgg.visible = true;
+    this.panFriedEgg.scale.setScalar(1);
+    this.panFriedEgg.rotation.set(0, 0, 0);
+    this.panScramble.visible = false;
     this.material(this.panScramble).color.copy(RAW_COLOR);
     this.showDoneness();
   }
@@ -253,14 +264,20 @@ export class CookingSystem extends createSystem({}) {
       return;
     }
     if (!this.hasRiceInPan) {
-      // Scrambling: the egg sets and breaks into bits.
+      // Scrambling: the whole egg tears apart and its bits set as they stir.
+      const broken = Math.min(amount / EGG_BREAKS_BY, 1);
+      this.panFriedEgg.visible = broken < 1;
+      this.panFriedEgg.scale.set(1 - 0.6 * broken, 1, 1 - 0.75 * broken);
+      this.panFriedEgg.rotation.y = amount * Math.PI;
+      this.panScramble.visible = amount > 0;
       this.material(this.panScramble).color.lerpColors(
         RAW_COLOR,
         SET_EGG_COLOR,
         amount,
       );
       this.panScramble.scale.setScalar(
-        SCRAMBLE_START_SCALE + (1 - SCRAMBLE_START_SCALE) * amount,
+        Math.max(broken, 0.001) *
+          (SCRAMBLE_START_SCALE + (1 - SCRAMBLE_START_SCALE) * amount),
       );
       return;
     }
@@ -553,6 +570,7 @@ export class CookingSystem extends createSystem({}) {
     for (const mesh of [
       this.panRice,
       this.panScramble,
+      this.panFriedEgg,
       this.panRiceOnion,
       this.plateRice,
       this.plateScramble,

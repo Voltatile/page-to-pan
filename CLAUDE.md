@@ -77,7 +77,8 @@ penuh, atau otomatis saat sesi XR kehilangan fokus. Kartu lalu menampilkan **Res
 
 ### Mekanik (omelette)
 Semua benda dipegang dengan pinch. Whisk, sudip, dan wajan dipegang di gagangnya: gagang berada di
-ujung jari yang menjepit. Angka ambang ada di `src/config/tuning.ts`.
+ujung jari yang menjepit. Saat mengaduk, gagang whisk dan sudip condong ke arah pemain dan ke sisi tangan
+yang memegang (kanan ke kanan, kiri ke kiri), dan putaran dibaca di ujung alatnya. Angka ambang ada di `src/config/tuning.ts`.
 
 | Langkah | Interaksi | Deteksi |
 |---|---|---|

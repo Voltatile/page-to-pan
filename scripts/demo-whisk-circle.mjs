@@ -4,13 +4,13 @@
  * sequences place a held object by its base, which fights the pose the game
  * gives the whisk, so this uses plain moves.
  */
-import { BOWL } from './demo-layout.mjs';
+import { WHISK_HAND } from './demo-layout.mjs';
 
 const TURNS = 3.4;
 const POINTS_PER_TURN = 16;
 const MOVE_S = 0.1;
 const HAND_CIRCLE_M = 0.07;
-const HAND_HEIGHT_M = 1.13;
+const HAND_HEIGHT_M = WHISK_HAND.y;
 
 export default async function run({ frame }) {
   await frame.evaluate(
@@ -30,7 +30,7 @@ export default async function run({ frame }) {
       }
     },
     {
-      bowl: BOWL,
+      bowl: WHISK_HAND,
       points: Math.round(TURNS * POINTS_PER_TURN),
       moveS: MOVE_S,
       radius: HAND_CIRCLE_M,
