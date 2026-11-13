@@ -108,6 +108,8 @@ export const TUNING = {
   sizzleVolume: 0.55,
   /** Steam puffs per second from a pan sizzling at full level. */
   steamPerS: 7,
+  /** Bubbles per second on the first side of a pancake once it is ready to flip. */
+  pancakeBubblesPerS: 14,
   /** Seconds a freshly served omelette keeps steaming on the plate. */
   plateSteamS: 6,
 } as const;

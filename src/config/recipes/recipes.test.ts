@@ -47,6 +47,11 @@ describe.each(ALL_RECIPES.map((recipe) => [recipe.id, recipe] as const))(
       }
     });
 
+    it('fits its at-home note in four lines', () => {
+      expect(recipe.atHome.length).toBeGreaterThan(20);
+      expect(recipe.atHome.length).toBeLessThanOrEqual(92);
+    });
+
     it('keeps tips and hints within two card lines', () => {
       for (const { tip, hint } of recipe.steps) {
         expect(tip.length).toBeLessThanOrEqual(70);

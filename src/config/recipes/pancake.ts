@@ -64,6 +64,8 @@ export const PANCAKE: Recipe = {
   },
   intro: 'Flour batter, spatula spread, maple glaze.',
   outro: 'Fluffy and golden! Press Again to cook another pancake.',
+  atHome:
+    '1 cup flour, 1 egg, 1 cup milk. Medium heat, flip when bubbles pop on top.',
   sheetSizeM: [0.4, 0.32],
   ingredients: [egg, syrup, flour, butter],
   steps: [

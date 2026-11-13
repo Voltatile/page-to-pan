@@ -8,6 +8,7 @@ import {
   VisibilityState,
 } from '@iwsdk/core';
 import { CookingSystem } from './CookingSystem.js';
+import { ScoreSystem } from './ScoreSystem.js';
 import { StepSystem } from './StepSystem.js';
 
 /** Perched beside the floating cookbook card on the recipe stand. */
@@ -17,6 +18,8 @@ const CHEF_Z = 0.025;
 
 const CHEER_DURATION_S = 0.48;
 const CHEER_HOP_M = 0.032;
+/** Three stars earn a longer dance of this many hops. */
+const PARTY_HOPS = 4;
 
 /**
  * Builds the procedural "Little Chef" toque mascot (5 low-poly parts, ~280
@@ -99,6 +102,10 @@ function buildLittleChefMesh(): Group {
 export class LittleChefSystem extends createSystem({}) {
   private steps!: StepSystem;
   private cooking: CookingSystem | undefined;
+  private score: ScoreSystem | undefined;
+  /** Hops left in the three-star dance. */
+  private partyHops = 0;
+  private hasPartied = false;
   private chef!: Group;
   private timeS = 0;
   private cheerS = -1;
@@ -111,6 +118,7 @@ export class LittleChefSystem extends createSystem({}) {
     }
     this.steps = steps;
     this.cooking = this.world.getSystem(CookingSystem);
+    this.score = this.world.getSystem(ScoreSystem);
 
     const stand = this.world.requireSceneEntity('recipe-stand').object3D;
     if (stand == null) {
@@ -160,8 +168,22 @@ export class LittleChefSystem extends createSystem({}) {
       offsetY += arc * CHEER_HOP_M;
       spinY += Math.sin(Math.PI * 2 * t) * 0.35;
       if (this.cheerS >= CHEER_DURATION_S) {
-        this.cheerS = -1;
+        // The dance chains its hops; a plain cheer ends after one.
+        this.partyHops = Math.max(this.partyHops - 1, 0);
+        this.cheerS = this.partyHops > 0 ? 0 : -1;
       }
+    }
+
+    // The score arrives just after the last step, so look for it here.
+    const isDone = this.steps.state.phase === 'done';
+    if (isDone && !this.hasPartied && this.score?.result != null) {
+      this.hasPartied = true;
+      if (this.score.result.stars >= 3) {
+        this.partyHops = PARTY_HOPS;
+        this.cheerS = 0;
+      }
+    } else if (!isDone) {
+      this.hasPartied = false;
     }
 
     // Nervous wobble when food is getting close to burning

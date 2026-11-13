@@ -504,6 +504,7 @@ async function cookFirstSide(next = /^Flip/) {
   }
   await expectTitle(/^Cook: Ready/);
   await sleep(1000);
+  await saveShot('cook-ready');
   await grabPanOffStove();
   await expectTitle(next);
   await saveShot('hold-pan');

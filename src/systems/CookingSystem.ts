@@ -114,6 +114,11 @@ export class CookingSystem extends createSystem({}) {
     return this.progress;
   }
 
+  /** True once the food has been flipped onto its second side. */
+  get isFlipped(): boolean {
+    return this.isFolded;
+  }
+
   /** True while the omelette is in the air. */
   get isTossing(): boolean {
     return this.tossT < 1;

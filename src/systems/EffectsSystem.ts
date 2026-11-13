@@ -8,6 +8,7 @@ import {
   VisibilityState,
 } from '@iwsdk/core';
 import { TUNING } from '../config/tuning.js';
+import { FLIP_READY_PROGRESS } from '../game/cooking.js';
 import { type PanState, type Sizzle, sizzleOf } from '../game/sizzle.js';
 import {
   createDotTexture,
@@ -166,6 +167,23 @@ const STEAM_LIFT_M = 0.025;
 /** Puffs start anywhere within this radius of the food. */
 const STEAM_SPREAD_M = 0.05;
 
+/** Bubbles swell and pop on the raw top of a pancake as its underside sets. */
+const BUBBLE_COLOR = new Color('#FBEFB0');
+const BUBBLE_MOTION: SpriteMotion = {
+  gravity: 0,
+  drag: 0,
+  lifeS: 0.5,
+  startSize: 0.006,
+  endSize: 0.02,
+  floorY: -Infinity,
+  fadeS: 0.08,
+};
+/** Bubbles sit on the batter, this far above the middle of the pan. */
+const BUBBLE_LIFT_M = 0.012;
+const BUBBLE_SPREAD_M = 0.065;
+/** The first bubbles show this long before the pancake is ready to flip. */
+const BUBBLE_LEAD = 0.2;
+
 /** The stove flame dances: height and width wobble by these shares. */
 const FLAME_HEIGHT_WOBBLE = 0.3;
 const FLAME_WIDTH_WOBBLE = 0.03;
@@ -194,6 +212,7 @@ export class EffectsSystem extends createSystem({}) {
   private cooking!: CookingSystem;
   private kitchen!: KitchenSystem;
   private steamDue = 0;
+  private bubblesDue = 0;
   private plateSteamS = 0;
   private wasDone = false;
   private flame: Object3D | undefined;
@@ -246,6 +265,7 @@ export class EffectsSystem extends createSystem({}) {
     this.flickerFlame(delta);
     if (!this.steps.isGamePaused) {
       this.emitPanSteam(delta);
+      this.emitPancakeBubbles(delta);
       this.emitPlateSteam(delta);
     }
     this.grains.update(delta, this.facing);
@@ -299,6 +319,44 @@ export class EffectsSystem extends createSystem({}) {
     pan.getWorldPosition(this.source);
     this.color.lerpColors(STEAM_COLOR, SMOKE_COLOR, this.heat.burn);
     this.puffFrom(this.source);
+  }
+
+  /**
+   * The tip on the card says bubbles mean the underside is golden, so the
+   * pancake shows them: few at first, many once it is ready to flip.
+   */
+  private emitPancakeBubbles(delta: number): void {
+    const pan = this.kitchen.requireTool('pan').object3D;
+    if (
+      pan == null ||
+      this.steps.activeRecipe.dish !== 'pancake' ||
+      !this.pan.isOnHeat ||
+      !this.pan.hasEgg ||
+      this.cooking.isFlipped
+    ) {
+      this.bubblesDue = 0;
+      return;
+    }
+    const ready = Math.min(
+      Math.max(
+        (this.pan.progress - (FLIP_READY_PROGRESS - BUBBLE_LEAD)) / BUBBLE_LEAD,
+        0,
+      ),
+      1,
+    );
+    this.bubblesDue += TUNING.pancakeBubblesPerS * ready * delta;
+    pan.getWorldPosition(this.source);
+    while (this.bubblesDue >= 1) {
+      this.bubblesDue -= 1;
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.sqrt(Math.random()) * BUBBLE_SPREAD_M;
+      this.spawnAt.set(
+        this.source.x + Math.cos(angle) * radius,
+        this.source.y + BUBBLE_LIFT_M,
+        this.source.z + Math.sin(angle) * radius,
+      );
+      this.grains.spawn(this.spawnAt, 0, 0, 0, BUBBLE_COLOR, BUBBLE_MOTION);
+    }
   }
 
   private emitPlateSteam(delta: number): void {

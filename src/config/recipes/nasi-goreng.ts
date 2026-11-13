@@ -53,6 +53,8 @@ export const NASI_GORENG: Recipe = {
   },
   intro: 'Point at Start and pinch to begin.',
   outro: 'Delicious! Press Again to cook once more.',
+  atHome:
+    '1 cup day-old rice, 1 egg, 2 tsp sweet soy sauce. High heat, keep stirring 3 minutes.',
   sheetSizeM: [0.4, 0.32],
   ingredients: [egg, soySauce, rice, greenOnion],
   steps: [

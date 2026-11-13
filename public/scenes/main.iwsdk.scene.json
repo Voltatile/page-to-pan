@@ -865,6 +865,22 @@
         ],
         "scale": 0.1
       }
+    },
+    {
+      "id": "home-note",
+      "name": "Home Note",
+      "content": {
+        "type": "asset",
+        "asset": "home-note"
+      },
+      "transform": {
+        "position": [
+          -0.38,
+          0.985,
+          -0.5
+        ],
+        "scale": 0.1
+      }
     }
   ]
 }

@@ -97,6 +97,8 @@ export interface Recipe {
   intro: string;
   /** Shown on the card when every step is finished. */
   outro: string;
+  /** How to cook the dish in a real kitchen, on the note beside the plate. */
+  atHome: string;
   /** Sheet size in meters: width along X, depth along Z. */
   sheetSizeM: readonly [width: number, depth: number];
   ingredients: readonly RecipeIngredient[];

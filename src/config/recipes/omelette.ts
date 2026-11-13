@@ -55,6 +55,8 @@ export const OMELETTE: Recipe = {
   dish: 'omelette',
   intro: 'Point at Start and pinch to begin.',
   outro: 'Nicely done! Press Again to cook once more.',
+  atHome:
+    '2 eggs, a pinch of salt, a knob of butter. Medium heat, about 2 minutes, then fold.',
   sheetSizeM: [0.4, 0.32],
   ingredients: [egg, salt, butter, greenOnion],
   steps: [

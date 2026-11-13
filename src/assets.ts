@@ -78,6 +78,7 @@ export default defineAssets({
   ),
   'title-logo': uikitml('title-logo.uikitml', 'Title Logo'),
   'result-banner': uikitml('result-banner.uikitml', 'Result Banner'),
+  'home-note': uikitml('home-note.uikitml', 'Home Note'),
   'praise-popup': uikitml('praise-popup.uikitml', 'Praise Popup'),
   'pause-modal': uikitml('pause-modal.uikitml', 'Pause Modal'),
 });

@@ -11,6 +11,7 @@ import { EffectsSystem } from './systems/EffectsSystem.js';
 import { EggShellSystem } from './systems/EggShellSystem.js';
 import { GestureSystem } from './systems/GestureSystem.js';
 import { GuideSystem } from './systems/GuideSystem.js';
+import { HomeNoteSystem } from './systems/HomeNoteSystem.js';
 import { KitchenSystem } from './systems/KitchenSystem.js';
 import { LittleChefSystem } from './systems/LittleChefSystem.js';
 import { PauseSystem } from './systems/PauseSystem.js';
@@ -50,6 +51,7 @@ World.create(
   world.registerSystem(UISystem);
   world.registerSystem(ResultStarsSystem);
   world.registerSystem(PraiseSystem);
+  world.registerSystem(HomeNoteSystem);
   world.registerSystem(TitlePreviewSystem);
   world.registerSystem(LittleChefSystem);
   world.registerSystem(ReachHighlightSystem);
