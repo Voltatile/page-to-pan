@@ -8,7 +8,7 @@ is in the game.
 - **Title:** Page to Pan
 - **Track:** Gaming
 - **Division:** New Experience (first commit 7 Nov 2026, inside the contest window)
-- **Play link:** https://voltatile.github.io/page-to-pan/
+- **Play link:** https://pagetopan.voltatile.tech/
 - **Video:** (add the YouTube or Vimeo link, public, under 3 minutes)
 
 ## One line

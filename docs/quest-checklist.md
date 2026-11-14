@@ -6,7 +6,7 @@ play session from start to finish, so it can be worked through in order.
 
 ## Before the session
 
-- Open **https://voltatile.github.io/page-to-pan/?debug=1** in Quest Browser. The
+- Open **https://pagetopan.voltatile.tech/?debug=1** in Quest Browser. The
   `?debug=1` board shows the frame rate beside the table. Play once more without it
   at the end, the way judges will see the game.
 - Sit on a normal chair at a desk. Hand tracking on, controllers put down.

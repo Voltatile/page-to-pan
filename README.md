@@ -4,7 +4,7 @@ A VR cooking game for beginners. A printed recipe sheet on the kitchen table
 shows every ingredient as a life-size outline. Set each ingredient on its
 outline, then cook the dish step by step with your own hands.
 
-**Play it:** https://voltatile.github.io/page-to-pan/ (open in the Meta Quest
+**Play it:** https://pagetopan.voltatile.tech/ (open in the Meta Quest
 Browser and press **Enter VR**)
 
 Made for the Meta VR Start Developer Competition 2026 (Gaming track).

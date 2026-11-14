@@ -42,7 +42,9 @@ satu per satu dengan gerakan tangan. Di akhir, pemain mendapat skor bintang dan 
 - Testing: emulator IWER di browser desktop, dikendalikan lewat IWSDK CLI/skills. `npm run demo` memainkan satu
   omelette penuh sebagai tes end-to-end; `DEMO_RECIPE=nasi-goreng` atau `DEMO_RECIPE=pancake` memainkan
   resep lain, `DEMO_DEBUG=1` juga mencetak angka performa, dan `DEMO_SHOTS=<folder>` menyimpan gambar.
-- Deploy: build statis ke **GitHub Pages** (HTTPS wajib untuk WebXR).
+- Deploy: build statis ke **GitHub Pages** (HTTPS wajib untuk WebXR), dengan domain sendiri
+  **https://pagetopan.voltatile.tech/** (CNAME di DNS Hostinger ke `voltatile.github.io`; alamat
+  github.io lama otomatis diarahkan ke sana).
 
 **Penting:** sebelum menulis kode yang memakai API IWSDK, cek dokumentasi resmi (iwsdk.dev / repo `facebook/immersive-web-sdk`)
 atau tool RAG/skills IWSDK yang terpasang. Jangan mengarang nama API. Kalau ragu, cari contoh di starter template.
